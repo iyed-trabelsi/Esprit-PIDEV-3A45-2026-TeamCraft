@@ -1,0 +1,24 @@
+<nav class="navbar navbar-expand-lg navbar-dark py-3 {% if transparent_nav|default(false) %}bg-transparent{% else %}bg-dark{% endif %}" style="{% if transparent_nav|default(false) %}background: transparent !important;{% endif %}">
+    <div class="container flex-wrap">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ path('app_home') }}">
+            <img src="{{ asset('images/logo.png') }}" alt="TEAMCRAFT" height="40" class="d-inline-block align-text-top">
+            <span class="brand-text">TEAMCRAFT</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse navbar-tc" id="navbarNav">
+            <ul class="navbar-nav gap-3 mx-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_home') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Players</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Teams</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Forum</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Events</a></li>
+            </ul>
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                <a class="nav-link text-white" href="{{ path('app_login') }}">Log in</a>
+                <a class="btn btn-tc-primary" href="{{ path('app_signup') }}">JOIN NOW →</a>
+            </div>
+        </div>
+    </div>
+</nav>
