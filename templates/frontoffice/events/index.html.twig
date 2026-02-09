@@ -1,0 +1,35 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Événements - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h1 class="h2 fw-bold mb-0 discovery-section-title">
+                {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                Événements
+            </h1>
+            <a href="#" class="discovery-view-all">VOIR TOUS LES ÉVÉNEMENTS →</a>
+        </div>
+        <div class="row g-4">
+            {% for e in events %}
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+                        <div class="discovery-avatar mx-auto mb-3">{{ e.initial }}</div>
+                        <h3 class="discovery-card-title mb-1">{{ e.title }}</h3>
+                        <p class="discovery-card-subtitle mb-3">{{ e.subtitle }}</p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                            <span class="badge-game {{ e.gameColor }}">{{ e.game }}</span>
+                            <span class="badge-rank {{ e.dateBadge }}">{{ e.date }}</span>
+                        </div>
+                        <a href="#" class="btn btn-recruit mt-auto text-decoration-none text-center">Voir l'événement</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

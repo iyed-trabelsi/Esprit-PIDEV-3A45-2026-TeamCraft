@@ -1,0 +1,33 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}My Teams{% endblock %}
+
+{% block body %}
+<h1>My Teams</h1>
+
+<a href="{{ path('team_create') }}" class="btn btn-success mb-3">Create New Team</a>
+
+{% if teams|length > 0 %}
+    <div class="row">
+        {% for team in teams %}
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark text-white">
+                    {% if team.logo %}
+                        <img src="{{ asset('uploads/teams/' ~ team.logo) }}" class="card-img-top" alt="{{ team.name }}">
+                    {% else %}
+                        <img src="{{ asset('images/default-team.png') }}" class="card-img-top" alt="Default Logo">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ team.name }}</h5>
+                        <p class="card-text">Games: {{ team.games|join(', ') }}</p>
+                        <p class="card-text"><small>Created at: {{ team.createdAt|date('d/m/Y H:i') }}</small></p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>You don't have any teams yet.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,33 @@
+<nav class="navbar navbar-expand-lg navbar-dark py-3 bg-dark">
+    <div class="container flex-wrap">
+        <a class="navbar-brand d-flex align-items-center" href="{{ path('app_home') }}">
+            <img src="{{ asset('images/logo.png') }}" alt="TEAMCRAFT" height="40" class="d-inline-block align-text-top">
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse navbar-tc" id="navbarNav">
+            <ul class="navbar-nav gap-3 mx-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_home') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_players') }}">Players</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_teams') }}">Teams</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_forum') }}">Forum</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_offres') }}">Offres</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_events') }}">Events</a></li>
+            </ul>
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                {% if app.user %}
+                    <span class="nav-link text-white-50 small d-none d-md-inline">Bonjour, {{ app.user.pseudo }}</span>
+                    <a class="nav-link text-white" href="{{ path('app_home') }}">Dashboard</a>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <a class="btn btn-tc-outline" href="{{ path('admin_dashboard') }}">Admin</a>
+                    {% endif %}
+                    <a class="btn btn-tc-primary" href="{{ path('app_logout') }}">Logout</a>
+                {% else %}
+                    <a class="nav-link text-white" href="{{ path('app_login') }}">Log in</a>
+                    <a class="btn btn-tc-primary" href="{{ path('app_register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
