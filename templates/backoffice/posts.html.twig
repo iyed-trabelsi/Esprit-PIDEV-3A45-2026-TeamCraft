@@ -1,0 +1,118 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des posts{% endblock %}
+{% block admin_subheading %}Liste de tous les posts du forum avec rubrique, auteur et statut.{% endblock %}
+
+{% block admin_content %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    <form method="get" action="{{ path('admin_posts') }}" class="d-flex flex-wrap gap-3 align-items-center mb-3" id="posts-search-form">
+        <input type="hidden" name="page" value="1">
+        <div class="input-group admin-search-group" style="max-width: 280px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="search" name="q" class="form-control" placeholder="Rechercher par titre ou contenu…" value="{{ q|default('') }}" aria-label="Recherche">
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label for="sort-posts" class="small text-white-50 mb-0">Trier par</label>
+            <select name="sort" id="sort-posts" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; min-width: 180px;" onchange="this.form.submit()">
+                <option value="date_desc" {{ sort|default('date_desc') == 'date_desc' ? 'selected' : '' }}>Date (récentes d’abord)</option>
+                <option value="date_asc" {{ sort|default('') == 'date_asc' ? 'selected' : '' }}>Date (anciennes d’abord)</option>
+                <option value="title_asc" {{ sort|default('') == 'title_asc' ? 'selected' : '' }}>Titre (A → Z)</option>
+                <option value="title_desc" {{ sort|default('') == 'title_desc' ? 'selected' : '' }}>Titre (Z → A)</option>
+            </select>
+        </div>
+    </form>
+    <script>
+        (function() {
+            var form = document.getElementById('posts-search-form');
+            var input = form && form.querySelector('input[name="q"]');
+            if (!input) return;
+            var timeout;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    form.querySelector('input[name="page"]').value = '1';
+                    form.submit();
+                }, 350);
+            });
+        })();
+    </script>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Titre</th>
+                        <th class="border-0 px-4 py-3">Rubrique</th>
+                        <th class="border-0 px-4 py-3">Auteur</th>
+                        <th class="border-0 px-4 py-3">Date</th>
+                        <th class="border-0 px-4 py-3">Statut</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for post in posts %}
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ post.titre }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ post.rubrique ? post.rubrique.nomRubrique : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ post.auteur ? post.auteur.pseudo : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ post.dateCreation ? post.dateCreation|date('d/m/Y') : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">
+                                <form method="post" action="{{ path('admin_post_statut', { id: post.id }) }}" class="d-inline-block" id="statut-form-{{ post.id }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_post_statut_' ~ post.id) }}">
+                                    <input type="hidden" name="page" value="{{ currentPage }}">
+                                    <input type="hidden" name="q" value="{{ q|default('') }}">
+                                    <input type="hidden" name="sort" value="{{ sort|default('date_desc') }}">
+                                    <select name="statut" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; min-width: 110px; font-size: 0.85rem;" onchange="this.form.submit()">
+                                        <option value="published" {{ post.statut == 'published' ? 'selected' : '' }}>Publié</option>
+                                        <option value="archived" {{ post.statut == 'archived' ? 'selected' : '' }}>Archivé</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="px-4 py-3 text-end bg-input-match">
+                                <a href="{{ path('app_forum_post_show', { id: post.id }) }}" class="action-btn view d-inline-block" title="Voir">
+                                    <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                </a>
+                                <form method="post" action="{{ path('admin_post_delete', { id: post.id }) }}" onsubmit="return confirm('Supprimer ce post ?');" class="d-inline-block">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_post_delete_' ~ post.id) }}">
+                                    <button type="submit" class="action-btn delete border-0 bg-transparent" title="Supprimer">
+                                        <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-4 text-center text-white-50">Aucun post.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">Affichage de {{ posts|length }} sur {{ total }} posts</span>
+        <nav aria-label="Pagination posts">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_posts', { page: currentPage - 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Précédent</a>
+                </li>
+                {% for i in 1..maxPages %}
+                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_posts', { page: i, q: q|default(''), sort: sort|default('date_desc') }) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_posts', { page: currentPage + 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
