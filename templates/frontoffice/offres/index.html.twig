@@ -1,0 +1,36 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Offres de recrutement - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h1 class="h2 fw-bold mb-0 discovery-section-title">
+                {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                Offres
+            </h1>
+            <a href="#" class="discovery-view-all">VIEW ALL OFFERS →</a>
+        </div>
+        <div class="row g-4">
+            {% for o in offres %}
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+                        <div class="discovery-avatar mx-auto mb-3">{{ o.team.name|first|upper }}</div>
+                        <h3 class="discovery-card-title mb-1">{{ o.title }}</h3>
+                        <p class="discovery-card-subtitle mb-3 text-muted small text-uppercase fw-bold">{{ o.team.name }}</p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                            {% set gameClass = o.game|lower == 'league of legends' ? 'lol' : o.game|lower %}
+                            <span class="badge-game {{ gameClass }}">{{ o.game }}</span>
+                            <span class="badge-rank purple">{{ o.rank }}</span>
+                        </div>
+                        <a href="{{ path('app_offres_show', { id: o.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Offer</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

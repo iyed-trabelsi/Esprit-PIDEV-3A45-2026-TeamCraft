@@ -1,0 +1,32 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ offre.title }} - Offres de recrutement TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_offres') }}" class="text-secondary text-decoration-none">Offres de recrutement</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ offre.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="discovery-card p-4 p-md-5 mb-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% set gameClass = offre.game|lower == 'league of legends' ? 'lol' : offre.game|lower %}
+                <span class="badge-game {{ gameClass }}">{{ offre.game }}</span>
+                <span class="badge-rank purple">{{ offre.rank }}</span>
+            </div>
+            <h1 class="h2 fw-bold discovery-card-title mb-2">{{ offre.title }}</h1>
+            <p class="discovery-card-subtitle mb-4 text-muted small text-uppercase fw-bold">{{ offre.team.name }}</p>
+            <div class="post-body mb-4" style="color: var(--tc-text); line-height: 1.6;">{{ offre.description }}</div>
+            <a href="#" class="btn btn-recruit py-3" style="max-width: 280px;">Postuler</a>
+        </div>
+
+        <a href="{{ path('app_offres') }}" class="discovery-view-all text-decoration-none">← Retour aux offres</a>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

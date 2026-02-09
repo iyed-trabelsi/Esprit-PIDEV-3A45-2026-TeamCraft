@@ -1,0 +1,1011 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Player Profile - {{ user.pseudo }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .profile-container {
+        color: #fff;
+        padding: 2rem 0;
+    }
+
+    .card-tc-profile {
+        background: rgba(15, 17, 26, 0.8);
+        border: 1px solid rgba(0, 255, 157, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-profile {
+        background: linear-gradient(135deg, rgba(0, 255, 157, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+        border: 1px solid rgba(0, 255, 157, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-profile::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ff9d, transparent);
+    }
+
+    .avatar-wrapper {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #1a1d29;
+        border: 2px solid #00ff9d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: #fff;
+        margin: 0 auto 1rem;
+        position: relative;
+        box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        background: #00ff9d;
+        border-radius: 50%;
+        border: 2px solid #1a1d29;
+    }
+
+    .online-badge {
+        color: #00ff9d;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .section-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .label-tc {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+
+    .value-tc {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .rank-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .btn-edit-profile {
+        background: #00ccff;
+        color: #fff;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 204, 255, 0.3);
+    }
+
+    .btn-edit-profile:hover {
+        background: #00aadd;
+        transform: translateY(-2px);
+    }
+
+    .game-icon-small {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+
+    .v-icon { background: #ff4655; }
+    .c-icon { background: #de9b35; }
+    .l-icon { background: #0099ff; }
+
+    .post-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .badge-status {
+        background: rgba(0, 255, 157, 0.1);
+        color: #00ff9d;
+        border: 1px solid #00ff9d;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+    }
+
+    .forum-comment {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0.75rem 0;
+    }
+
+    .forum-comment:last-child {
+        border-bottom: none;
+    }
+
+    .settings-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #fff;
+        text-decoration: none;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .settings-link:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #00ff9d;
+        color: #fff;
+    }
+
+    .btn-tc-primary {
+        background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%);
+        color: #0f111a;
+        border: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-tc-primary:hover {
+        background: linear-gradient(135deg, #00cc7d 0%, #00aa6d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 255, 157, 0.4);
+        color: #0f111a;
+    }
+
+    .btn-tc-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-tc-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #fff;
+    }
+
+</style>
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <div class="container profile-container">
+        <h2 class="mb-4 d-flex align-items-center gap-2">
+        {% include 'frontoffice/partials/_icon_people.html.twig' %}
+            Player Profile
+        </h2>
+
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <!-- Hero Section -->
+                <div class="card card-tc-profile hero-profile p-5 text-center">
+                    <div class="avatar-wrapper">
+                        {% if user.profilePicture %}
+                            <img src="{{ user.profilePicture }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        {% else %}
+                            {{ user.pseudo|first|upper }}
+                        {% endif %}
+                        <span class="status-dot"></span>
+                    </div>
+                    <h1 class="fw-bold mb-1 text-white">{{ user.pseudo }}</h1>
+                    <div class="online-badge mb-4">
+                        <span class="dot" style="width: 8px; height: 8px; background: #00ff9d; border-radius: 50%;"></span>
+                        Online
+                    </div>
+                    {% if app.user and app.user.id == user.id %}
+                        <div>
+                            <button class="btn btn-edit-profile" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile</button>
+                        </div>
+                    {% else %}
+                        <div>
+                            <button class="btn btn-edit-profile">RECRUIT ME</button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card card-tc-profile p-4">
+                            <h3 class="section-title"><i class="bi bi-person-vcard text-success"></i> Player Info</h3>
+                            <div class="info-row">
+                                <span class="label-tc">Username:</span>
+                                <span class="value-tc">{{ playerInfo.username }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Email:</span>
+                                <span class="value-tc">{{ playerInfo.email }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Pays:</span>
+                                <span class="value-tc">
+                                    {% set countryFlags = {
+                                        'France': '&#127467;&#127479;',
+                                        'Tunisia': '&#127481;&#127475;',
+                                        'Algeria': '&#127465;&#127487;',
+                                        'Morocco': '&#127474;&#127462;',
+                                        'United States': '&#127482;&#127480;',
+                                        'United Kingdom': '&#127468;&#127463;',
+                                        'Germany': '&#127465;&#127466;',
+                                        'Spain': '&#127466;&#127480;',
+                                        'Italy': '&#127470;&#127481;',
+                                        'Canada': '&#127464;&#127462;',
+                                        'Belgium': '&#127463;&#127466;',
+                                        'Switzerland': '&#127464;&#127469;',
+                                        'Netherlands': '&#127475;&#127473;',
+                                        'Portugal': '&#127477;&#127481;',
+                                        'Poland': '&#127477;&#127473;',
+                                        'Sweden': '&#127480;&#127466;',
+                                        'Norway': '&#127475;&#127476;',
+                                        'Denmark': '&#127465;&#127472;',
+                                        'Finland': '&#127467;&#127470;',
+                                        'Austria': '&#127462;&#127481;',
+                                        'Greece': '&#127468;&#127479;',
+                                        'Turkey': '&#127481;&#127479;',
+                                        'Egypt': '&#127466;&#127468;',
+                                        'Saudi Arabia': '&#127480;&#127462;',
+                                        'UAE': '&#127462;&#127466;',
+                                        'Brazil': '&#127463;&#127479;',
+                                        'Argentina': '&#127462;&#127479;',
+                                        'Mexico': '&#127474;&#127485;',
+                                        'Japan': '&#127471;&#127477;',
+                                        'South Korea': '&#127472;&#127479;',
+                                        'China': '&#127464;&#127475;',
+                                        'Australia': '&#127462;&#127482;',
+                                        'New Zealand': '&#127475;&#127487;'
+                                    } %}
+                                    {{ (countryFlags[playerInfo.country] ?? '&#127757;')|raw }} {{ playerInfo.country }}
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Inscrit le:</span>
+                                <span class="value-tc">{{ playerInfo.joinedAt }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-tc-profile p-4">
+                            <h3 class="section-title"><i class="bi bi-controller text-success"></i> Player Preferences</h3>
+                            <div class="info-row">
+                                <span class="label-tc">Jeux actifs:</span>
+                                <div>
+                                    {% set gameIcons = {
+                                        'valorant': {'icon': 'V', 'class': 'v-icon'},
+                                        'csgo': {'icon': 'C', 'class': 'c-icon'},
+                                        'lol': {'icon': 'L', 'class': 'l-icon'},
+                                        'ow2': {'icon': 'O', 'class': 'bg-warning text-dark'},
+                                        'fortnite': {'icon': 'F', 'class': 'bg-primary'}
+                                    } %}
+                                    {% if playerPreferences.activeGames is not empty %}
+                                        {% for game in playerPreferences.activeGames %}
+                                            {% if gameIcons[game] is defined %}
+                                                <span class="game-icon-small {{ gameIcons[game].class }} text-white">{{ gameIcons[game].icon }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-white-50 small">Aucun jeu sélectionné</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Disponibilité:</span>
+                                <span class="value-tc">{{ playerPreferences.availability }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post History -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-newspaper text-success"></i> Post History</h3>
+                    {% for post in postHistory %}
+                        <div class="post-item">
+                            <div class="d-flex gap-3">
+                                <div style="width: 60px; height: 60px; background: #1a1d29; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-image text-white-50"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h5 class="mb-0 text-white">{{ post.title }}</h5>
+                                        <span class="badge-status">{{ post.status }}</span>
+                                    </div>
+                                    <p class="small text-white-50 mb-2">{{ post.excerpt }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Forum History -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-chat-dots text-success"></i> Forum History</h3>
+                    {% for forum in forumHistory %}
+                        <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 10px;">
+                            <span class="badge bg-danger mb-2">{{ forum.category }}</span>
+                            <h5 class="text-white">{{ forum.topic }}</h5>
+                            <p class="small text-white-50 mb-3">{{ forum.description }}</p>
+                            
+                            <div class="comments-list">
+                                {% for comment in forum.comments %}
+                                    <div class="forum-comment">
+                                        <div class="d-flex gap-2 align-items-center mb-1">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-secondary" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                                {{ comment.author|first|upper }}
+                                            </div>
+                                            <span class="fw-bold small text-white">{{ comment.author }}</span>
+                                            <span class="text-white smaller" style="font-size: 0.7rem;">• {{ comment.time }}</span>
+                                        </div>
+                                        <p class="small mb-0 text-white-50 ps-4">{{ comment.content }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Team Status -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-people text-success"></i> Team Status</h3>
+                    {% if teamStatus.hasTeam %}
+                        <div class="mb-3">
+                            <h6 class="text-white-50 small text-uppercase mb-3">Team: <span class="text-white">{{ teamStatus.teamName }}</span></h6>
+                            <div class="players-list">
+                                {% for player in teamStatus.players %}
+                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-tc-primary text-white small" style="width: 30px; height: 30px; font-weight: bold;">
+                                                {{ player.name|first|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="small fw-bold text-white">{{ player.name }}</div>
+                                                <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ player.role }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="smaller {% if player.status == 'Online' %}text-success{% elseif player.status == 'In Game' %}text-warning{% else %}text-white-25{% endif %}" style="font-size: 0.7rem;">
+                                                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> {{ player.status }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <button class="btn btn-edit-profile w-100 py-2 mt-2">
+                            <i class="bi bi-chat-left-text me-2"></i> TEAM CHAT
+                        </button>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-white-50 mb-3">Aucune équipe active</p>
+                            <button class="btn btn-edit-profile w-100 py-2">
+                                <i class="bi bi-plus-circle me-2"></i> AVAILABLE FOR RECRUITMENT
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Competitive Rank -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-shield-check text-success"></i> Competitive Rank</h3>
+                    {% if competitiveRanks is not empty %}
+                        {% for rank in competitiveRanks %}
+                            <div class="rank-card mb-3">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px;">
+                                        {% if rank.logo %}
+                                            <img src="{{ rank.logo }}" alt="{{ rank.game }}" style="width: 100%; height: 100%; object-fit: contain;">
+                                        {% else %}
+                                            <i class="bi bi-controller fs-4 text-white-50"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 text-white fw-bold">{{ rank.game }}</h6>
+                                        <span class="smaller text-success">{{ rank.rank|capitalize }}</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 border-bottom border-white-10 pb-2">
+                                    <span class="label-tc">Rôle:</span>
+                                    <span class="value-tc">{{ rank.role|capitalize }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="label-tc">Région:</span>
+                                    <span class="value-tc">{{ rank.region }}</span>
+                                </div>
+                                <div class="d-flex justify-content-end mt-3 pt-3 border-top border-white-10 gap-3">
+                                    {% if app.user and app.user.id == user.id %}
+                                        <button class="btn p-0 border-0 bg-transparent opacity-75 w-auto" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'"
+                                                title="Modifier" data-bs-toggle="modal" data-bs-target="#editRankModal_{{ rank.id }}">
+                                            <img src="/images/icons/edit.png" alt="Edit" style="width: 20px; height: 20px;">
+                                        </button>
+                                        <form method="post" action="{{ path('app_profile_rank_delete', {'id': rank.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce rang ?');" class="d-inline">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ rank.id) }}">
+                                            <button type="submit" class="btn p-0 border-0 bg-transparent opacity-75 w-auto" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'" title="Supprimer">
+                                                <img src="/images/icons/delete.png" alt="Delete" style="width: 20px; height: 20px;">
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <button class="btn p-0 border-0 bg-transparent opacity-75 w-auto" style="transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'" 
+                                            title="Détails" data-bs-toggle="modal" data-bs-target="#viewRankModal_{{ rank.id }}">
+                                        <img src="/images/icons/view.png" alt="Details" style="width: 20px; height: 20px;">
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 bg-dark bg-opacity-25 rounded border border-white-10">
+                            <i class="bi bi-trophy text-white-50 fs-2 mb-2 d-block"></i>
+                            <p class="text-white-50 small mb-0">Aucun rang compétitif</p>
+                            <small class="text-white-25">Créez votre profil ci-dessous</small>
+                        </div>
+                    {% endif %}
+                    {% if app.user and app.user.id == user.id %}
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-edit-profile w-100 py-2" data-bs-toggle="modal" data-bs-target="#createRankModal">
+                                <i class="bi bi-plus-circle me-2"></i> CREATE
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+
+                {% if app.user and app.user.id == user.id %}
+                    <!-- Account Settings -->
+                    <div class="card card-tc-profile p-4">
+                        <h3 class="section-title"><i class="bi bi-gear text-success"></i> Account Settings</h3>
+                        <a href="#" class="settings-link">
+                            <i class="bi bi-lock text-primary"></i>
+                            <span>Change password</span>
+                        </a>
+                        <a href="#" class="settings-link">
+                            <i class="bi bi-person-bounding-box text-primary"></i>
+                            <span>Change avatar</span>
+                        </a>
+                        <a href="#" class="settings-link">
+                            <div class="d-flex justify-content-between w-100 align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-bell text-primary"></i>
+                                    <span>Notification preferences</span>
+                                </div>
+                                <div class="d-flex gap-1" style="font-size: 0.7rem;">
+                                    🇫🇷 🇬🇧
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+
+    {% if app.user and app.user.id == user.id %}
+        <!-- Edit Profile Modal -->
+        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+            {# ... modal content ... #}
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content card-tc-premium border-0 shadow-lg">
+                    <div class="modal-header-premium border-bottom border-white-10 p-4 d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title text-white mb-0" id="editProfileModalLabel"><i class="bi bi-pencil-square me-2 text-success"></i> Edit Profile</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="modal-body p-4">
+                            <div class="row g-4">
+                                <!-- Avatar Upload Section -->
+                                <div class="col-12 text-center mb-3">
+                                    <div class="avatar-wrapper mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2rem;">
+                                        {% if user.profilePicture %}
+                                            <img src="{{ user.profilePicture }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                        {% else %}
+                                            {{ user.pseudo|first|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="profilePicture" class="form-label text-white-50 small">Photo de profil</label>
+                                        <input type="file" class="form-control form-control-sm modal-tc-input" id="profilePicture" name="profilePicture">
+                                    </div>
+                                </div>
+
+                                <!-- Basic Info -->
+                                 <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Pseudo</label>
+                                    <input type="text" class="form-control modal-tc-input" name="pseudo" value="{{ user.pseudo }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Nom</label>
+                                    <input type="text" class="form-control modal-tc-input" name="name" value="{{ user.name }}" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label text-white-50 small">Email</label>
+                                    <input type="email" class="form-control modal-tc-input" name="email" value="{{ user.email }}" required>
+                                </div>
+
+                                <!-- Sexe & Bio -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Sexe</label>
+                                    <select class="form-select modal-tc-input" name="sexe">
+                                        <option value="M" {% if user.sexe == 'M' %}selected{% endif %}>Masculin</option>
+                                        <option value="F" {% if user.sexe == 'F' %}selected{% endif %}>Féminin</option>
+                                        <option value="Autre" {% if user.sexe == 'Autre' %}selected{% endif %}>Autre</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Pays</label>
+                                    <select class="form-select modal-tc-input" name="country">
+                                        <option value="">Sélectionner un pays</option>
+                                        {% set countries = [
+                                            {'name': 'France', 'flag': '&#127467;&#127479;'},
+                                            {'name': 'Tunisia', 'flag': '&#127481;&#127475;'},
+                                            {'name': 'Algeria', 'flag': '&#127465;&#127487;'},
+                                            {'name': 'Morocco', 'flag': '&#127474;&#127462;'},
+                                            {'name': 'United States', 'flag': '&#127482;&#127480;'},
+                                            {'name': 'United Kingdom', 'flag': '&#127468;&#127463;'},
+                                            {'name': 'Germany', 'flag': '&#127465;&#127466;'},
+                                            {'name': 'Spain', 'flag': '&#127466;&#127480;'},
+                                            {'name': 'Italy', 'flag': '&#127470;&#127481;'},
+                                            {'name': 'Canada', 'flag': '&#127464;&#127462;'},
+                                            {'name': 'Belgium', 'flag': '&#127463;&#127466;'},
+                                            {'name': 'Switzerland', 'flag': '&#127464;&#127469;'},
+                                            {'name': 'Netherlands', 'flag': '&#127475;&#127473;'},
+                                            {'name': 'Portugal', 'flag': '&#127477;&#127481;'},
+                                            {'name': 'Poland', 'flag': '&#127477;&#127473;'},
+                                            {'name': 'Sweden', 'flag': '&#127480;&#127466;'},
+                                            {'name': 'Norway', 'flag': '&#127475;&#127476;'},
+                                            {'name': 'Denmark', 'flag': '&#127465;&#127472;'},
+                                            {'name': 'Finland', 'flag': '&#127467;&#127470;'},
+                                            {'name': 'Austria', 'flag': '&#127462;&#127481;'},
+                                            {'name': 'Greece', 'flag': '&#127468;&#127479;'},
+                                            {'name': 'Turkey', 'flag': '&#127481;&#127479;'},
+                                            {'name': 'Egypt', 'flag': '&#127466;&#127468;'},
+                                            {'name': 'Saudi Arabia', 'flag': '&#127480;&#127462;'},
+                                            {'name': 'UAE', 'flag': '&#127462;&#127466;'},
+                                            {'name': 'Brazil', 'flag': '&#127463;&#127479;'},
+                                            {'name': 'Argentina', 'flag': '&#127462;&#127479;'},
+                                            {'name': 'Mexico', 'flag': '&#127474;&#127485;'},
+                                            {'name': 'Japan', 'flag': '&#127471;&#127477;'},
+                                            {'name': 'South Korea', 'flag': '&#127472;&#127479;'},
+                                            {'name': 'China', 'flag': '&#127464;&#127475;'},
+                                            {'name': 'Australia', 'flag': '&#127462;&#127482;'},
+                                            {'name': 'New Zealand', 'flag': '&#127475;&#127487;'}
+                                        ] %}
+                                        {% for country in countries %}
+                                            <option value="{{ country.name }}" {% if user.country == country.name %}selected{% endif %}>
+                                                {{ country.flag|raw }} {{ country.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-white-50 small">Bio</label>
+                                    <textarea class="form-control modal-tc-input" name="bio" rows="3">{{ user.bio }}</textarea>
+                                </div>
+
+                                <!-- Games Selection -->
+                                <div class="col-12">
+                                    <label class="form-label text-white-50 small d-block mb-3">Games (choisissez vos jeux)</label>
+                                    <div class="d-flex flex-wrap gap-4">
+                                        {% set games = [
+                                            {'id': 'valorant', 'label': 'Valorant', 'icon': 'V', 'color': 'v-icon'},
+                                            {'id': 'csgo', 'label': 'CS:GO', 'icon': 'C', 'color': 'c-icon'},
+                                            {'id': 'lol', 'label': 'LoL', 'icon': 'L', 'color': 'l-icon'},
+                                            {'id': 'ow2', 'label': 'Overwatch 2', 'icon': 'O', 'color': 'bg-warning text-dark'},
+                                            {'id': 'fortnite', 'label': 'Fortnite', 'icon': 'F', 'color': 'bg-primary'}
+                                        ] %}
+                                        {% for game in games %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="games[]" value="{{ game.id }}" id="game_{{ game.id }}" 
+                                                    {% if game.id in user.playerProfile.selectedGames|default([]) %}checked{% endif %}>
+                                                <label class="form-check-label text-white d-flex align-items-center gap-2" for="game_{{ game.id }}">
+                                                    <span class="game-icon-small {{ game.color }}">{{ game.icon }}</span>
+                                                    {{ game.label }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top border-white-10 p-4 d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-tc-secondary px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-tc-primary px-4 py-2">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if app.user and app.user.id == user.id %}
+        <!-- Create Competitive Rank Modal -->
+        <div class="modal fade" id="createRankModal" tabindex="-1" aria-labelledby="createRankModalLabel" aria-hidden="true">
+            {# ... modal content ... #}
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content card-tc-premium border-0 shadow-lg">
+                    <div class="modal-header-premium border-bottom border-white-10 p-4 d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title text-white mb-0" id="createRankModalLabel">
+                            <i class="bi bi-trophy me-2 text-success"></i> Create Competitive Rank
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ path('app_profile') }}">
+                        <div class="modal-body p-4">
+                            <div class="row g-4">
+                                <!-- Game Selection -->
+                                <div class="col-12">
+                                    <label class="form-label text-white-50 small d-block mb-3">Choisir un jeu *</label>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <input type="radio" class="btn-check" name="competitive_game" id="create_rank_game_valorant" value="valorant" autocomplete="off">
+                                            <label class="btn btn-outline-danger w-100 py-3 fw-bold" for="create_rank_game_valorant">
+                                                VALORANT
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="radio" class="btn-check" name="competitive_game" id="create_rank_game_lol" value="lol" autocomplete="off">
+                                            <label class="btn btn-outline-warning w-100 py-3 fw-bold" for="create_rank_game_lol">
+                                                LEAGUE OF LEGENDS
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="radio" class="btn-check" name="competitive_game" id="create_rank_game_cs2" value="cs2" autocomplete="off">
+                                            <label class="btn btn-outline-light w-100 py-3 fw-bold" for="create_rank_game_cs2">
+                                                COUNTER-STRIKE 2
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Principal Role -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Rôle Principal *</label>
+                                    <select class="form-select modal-tc-input" name="principal_role" id="create_rank_role" required disabled>
+                                        <option value="">Sélectionner un jeu d'abord</option>
+                                    </select>
+                                </div>
+
+                                <!-- Skill Level -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Niveau de jeu *</label>
+                                    <select class="form-select modal-tc-input" name="skill_level" id="create_rank_level" required disabled>
+                                        <option value="">Sélectionner un jeu d'abord</option>
+                                    </select>
+                                </div>
+
+                                <!-- Experience -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Expérience *</label>
+                                    <select class="form-select modal-tc-input" name="experience" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="beginner">Débutant (< 6 mois)</option>
+                                        <option value="intermediate">Intermédiaire (6 mois - 2 ans)</option>
+                                        <option value="advanced">Avancé (2-5 ans)</option>
+                                        <option value="expert">Expert (5+ ans)</option>
+                                        <option value="pro">Professionnel</option>
+                                    </select>
+                                </div>
+
+                                <!-- Availability -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Disponibilité *</label>
+                                    <select class="form-select modal-tc-input" name="availability" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="weekdays_evening">Soirs en semaine</option>
+                                        <option value="weekends">Week-ends</option>
+                                        <option value="weekdays_weekends">Soirs & week-ends</option>
+                                        <option value="full_time">Temps plein</option>
+                                        <option value="flexible">Flexible</option>
+                                    </select>
+                                </div>
+
+                                <!-- Region/Server -->
+                                <div class="col-12">
+                                    <label class="form-label text-white-50 small">Région / Serveur *</label>
+                                    <select class="form-select modal-tc-input" name="region" required>
+                                        <option value="">Sélectionner une région</option>
+                                        <optgroup label="Europe">
+                                            <option value="EUW">EUW (Europe West)</option>
+                                            <option value="EUNE">EUNE (Europe Nordic & East)</option>
+                                            <option value="EU">EU (Europe)</option>
+                                        </optgroup>
+                                        <optgroup label="Americas">
+                                            <option value="NA">NA (North America)</option>
+                                            <option value="LAN">LAN (Latin America North)</option>
+                                            <option value="LAS">LAS (Latin America South)</option>
+                                            <option value="BR">BR (Brazil)</option>
+                                        </optgroup>
+                                        <optgroup label="Asia">
+                                            <option value="KR">KR (Korea)</option>
+                                            <option value="JP">JP (Japan)</option>
+                                            <option value="OCE">OCE (Oceania)</option>
+                                            <option value="SEA">SEA (Southeast Asia)</option>
+                                        </optgroup>
+                                        <optgroup label="Other">
+                                            <option value="TR">TR (Turkey)</option>
+                                            <option value="RU">RU (Russia)</option>
+                                            <option value="MENA">MENA (Middle East & North Africa)</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top border-white-10 p-4 d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-tc-secondary px-4 py-2" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-tc-primary px-4 py-2">
+                                <i class="bi bi-check-circle me-2"></i> Créer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Modals Loop -->
+     {% for rank in competitiveRanks %}
+        <!-- View Details Modal -->
+        <div class="modal fade" id="viewRankModal_{{ rank.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content card-tc-premium border-0 game-accent-{{ rank.game_key|lower }}">
+                    <div class="modal-header-premium d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title text-white mb-0">Détails du Profil</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="text-center mb-4 pb-4 border-bottom border-white-10">
+                            <div class="position-relative d-inline-block mb-3">
+                                <div class="position-absolute top-50 left-50 translate-middle" style="width: 120px; height: 120px; background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, transparent 70%); filter: blur(15px);"></div>
+                                <img src="{{ rank.logo }}" alt="{{ rank.game }}" style="width: 100px; height: 100px; object-fit: contain; position: relative;">
+                            </div>
+                            <h3 class="text-white fw-bold mb-1">{{ rank.game }}</h3>
+                            <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+                                <i class="bi bi-award-fill me-1"></i> {{ rank.rank|capitalize }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="info-card-premium">
+                                    <span class="info-label"><i class="bi bi-person-badge me-1"></i> Rôle</span>
+                                    <span class="info-value text-white">{{ rank.role|capitalize }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-card-premium">
+                                    <span class="info-label"><i class="bi bi-globe me-1"></i> Région</span>
+                                    <span class="info-value text-white">{{ rank.region }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-card-premium">
+                                    <span class="info-label"><i class="bi bi-clock-history me-1"></i> Expérience</span>
+                                    <span class="info-value text-white">{{ rank.experience|capitalize }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-card-premium">
+                                    <span class="info-label"><i class="bi bi-calendar-check me-1"></i> Disponibilité</span>
+                                    <span class="info-value text-white">{{ rank.availability|replace({'_': ' '})|capitalize }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0 justify-content-center">
+                        <button type="button" class="btn btn-tc-secondary px-5 py-2" data-bs-dismiss="modal">FERMER</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if app.user and app.user.id == user.id %}
+            <!-- Edit Rank Modal -->
+            <div class="modal fade" id="editRankModal_{{ rank.id }}" tabindex="-1" aria-hidden="true">
+                {# ... modal content ... #}
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content card-tc-premium border-0 game-accent-{{ rank.game_key|lower }}">
+                        <div class="modal-header-premium d-flex justify-content-between align-items-center">
+                            <h5 class="modal-title text-white mb-0">Modifier mon Rang</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{{ path('app_profile_rank_edit', {'id': rank.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('edit' ~ rank.id) }}">
+                            <div class="modal-body p-4 text-start">
+                                <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-info small mb-4">
+                                    <i class="bi bi-info-circle me-2"></i> Mettez à jour vos informations pour le jeu <strong>{{ rank.game }}</strong>.
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label text-white-50 small">Rôle Principal</label>
+                                        <select class="form-select modal-tc-input" name="principal_role" required>
+                                            {% set game_roles = [] %}
+                                            {% if rank.game_key|lower == 'valorant' %}
+                                                {% set game_roles = ['Duellistes', 'Initiators', 'Controllers', 'Sentinelles'] %}
+                                            {% elseif rank.game_key|lower == 'lol' or rank.game_key|lower == 'league of legends' %}
+                                                {% set game_roles = ['TOP', 'JGL', 'MID', 'ADC', 'Support'] %}
+                                            {% elseif rank.game_key|lower == 'cs2' or rank.game_key|lower == 'counter-strike 2' %}
+                                                {% set game_roles = ['Entry Fragger', 'Sniper (AWP)', 'In-Game Leader', 'Lurker', 'Support', 'Anchor'] %}
+                                            {% else %}
+                                                {% set game_roles = ['Flex', 'Support', 'Leader', 'Player'] %}
+                                            {% endif %}
+
+                                            {% for role in game_roles %}
+                                                <option value="{{ role }}" {{ rank.role == role ? 'selected' : '' }}>{{ role }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label text-white-50 small">Niveau de jeu</label>
+                                        <select class="form-select modal-tc-input" name="skill_level" required>
+                                            {% set game_ranks = [] %}
+                                            {% if rank.game_key|lower == 'valorant' %}
+                                                {% set game_ranks = ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant'] %}
+                                            {% elseif rank.game_key|lower == 'lol' or rank.game_key|lower == 'league of legends' %}
+                                                {% set game_ranks = ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Master', 'Grandmaster', 'Challenger'] %}
+                                            {% elseif rank.game_key|lower == 'cs2' or rank.game_key|lower == 'counter-strike 2' %}
+                                                {% set game_ranks = ['Silver', 'Silver Elite', 'Silver Elite Master', 'Gold Nova', 'Gold Nova Master', 'Master Guardian', 'Master Guardian Elite', 'Distinguished Master Guardian', 'Legendary Eagle', 'Legendary Eagle Master', 'Supreme Master First Class', 'Global Elite'] %}
+                                            {% else %}
+                                                {% set game_ranks = ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Pro'] %}
+                                            {% endif %}
+
+                                            {% for level in game_ranks %}
+                                                <option value="{{ level }}" {{ rank.rank == level ? 'selected' : '' }}>{{ level }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label text-white-50 small">Expérience</label>
+                                        <select class="form-select modal-tc-input" name="experience" required>
+                                            {% set experiences = {'beginner': 'Débutant (< 6 mois)', 'intermediate': 'Intermédiaire (6 mois - 2 ans)', 'advanced': 'Avancé (2-5 ans)', 'expert': 'Expert (5+ ans)', 'pro': 'Professionnel'} %}
+                                            {% for val, lab in experiences %}
+                                                <option value="{{ val }}" {{ rank.experience == val ? 'selected' : '' }}>{{ lab }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label text-white-50 small">Disponibilité</label>
+                                        <select class="form-select modal-tc-input" name="availability" required>
+                                            {% set availabilities = {'weekdays_evening': 'Soirs en semaine', 'weekends': 'Week-ends', 'weekdays_weekends': 'Soirs & week-ends', 'full_time': 'Temps plein', 'flexible': 'Flexible'} %}
+                                            {% for val, lab in availabilities %}
+                                                <option value="{{ val }}" {{ rank.availability == val ? 'selected' : '' }}>{{ lab }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label text-white-50 small">Région / Serveur</label>
+                                        <select class="form-select modal-tc-input" name="region" required>
+                                            {% for reg in ['EUW', 'EUNE', 'EU', 'NA', 'LAN', 'LAS', 'BR', 'KR', 'JP', 'OCE', 'SEA', 'TR', 'RU', 'MENA'] %}
+                                                <option value="{{ reg }}" {{ rank.region == reg ? 'selected' : '' }}>{{ reg }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-top border-white-05 p-4 d-flex justify-content-center gap-3">
+                                <button type="button" class="btn btn-tc-secondary px-4 py-2" data-bs-dismiss="modal">ANNULER</button>
+                                <button type="submit" class="btn btn-tc-primary px-4 py-2">ENREGISTRER</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameRadios = document.querySelectorAll('input[name="competitive_game"]');
+            const roleSelect = document.getElementById('create_rank_role');
+            const levelSelect = document.getElementById('create_rank_level');
+
+            const gameData = {
+                valorant: {
+                    roles: ['Duellistes', 'Initiators', 'Controllers', 'Sentinelles'],
+                    ranks: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant']
+                },
+                lol: {
+                    roles: ['TOP', 'JGL', 'MID', 'ADC', 'Support'],
+                    ranks: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Master', 'Grandmaster', 'Challenger']
+                },
+                cs2: {
+                    roles: ['Entry Fragger', 'Sniper (AWP)', 'In-Game Leader', 'Lurker', 'Support', 'Anchor'],
+                    ranks: ['Silver', 'Silver Elite', 'Silver Elite Master', 'Gold Nova', 'Gold Nova Master', 'Master Guardian', 'Master Guardian Elite', 'Distinguished Master Guardian', 'Legendary Eagle', 'Legendary Eagle Master', 'Supreme Master First Class', 'Global Elite']
+                }
+            };
+
+            gameRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const game = this.value;
+                    const data = gameData[game];
+
+                    if (data) {
+                        // Enable selects
+                        roleSelect.disabled = false;
+                        levelSelect.disabled = false;
+
+                        // Populate Roles
+                        roleSelect.innerHTML = '<option value="">Sélectionner un rôle</option>';
+                        data.roles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role;
+                            option.textContent = role;
+                            roleSelect.appendChild(option);
+                        });
+
+                        // Populate Ranks
+                        levelSelect.innerHTML = '<option value="">Sélectionner un niveau</option>';
+                        data.ranks.forEach(rank => {
+                            const option = document.createElement('option');
+                            option.value = rank;
+                            option.textContent = rank;
+                            levelSelect.appendChild(option);
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

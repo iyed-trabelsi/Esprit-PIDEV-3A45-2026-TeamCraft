@@ -1,0 +1,59 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Sign Up - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="position-relative flex-grow-1 d-flex align-items-center py-5" style="min-height: calc(100vh - 80px);">
+        <div class="container position-relative z-1">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card card-tc p-4 p-md-5">
+                        <h2 class="text-center fw-bold mb-4">Sign Up</h2>
+
+                        {{ form_start(registrationForm, {'attr': {'class': 'form-tc'}}) }}
+                            
+                            <div class="mb-3">
+                                {{ form_label(registrationForm.email, 'Email Address', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control', 'placeholder': 'you@example.com'}}) }}
+                                {{ form_errors(registrationForm.email) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(registrationForm.username, 'Username', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(registrationForm.username, {'attr': {'class': 'form-control', 'placeholder': 'Choose a username'}}) }}
+                                {{ form_errors(registrationForm.username) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(registrationForm.plainPassword, 'Password', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control', 'placeholder': '••••••••'}}) }}
+                                {{ form_errors(registrationForm.plainPassword) }}
+                            </div>
+
+                            <div class="mb-4">
+                                {{ form_label(registrationForm.userType, 'Role', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(registrationForm.userType, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(registrationForm.userType) }}
+                            </div>
+
+                            {# Si vous avez une case à cocher pour les conditions d'utilisation #}
+                            {% if registrationForm.agreeTerms is defined %}
+                                <div class="mb-3 form-check">
+                                    {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'form-check-input'}}) }}
+                                    {{ form_label(registrationForm.agreeTerms, 'Agree to terms', {'label_attr': {'class': 'form-check-label'}}) }}
+                                </div>
+                            {% endif %}
+
+                            <button type="submit" class="btn btn-tc-primary w-100 py-3">Sign Up</button>
+
+                        {{ form_end(registrationForm) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Rôle Admin{% endblock %}
+{% block admin_subheading %}Liste des entrées de la table admin (user_id = utilisateur administrateur).{% endblock %}
+
+{% block admin_content %}
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">id</th>
+                        <th class="border-0 px-4 py-3">user_id</th>
+                        <th class="border-0 px-4 py-3">Email</th>
+                        <th class="border-0 px-4 py-3">Pseudo</th>
+                        <th class="border-0 px-4 py-3">Nom</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for admin in admins %}
+                        <tr>
+                            <td class="px-4 py-3 bg-input-match">{{ admin.id }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ admin.user ? admin.user.id : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ admin.user ? admin.user.email : '—' }}</td>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ admin.user ? admin.user.pseudo : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ admin.user ? admin.user.name : '—' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-white-50">Aucune entrée dans la table admin.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">{{ admins|length }} administrateur(s)</span>
+    </div>
+{% endblock %}
