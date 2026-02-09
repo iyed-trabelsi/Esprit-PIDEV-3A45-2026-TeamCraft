@@ -23,13 +23,6 @@
                                 <label for="password" class="form-label">Password</label>
                                 <input type="password" name="_password" id="password" class="form-control" placeholder="••••••••" required>
                             </div>
-                            <hr>
-                        <a href="{{ path('connect_google_start') }}" class="google-btn-full mb-4">
-                            <div class="google-content">
-                                <img src="	https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google logo" class="google-logo">
-                                <span class="google-text">Continue with Google</span>
-                            </div>
-                        </a>    
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
                             <button type="submit" class="btn btn-tc-primary w-100 py-3">Log In</button>
                         </form>

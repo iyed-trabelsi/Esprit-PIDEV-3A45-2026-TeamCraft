@@ -36,7 +36,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(length: 100)]
     private ?string $pseudo = null;
 
     #[ORM\Column(length: 100)]
@@ -103,6 +103,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @see UserInterface
+     * ROLE_ADMIN est ajouté automatiquement si l'utilisateur a une entrée dans la table admin.
      */
     public function getRoles(): array
     {

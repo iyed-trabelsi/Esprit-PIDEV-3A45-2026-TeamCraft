@@ -1,0 +1,493 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Player Profile - {{ app.user.pseudo }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .profile-container {
+        color: #fff;
+        padding: 2rem 0;
+    }
+
+    .card-tc-profile {
+        background: rgba(15, 17, 26, 0.8);
+        border: 1px solid rgba(0, 255, 157, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-profile {
+        background: linear-gradient(135deg, rgba(0, 255, 157, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+        border: 1px solid rgba(0, 255, 157, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-profile::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ff9d, transparent);
+    }
+
+    .avatar-wrapper {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #1a1d29;
+        border: 2px solid #00ff9d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: #fff;
+        margin: 0 auto 1rem;
+        position: relative;
+        box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        background: #00ff9d;
+        border-radius: 50%;
+        border: 2px solid #1a1d29;
+    }
+
+    .online-badge {
+        color: #00ff9d;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .section-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .label-tc {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+
+    .value-tc {
+        color: #fff;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .rank-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .btn-edit-profile {
+        background: #00ccff;
+        color: #fff;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 204, 255, 0.3);
+    }
+
+    .btn-edit-profile:hover {
+        background: #00aadd;
+        transform: translateY(-2px);
+    }
+
+    .game-icon-small {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+
+    .v-icon { background: #ff4655; }
+    .c-icon { background: #de9b35; }
+    .l-icon { background: #0099ff; }
+
+    .post-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .badge-status {
+        background: rgba(0, 255, 157, 0.1);
+        color: #00ff9d;
+        border: 1px solid #00ff9d;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+    }
+
+    .forum-comment {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0.75rem 0;
+    }
+
+    .forum-comment:last-child {
+        border-bottom: none;
+    }
+
+    .settings-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #fff;
+        text-decoration: none;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .settings-link:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #00ff9d;
+        color: #fff;
+    }
+
+</style>
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <div class="container profile-container">
+        <h2 class="mb-4 d-flex align-items-center gap-2">
+            <i class="bi bi-person-circle text-success"></i>
+            Player Profile
+        </h2>
+
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <!-- Hero Section -->
+                <div class="card card-tc-profile hero-profile p-5 text-center">
+                    <div class="avatar-wrapper">
+                        {{ app.user.pseudo|first|upper }}
+                        <span class="status-dot"></span>
+                    </div>
+                    <h1 class="fw-bold mb-1 text-white">{{ app.user.pseudo }}</h1>
+                    <div class="online-badge mb-4">
+                        <span class="dot" style="width: 8px; height: 8px; background: #00ff9d; border-radius: 50%;"></span>
+                        Online
+                    </div>
+                    <div>
+                        <button class="btn btn-edit-profile" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card card-tc-profile p-4">
+                            <h3 class="section-title"><i class="bi bi-person-vcard text-success"></i> Player Info</h3>
+                            <div class="info-row">
+                                <span class="label-tc">Username:</span>
+                                <span class="value-tc">{{ playerInfo.username }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Email:</span>
+                                <span class="value-tc">{{ playerInfo.email }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Pays:</span>
+                                <span class="value-tc"><i class="bi bi-flag-fill text-primary"></i> {{ playerInfo.country }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Inscrit le:</span>
+                                <span class="value-tc">{{ playerInfo.joinedAt }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-tc-profile p-4">
+                            <h3 class="section-title"><i class="bi bi-controller text-success"></i> Player Preferences</h3>
+                            <div class="info-row">
+                                <span class="label-tc">Jeux actifs:</span>
+                                <div>
+                                    <span class="game-icon-small v-icon text-white">V</span>
+                                    <span class="game-icon-small c-icon text-white">C</span>
+                                    <span class="game-icon-small l-icon text-white">L</span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <span class="label-tc">Disponibilité:</span>
+                                <span class="value-tc">{{ playerPreferences.availability }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post History -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-newspaper text-success"></i> Post History</h3>
+                    {% for post in postHistory %}
+                        <div class="post-item">
+                            <div class="d-flex gap-3">
+                                <div style="width: 60px; height: 60px; background: #1a1d29; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-image text-white-50"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h5 class="mb-0 text-white">{{ post.title }}</h5>
+                                        <span class="badge-status">{{ post.status }}</span>
+                                    </div>
+                                    <p class="small text-white-50 mb-2">{{ post.excerpt }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Forum History -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-chat-dots text-success"></i> Forum History</h3>
+                    {% for forum in forumHistory %}
+                        <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 10px;">
+                            <span class="badge bg-danger mb-2">{{ forum.category }}</span>
+                            <h5 class="text-white">{{ forum.topic }}</h5>
+                            <p class="small text-white-50 mb-3">{{ forum.description }}</p>
+                            
+                            <div class="comments-list">
+                                {% for comment in forum.comments %}
+                                    <div class="forum-comment">
+                                        <div class="d-flex gap-2 align-items-center mb-1">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-secondary" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                                {{ comment.author|first|upper }}
+                                            </div>
+                                            <span class="fw-bold small text-white">{{ comment.author }}</span>
+                                            <span class="text-white smaller" style="font-size: 0.7rem;">• {{ comment.time }}</span>
+                                        </div>
+                                        <p class="small mb-0 text-white-50 ps-4">{{ comment.content }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Team Status -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-people text-success"></i> Team Status</h3>
+                    {% if teamStatus.hasTeam %}
+                        <div class="mb-3">
+                            <h6 class="text-white-50 small text-uppercase mb-3">Team: <span class="text-white">{{ teamStatus.teamName }}</span></h6>
+                            <div class="players-list">
+                                {% for player in teamStatus.players %}
+                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-tc-primary text-white small" style="width: 30px; height: 30px; font-weight: bold;">
+                                                {{ player.name|first|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="small fw-bold text-white">{{ player.name }}</div>
+                                                <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ player.role }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="smaller {% if player.status == 'Online' %}text-success{% elseif player.status == 'In Game' %}text-warning{% else %}text-white-25{% endif %}" style="font-size: 0.7rem;">
+                                                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> {{ player.status }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <button class="btn btn-tc-primary w-100 py-2 mt-2">
+                            <i class="bi bi-chat-left-text me-2"></i> TEAM CHAT
+                        </button>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-white-50 mb-3">Aucune équipe active</p>
+                            <button class="btn btn-sm btn-outline-success border-success text-success w-100 py-2">
+                                <i class="bi bi-plus-circle me-2"></i> AVAILABLE FOR RECRUITMENT
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Competitive Rank -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-shield-check text-success"></i> Competitive Rank</h3>
+                    <div class="rank-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-aspect-ratio"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 text-danger">{{ competitiveRank.game }}</h6>
+                                <span class="smaller text-white-50">{{ competitiveRank.rank }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="label-tc">Role principal:</span>
+                            <span class="value-tc">{{ competitiveRank.role }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="label-tc">Peak Rank:</span>
+                            <span class="fw-bold">{{ competitiveRank.peakRank }}</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Account Settings -->
+                <div class="card card-tc-profile p-4">
+                    <h3 class="section-title"><i class="bi bi-gear text-success"></i> Account Settings</h3>
+                    <a href="#" class="settings-link">
+                        <i class="bi bi-lock text-primary"></i>
+                        <span>Change password</span>
+                    </a>
+                    <a href="#" class="settings-link">
+                        <i class="bi bi-person-bounding-box text-primary"></i>
+                        <span>Change avatar</span>
+                    </a>
+                    <a href="#" class="settings-link">
+                        <div class="d-flex justify-content-between w-100 align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-bell text-primary"></i>
+                                <span>Notification preferences</span>
+                            </div>
+                            <div class="d-flex gap-1" style="font-size: 0.7rem;">
+                                🇫🇷 🇬🇧
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+
+    <!-- Edit Profile Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content card-tc-profile border-0 shadow-lg">
+                <div class="modal-header border-bottom border-white-10 p-4">
+                    <h5 class="modal-title text-white" id="editProfileModalLabel"><i class="bi bi-pencil-square me-2 text-success"></i> Edit Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <div class="row g-4">
+                            <!-- Avatar Upload Section -->
+                            <div class="col-12 text-center mb-3">
+                                <div class="avatar-wrapper mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2rem;">
+                                    {{ user.pseudo|first|upper }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profilePicture" class="form-label text-white-50 small">Photo de profil</label>
+                                    <input type="file" class="form-control form-control-sm bg-dark border-secondary text-white" id="profilePicture" name="profilePicture">
+                                </div>
+                            </div>
+
+                            <!-- Basic Info -->
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Pseudo</label>
+                                <input type="text" class="form-control bg-dark border-secondary text-white" name="pseudo" value="{{ user.pseudo }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Nom</label>
+                                <input type="text" class="form-control bg-dark border-secondary text-white" name="name" value="{{ user.name }}" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-white-50 small">Email</label>
+                                <input type="email" class="form-control bg-dark border-secondary text-white" name="email" value="{{ user.email }}" required>
+                            </div>
+
+                            <!-- Sexe & Bio -->
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Sexe</label>
+                                <select class="form-select bg-dark border-secondary text-white" name="sexe">
+                                    <option value="M" {% if user.sexe == 'M' %}selected{% endif %}>Masculin</option>
+                                    <option value="F" {% if user.sexe == 'F' %}selected{% endif %}>Féminin</option>
+                                    <option value="Autre" {% if user.sexe == 'Autre' %}selected{% endif %}>Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-white-50 small">Pays</label>
+                                <input type="text" class="form-control bg-dark border-secondary text-white" name="country" value="{{ user.country }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small">Bio</label>
+                                <textarea class="form-control bg-dark border-secondary text-white" name="bio" rows="3">{{ user.bio }}</textarea>
+                            </div>
+
+                            <!-- Games Selection -->
+                            <div class="col-12">
+                                <label class="form-label text-white-50 small d-block mb-3">Games (choisissez vos jeux)</label>
+                                <div class="d-flex flex-wrap gap-4">
+                                    {% set games = [
+                                        {'id': 'valorant', 'label': 'Valorant', 'icon': 'V', 'color': 'v-icon'},
+                                        {'id': 'csgo', 'label': 'CS:GO', 'icon': 'C', 'color': 'c-icon'},
+                                        {'id': 'lol', 'label': 'LoL', 'icon': 'L', 'color': 'l-icon'},
+                                        {'id': 'ow2', 'label': 'Overwatch 2', 'icon': 'O', 'color': 'bg-warning text-dark'},
+                                        {'id': 'fortnite', 'label': 'Fortnite', 'icon': 'F', 'color': 'bg-primary'}
+                                    ] %}
+                                    {% for game in games %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="games[]" value="{{ game.id }}" id="game_{{ game.id }}" 
+                                                {% if game.id in user.playerProfile.selectedGames|default([]) %}checked{% endif %}>
+                                            <label class="form-check-label text-white d-flex align-items-center gap-2" for="game_{{ game.id }}">
+                                                <span class="game-icon-small {{ game.color }}">{{ game.icon }}</span>
+                                                {{ game.label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-white-10 p-4">
+                        <button type="button" class="btn btn-tc-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-tc-primary px-5">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

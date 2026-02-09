@@ -218,4 +218,91 @@
             </a>
         </div>
     </div>
+
+    {# 4. Rubriques (5 par page) #}
+    <div class="card-tc p-4 mt-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0 font-display">Rubriques</h2>
+            <a href="{{ path('admin_rubriques') }}" class="text-link-green">VOIR TOUTES</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle text-white mb-0" style="font-size: 0.85rem;">
+                <thead class="custom-table-header"><tr><th class="border-0 py-2">Nom</th><th class="border-0 py-2">Auteur</th><th class="border-0 py-2">État</th></tr></thead>
+                <tbody>
+                {% for rubrique in rubriques %}
+                    <tr><td class="py-2">{{ rubrique.nomRubrique }}</td><td class="py-2">{{ rubrique.auteur ? rubrique.auteur.pseudo : '—' }}</td><td class="py-2"><span class="badge-status {{ rubrique.etat == 'active' ? 'badge-online' : 'bg-secondary' }}">{{ rubrique.etat == 'active' ? 'Actif' : 'Archivé' }}</span></td></tr>
+                {% else %}
+                    <tr><td colspan="3" class="py-3 text-center text-muted">Aucune rubrique.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span class="small text-muted">{{ rubriques|length }} sur {{ rubriquesTotal }} rubriques</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ rubriquesCurrentPage == 1 ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage - 1, page_posts: postsCurrentPage, page_comments: commentsCurrentPage }) }}">Précédent</a></li>
+                    <li class="page-item {{ rubriquesCurrentPage == rubriquesMaxPages ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage + 1, page_posts: postsCurrentPage, page_comments: commentsCurrentPage }) }}">Suivant</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    {# 5. Posts (5 par page) #}
+    <div class="card-tc p-4 mt-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0 font-display">Posts</h2>
+            <a href="{{ path('admin_posts') }}" class="text-link-green">VOIR TOUS</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle text-white mb-0" style="font-size: 0.85rem;">
+                <thead class="custom-table-header"><tr><th class="border-0 py-2">Titre</th><th class="border-0 py-2">Rubrique</th><th class="border-0 py-2">Statut</th></tr></thead>
+                <tbody>
+                {% for post in posts %}
+                    <tr><td class="py-2">{{ post.titre }}</td><td class="py-2">{{ post.rubrique ? post.rubrique.nomRubrique : '—' }}</td><td class="py-2"><span class="badge-status {{ post.statut == 'published' ? 'badge-online' : 'bg-secondary' }}">{{ post.statut == 'published' ? 'Publié' : 'Archivé' }}</span></td></tr>
+                {% else %}
+                    <tr><td colspan="3" class="py-3 text-center text-muted">Aucun post.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span class="small text-muted">{{ posts|length }} sur {{ postsTotal }} posts</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ postsCurrentPage == 1 ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage - 1, page_comments: commentsCurrentPage }) }}">Précédent</a></li>
+                    <li class="page-item {{ postsCurrentPage == postsMaxPages ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage + 1, page_comments: commentsCurrentPage }) }}">Suivant</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    {# 6. Commentaires (5 par page) #}
+    <div class="card-tc p-4 mt-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0 font-display">Commentaires</h2>
+            <a href="{{ path('admin_comments') }}" class="text-link-green">VOIR TOUS</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle text-white mb-0" style="font-size: 0.85rem;">
+                <thead class="custom-table-header"><tr><th class="border-0 py-2">Contenu</th><th class="border-0 py-2">Auteur</th><th class="border-0 py-2">Post</th></tr></thead>
+                <tbody>
+                {% for comment in comments %}
+                    <tr><td class="py-2">{% set txt = comment.contenu %}{{ txt|length > 40 ? txt|slice(0, 40) ~ '…' : txt }}</td><td class="py-2">{{ comment.auteur ? comment.auteur.pseudo : '—' }}</td><td class="py-2">{{ comment.post ? comment.post.titre : '—' }}</td></tr>
+                {% else %}
+                    <tr><td colspan="3" class="py-3 text-center text-muted">Aucun commentaire.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span class="small text-muted">{{ comments|length }} sur {{ commentsTotal }} commentaires</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ commentsCurrentPage == 1 ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage, page_comments: commentsCurrentPage - 1 }) }}">Précédent</a></li>
+                    <li class="page-item {{ commentsCurrentPage == commentsMaxPages ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage, page_comments: commentsCurrentPage + 1 }) }}">Suivant</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
 {% endblock %}
