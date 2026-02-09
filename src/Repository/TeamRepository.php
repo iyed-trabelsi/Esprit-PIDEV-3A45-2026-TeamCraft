@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Team;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<Team>
+ */
+class TeamRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Team::class);
+    }
+
+    //    /**
+    //     * @return Team[] Returns an array of Team objects
+    //     */
+    //    public function findByExampleField($value): array
+    //    {
+    //        return $this->createQueryBuilder('t')
+    //            ->andWhere('t.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->orderBy('t.id', 'ASC')
+    //            ->setMaxResults(10)
+    //            ->getQuery()
+    //            ->getResult()
+    //        ;
+    //    }
+
+    //    public function findOneBySomeField($value): ?Team
+    //    {
+    //        return $this->createQueryBuilder('t')
+    //            ->andWhere('t.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->getQuery()
+    //            ->getOneOrNullResult()
+    //        ;
+    //    }
+    public function searchByNameOrGame(?string $query, ?string $game, ?string $sort, int $limit, int $offset): array
+    {
+        $qb = $this->createQueryBuilder('t');
+
+        if ($query) {
+            $qb->andWhere('t.name LIKE :val OR t.games LIKE :val')
+                ->setParameter('val', '%' . $query . '%');
+        }
+
+        if ($game) {
+            $qb->andWhere('t.games LIKE :game')
+                ->setParameter('game', '%' . $game . '%');
+        }
+
+        // Sorting
+        if ($sort === 'name_asc') {
+            $qb->orderBy('t.name', 'ASC');
+        } elseif ($sort === 'name_desc') {
+            $qb->orderBy('t.name', 'DESC');
+        } else {
+            $qb->orderBy('t.id', 'DESC');
+        }
+
+        $qb->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function countSearchByNameOrGame(?string $query, ?string $game): int
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->select('count(t.id)');
+
+        if ($query) {
+            $qb->andWhere('t.name LIKE :val OR t.games LIKE :val')
+                ->setParameter('val', '%' . $query . '%');
+        }
+
+        if ($game) {
+            $qb->andWhere('t.games LIKE :game')
+                ->setParameter('game', '%' . $game . '%');
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+}

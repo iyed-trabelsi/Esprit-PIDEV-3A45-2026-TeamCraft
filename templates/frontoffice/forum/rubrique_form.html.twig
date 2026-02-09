@@ -1,0 +1,54 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ is_edit ? 'Modifier' : 'Nouvelle rubrique' }} - Forum TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1 d-flex flex-column justify-content-center">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_forum') }}" class="text-secondary text-decoration-none">Forum</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ is_edit ? 'Modifier' : 'Nouvelle rubrique' }}</li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card bg-dark border-0 shadow-lg text-white" style="border-radius: 1rem; background: #1a1a1a;">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-5">
+                            <h1 class="h2 fw-bold mb-2 text-white">{{ is_edit ? 'Modifier la rubrique' : 'Nouvelle rubrique' }}</h1>
+                            <p class="text-white-50">{{ is_edit ? 'Modifiez les informations de la rubrique' : 'Créez une rubrique pour organiser les discussions du forum' }}</p>
+                        </div>
+
+                        {{ form_start(form) }}
+                            <div class="mb-4">
+                                {{ form_label(form.nomRubrique, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.nomRubrique, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.nomRubrique) }}
+                            </div>
+                            <div class="mb-4">
+                                {{ form_label(form.description, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.description) }}
+                            </div>
+                            <div class="mb-5">
+                                {{ form_label(form.topic, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.topic, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.topic) }}
+                            </div>
+
+                            <div class="d-grid gap-3 d-md-flex justify-content-md-between align-items-center">
+                                <a href="{{ is_edit ? path('app_forum_rubrique_show', { id: rubrique.id }) : path('app_forum') }}" class="btn btn-outline-danger px-4">Cancel</a>
+                                <button type="submit" class="btn btn-success px-5 fw-bold">{{ is_edit ? 'Enregistrer' : 'Créer la rubrique' }}</button>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

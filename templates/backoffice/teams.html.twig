@@ -1,0 +1,190 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des équipes{% endblock %}
+{% block admin_subheading %}Liste des équipes, jeux associés, niveaux et statuts.{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+        <div class="flex-grow-1" style="max-width: 420px;">
+            <form method="get" action="{{ path('admin_teams') }}">
+                <div class="input-group admin-search-group">
+                    <button type="submit" class="input-group-text bg-transparent border-0 text-secondary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <input type="search" name="q" class="form-control border-0 bg-transparent text-white" placeholder="Rechercher par équipe ou jeu" value="{{ app.request.query.get('q') }}">
+                </div>
+            </form>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-tc-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-funnel me-1"></i> Filtrer
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark shadow" style="background: var(--tc-bg-card); border-color: var(--tc-border);">
+                    <li><h6 class="dropdown-header text-uppercase small text-muted">Trier par</h6></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('sort') == 'name_asc' ? 'active' : '' }}" href="#" data-filter-type="sort" data-filter-value="name_asc">Nom (A -> Z)</a></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('sort') == 'name_desc' ? 'active' : '' }}" href="#" data-filter-type="sort" data-filter-value="name_desc">Nom (Z -> A)</a></li>
+                    <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                    <li><h6 class="dropdown-header text-uppercase small text-muted">Par Jeu</h6></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('game') == 'valorant' ? 'active' : '' }}" href="#" data-filter-type="game" data-filter-value="valorant">Valorant</a></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('game') == 'lol' ? 'active' : '' }}" href="#" data-filter-type="game" data-filter-value="lol">League of Legends</a></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('game') == 'wow' ? 'active' : '' }}" href="#" data-filter-type="game" data-filter-value="wow">World of Warcraft</a></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('game') == 'csgo' ? 'active' : '' }}" href="#" data-filter-type="game" data-filter-value="csgo">CS:GO / CS2</a></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('game') == 'overwatch' ? 'active' : '' }}" href="#" data-filter-type="game" data-filter-value="overwatch">Overwatch</a></li>
+                    <li><a class="dropdown-item filter-link {{ app.request.query.get('game') == 'fortnite' ? 'active' : '' }}" href="#" data-filter-type="game" data-filter-value="fortnite">Fortnite</a></li>
+                    <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                    <li><a class="dropdown-item text-danger small filter-link" href="#" data-filter-type="reset">Réinitialiser</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="teams-list-container">
+        {% include 'backoffice/_teams_list.html.twig' %}
+    </div>
+
+    <!-- Modal Team Details -->
+    <div class="modal fade" id="teamDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--tc-bg-card); border: 1px solid var(--tc-border); color: #fff;">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">Détails de l'équipe</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <img id="modalTeamLogo" src="" alt="Team Logo" class="rounded-circle border border-primary p-1" style="width: 100px; height: 100px; object-fit: cover;">
+                    </div>
+                    <h3 id="modalTeamName" class="fw-bold mb-1"></h3>
+                    <p id="modalTeamGames" class="text-info small text-uppercase fw-bold mb-4"></p>
+                    
+                    <div class="row g-3 text-start bg-black bg-opacity-25 p-3 rounded">
+                        <div class="col-6">
+                            <span class="text-white-50 small d-block">Créateur (Owner)</span>
+                            <span id="modalTeamOwner" class="fw-semibold"></span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-white-50 small d-block">Date de création</span>
+                            <span id="modalTeamCreated" class="fw-semibold"></span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-white-50 small d-block">Statut</span>
+                            <span class="badge bg-success bg-opacity-25 text-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary border-opacity-25">
+                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Modal Logic
+            var teamModal = document.getElementById('teamDetailsModal');
+            if (teamModal) {
+                teamModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    
+                    var name = button.getAttribute('data-name');
+                    var logo = button.getAttribute('data-logo');
+                    var games = button.getAttribute('data-games');
+                    var owner = button.getAttribute('data-owner');
+                    var created = button.getAttribute('data-created');
+
+                    teamModal.querySelector('#modalTeamName').textContent = name;
+                    teamModal.querySelector('#modalTeamGames').textContent = games;
+                    teamModal.querySelector('#modalTeamOwner').textContent = owner;
+                    teamModal.querySelector('#modalTeamCreated').textContent = created;
+                    
+                    var logoImg = teamModal.querySelector('#modalTeamLogo');
+                    if (logo) {
+                        logoImg.src = logo;
+                    } else {
+                        logoImg.src = ''; 
+                    }
+                });
+            }
+
+            // AJAX Search logic
+            const searchInput = document.querySelector('input[name="q"]');
+            const listContainer = document.getElementById('teams-list-container');
+            let debounceTimer;
+
+            if (searchInput && listContainer) {
+                searchInput.addEventListener('input', function() {
+                    const query = this.value;
+                    
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        // Use current URL to preserve sort/filter params
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('q', query);
+                        // Reset page to 1 on new search
+                        url.searchParams.set('page', 1);
+
+                        fetchAndUpdate(url);
+                    }, 300); // 300ms debounce
+                });
+
+                // Hijack pagination links
+                listContainer.addEventListener('click', function(e) {
+                    if (e.target.closest('.page-link')) {
+                        e.preventDefault();
+                        const link = e.target.closest('.page-link');
+                        const url = link.href;
+
+                        if (url && url !== '#') {
+                            fetchAndUpdate(url);
+                        }
+                    }
+                });
+            }
+
+            // Filter dropdown handlers
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.filter-link')) {
+                    e.preventDefault();
+                    const link = e.target.closest('.filter-link');
+                    const filterType = link.getAttribute('data-filter-type');
+                    const filterValue = link.getAttribute('data-filter-value');
+
+                    const url = new URL(window.location.href);
+                    
+                    if (filterType === 'reset') {
+                        // Clear all filters
+                        url.searchParams.delete('sort');
+                        url.searchParams.delete('game');
+                        url.searchParams.delete('q');
+                        url.searchParams.set('page', 1);
+                    } else {
+                        // Set the filter
+                        url.searchParams.set(filterType, filterValue);
+                        url.searchParams.set('page', 1);
+                    }
+
+                    fetchAndUpdate(url);
+                }
+            });
+
+            // Shared fetch and update function
+            function fetchAndUpdate(url) {
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    listContainer.innerHTML = html;
+                    // Update browser URL without reload
+                    window.history.pushState({}, '', url);
+                })
+                .catch(err => console.error('Error fetching teams:', err));
+            }
+        });
+    </script>
+{% endblock %}
+
