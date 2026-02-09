@@ -1,0 +1,57 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des participations{% endblock %}
+{% block admin_subheading %}Liste des inscriptions aux événements.{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+        <div class="flex-grow-1" style="max-width: 420px;">
+            <div class="input-group admin-search-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="search" class="form-control" placeholder="Rechercher...">
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_participation_new') }}" class="btn btn-sm btn-tc-primary">
+                <i class="bi bi-plus-lg me-1"></i> Nouvelle participation
+            </a>
+        </div>
+    </div>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Id</th>
+                        <th class="border-0 px-4 py-3">Date d'inscription</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                {% for participation in participations %}
+                    <tr>
+                        <td class="px-4 py-3 bg-input-match">{{ participation.id }}</td>
+                        <td class="px-4 py-3 bg-input-match">{{ participation.dateInscription ? participation.dateInscription|date('Y-m-d H:i:s') : '' }}</td>
+                        <td class="px-4 py-3 text-end bg-input-match">
+                            <a href="{{ path('app_participation_show', {'id': participation.id}) }}" class="action-btn view" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ path('app_participation_edit', {'id': participation.id}) }}" class="action-btn edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="px-4 py-3 text-center bg-input-match">Aucune participation trouvée</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+

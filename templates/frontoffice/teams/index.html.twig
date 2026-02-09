@@ -1,0 +1,103 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Teams Discovery - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <!-- Page Header & Actions -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5">
+            <div class="d-flex align-items-center gap-3">
+                 <div class="p-2 rounded d-inline-flex" style="background: rgba(255,255,255,0.05);">
+                    {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                 </div>
+                 <div>
+                    <h1 class="h2 fw-bold mb-0 text-white">Teams</h1>
+                    <p class="text-white-50 mb-0">Join a squad or build your legacy</p>
+                 </div>
+            </div>
+            <a href="{{ path('team_create') }}" class="btn btn-recruit px-4 py-2 d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                </svg>
+                Create Team
+            </a>
+        </div>
+
+        <!-- My Team Section -->
+        <div class="mb-5">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <h2 class="h4 fw-bold text-white mb-0">My Team</h2>
+                <div class="flex-grow-1" style="height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+            </div>
+
+            {% if myTeams|length > 0 %}
+                <div class="row g-4">
+                    {% for team in myTeams %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative overflow-hidden border border-primary border-opacity-50" style="box-shadow: 0 4px 20px rgba(13, 110, 253, 0.15);">
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">OWNER</span>
+                                </div>
+                                
+                                <div class="discovery-avatar mx-auto mb-3 bg-gradient-primary text-white border-primary" style="background: linear-gradient(135deg, #0d6efd, #0a58ca);">
+                                    {% if team.logo %}
+                                        <img src="{{ asset('uploads/teams/' ~ team.logo) }}" alt="{{ team.name }}" class="w-100 h-100 object-fit-cover rounded-circle">
+                                    {% else %}
+                                        {{ team.name|first|upper }}
+                                    {% endif %}
+                                </div>
+                                <h3 class="discovery-card-title mb-1 text-white">{{ team.name }}</h3>
+                                <p class="discovery-card-subtitle mb-3 text-primary">Esports Division</p>
+                                
+                                <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                                    {% for game in team.games %}
+                                        <span class="badge-game {{ game|lower }}">{{ game }}</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="mt-auto row g-2">
+                                    <div class="col-12">
+                                        <a href="{{ path('team_manage', {'id': team.id}) }}" class="btn btn-sm btn-outline-light w-100">Manage</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 border border-dashed border-secondary rounded-3">
+                    <p class="text-white-50 mb-3">You typically haven't created any teams yet.</p>
+                     <a href="{{ path('team_create') }}" class="btn btn-primary btn-sm">Create Your First Team</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Discovery Heading -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h2 class="h4 fw-bold mb-0 discovery-section-title">
+                Teams Discovery
+            </h2>
+            <a href="#" class="discovery-view-all">VIEW ALL TEAMS →</a>
+        </div>
+        <div class="row g-4">
+            {% for t in teams %}
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+                        <div class="discovery-avatar mx-auto mb-3">{{ t.initial }}</div>
+                        <h3 class="discovery-card-title mb-1">{{ t.name }}</h3>
+                        <p class="discovery-card-subtitle mb-3">{{ t.role }}</p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                            <span class="badge-game {{ t.gameColor }}">{{ t.game }}</span>
+                            <span class="badge-rank {{ t.rankColor }}">{{ t.rank }}</span>
+                        </div>
+                        <button type="button" class="btn btn-recruit mt-auto">Recruit Me</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
