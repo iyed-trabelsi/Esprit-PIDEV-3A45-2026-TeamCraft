@@ -195,8 +195,8 @@ class FrontEventController extends AbstractController
         }
         
         if ($isNew) {
-            if ($evenement->getDateDebut() === null || $evenement->getDateDebut() < new \DateTime('today')) {
-                $errors[] = 'La date de début ne peut pas être dans le passé et doit être renseignée.';
+            if ($evenement->getDateDebut() === null) {
+                $errors[] = 'La date de début doit être renseignée.';
             }
         }
         

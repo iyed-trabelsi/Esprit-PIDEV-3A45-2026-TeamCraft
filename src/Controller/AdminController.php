@@ -2,28 +2,74 @@
 
 namespace App\Controller;
 
+use App\Entity\Comment;
+use App\Entity\Post;
+use App\Entity\Rubrique;
+use App\Repository\AdminRepository;
+use App\Repository\CommentRepository;
+use App\Repository\PostRepository;
+use App\Repository\RubriqueRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class AdminController extends AbstractController
 {
     #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
-    public function dashboard(): Response
+    public function dashboard(Request $request, RubriqueRepository $rubriqueRepository, PostRepository $postRepository, CommentRepository $commentRepository): Response
     {
-        // Données simulées pour le tableau de bord
+        $limit = 5;
         $players = $this->getPlayers();
         $teams = $this->getTeams();
         $offers = $this->getOffres();
         $events = $this->getEvents();
-        $posts = $this->getForumPosts();
+
+        $pageRubriques = max(1, $request->query->getInt('page_rubriques', 1));
+        $allRubriques = $rubriqueRepository->findBy([], ['dateCreation' => 'DESC']);
+        $totalRubriques = count($allRubriques);
+        $maxPagesRubriques = (int) ceil($totalRubriques / $limit) ?: 1;
+        if ($pageRubriques > $maxPagesRubriques) {
+            $pageRubriques = $maxPagesRubriques;
+        }
+        $rubriques = array_slice($allRubriques, ($pageRubriques - 1) * $limit, $limit);
+
+        $pagePosts = max(1, $request->query->getInt('page_posts', 1));
+        $allPosts = $postRepository->findBy([], ['dateCreation' => 'DESC']);
+        $totalPosts = count($allPosts);
+        $maxPagesPosts = (int) ceil($totalPosts / $limit) ?: 1;
+        if ($pagePosts > $maxPagesPosts) {
+            $pagePosts = $maxPagesPosts;
+        }
+        $posts = array_slice($allPosts, ($pagePosts - 1) * $limit, $limit);
+
+        $pageComments = max(1, $request->query->getInt('page_comments', 1));
+        $allComments = $commentRepository->findAllForAdmin();
+        $totalComments = count($allComments);
+        $maxPagesComments = (int) ceil($totalComments / $limit) ?: 1;
+        if ($pageComments > $maxPagesComments) {
+            $pageComments = $maxPagesComments;
+        }
+        $comments = array_slice($allComments, ($pageComments - 1) * $limit, $limit);
 
         return $this->render('backoffice/dashboard.html.twig', [
             'players' => $players,
             'teams' => $teams,
             'offers' => $offers,
             'events' => $events,
+            'rubriques' => $rubriques,
+            'rubriquesCurrentPage' => $pageRubriques,
+            'rubriquesMaxPages' => $maxPagesRubriques,
+            'rubriquesTotal' => $totalRubriques,
             'posts' => $posts,
+            'postsCurrentPage' => $pagePosts,
+            'postsMaxPages' => $maxPagesPosts,
+            'postsTotal' => $totalPosts,
+            'comments' => $comments,
+            'commentsCurrentPage' => $pageComments,
+            'commentsMaxPages' => $maxPagesComments,
+            'commentsTotal' => $totalComments,
         ]);
     }
 
@@ -115,7 +161,6 @@ class AdminController extends AbstractController
         ]);
     }
 
-    /*
     #[Route('/admin/events', name: 'admin_events', methods: ['GET'])]
     public function events(\Symfony\Component\HttpFoundation\Request $request): Response
     {
@@ -139,29 +184,171 @@ class AdminController extends AbstractController
             'totalEvents' => $totalEvents
         ]);
     }
-    */
 
-    #[Route('/admin/forum', name: 'admin_forum', methods: ['GET'])]
-    public function forum(\Symfony\Component\HttpFoundation\Request $request): Response
+    #[Route('/admin/rubriques', name: 'admin_rubriques', methods: ['GET'])]
+    public function rubriques(Request $request, RubriqueRepository $rubriqueRepository): Response
     {
-        $allPosts = $this->getForumPosts();
-        $limit = 2;
+        $limit = 5;
         $page = max(1, $request->query->getInt('page', 1));
-        $totalPosts = count($allPosts);
-        $maxPages = (int) ceil($totalPosts / $limit);
+        $q = $request->query->get('q');
+        $sort = $request->query->get('sort', 'date_desc');
 
-        if ($page > $maxPages && $maxPages > 0) {
+        $total = $rubriqueRepository->countForAdmin($q);
+        $maxPages = (int) ceil($total / $limit) ?: 1;
+        if ($page > $maxPages) {
             $page = $maxPages;
         }
-
         $offset = ($page - 1) * $limit;
-        $paginatedPosts = array_slice($allPosts, $offset, $limit);
+        $rubriques = $rubriqueRepository->findForAdmin($q, $sort, $limit, $offset);
 
-        return $this->render('backoffice/forum.html.twig', [
-            'posts' => $paginatedPosts,
+        return $this->render('backoffice/rubriques.html.twig', [
+            'rubriques' => $rubriques,
             'currentPage' => $page,
             'maxPages' => $maxPages,
-            'totalPosts' => $totalPosts
+            'total' => $total,
+            'q' => $q,
+            'sort' => $sort,
+        ]);
+    }
+
+    #[Route('/admin/rubriques/{id}/etat', name: 'admin_rubrique_etat', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function rubriqueEtat(int $id, Request $request, RubriqueRepository $rubriqueRepository, EntityManagerInterface $em): Response
+    {
+        $rubrique = $rubriqueRepository->find($id);
+        $etat = $request->request->get('etat');
+        if ($rubrique && \in_array($etat, ['active', 'archived'], true) && $this->isCsrfTokenValid('admin_rubrique_etat_' . $id, (string) $request->request->get('_token'))) {
+            $rubrique->setEtat($etat);
+            $em->flush();
+            $this->addFlash('success', 'État de la rubrique mis à jour.');
+        }
+        $page = max(1, (int) $request->request->get('page', $request->query->get('page', 1)));
+        $params = ['page' => $page];
+        if ($request->request->get('q') !== null && $request->request->get('q') !== '') {
+            $params['q'] = $request->request->get('q');
+        }
+        if ($request->request->get('sort') !== null && $request->request->get('sort') !== '') {
+            $params['sort'] = $request->request->get('sort');
+        }
+        return $this->redirectToRoute('admin_rubriques', $params);
+    }
+
+    #[Route('/admin/rubriques/{id}/delete', name: 'admin_rubrique_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function rubriqueDelete(int $id, Request $request, RubriqueRepository $rubriqueRepository, EntityManagerInterface $em): Response
+    {
+        $rubrique = $rubriqueRepository->find($id);
+        if ($rubrique && $this->isCsrfTokenValid('admin_rubrique_delete_' . $id, (string) $request->request->get('_token'))) {
+            $em->remove($rubrique);
+            $em->flush();
+            $this->addFlash('success', 'Rubrique supprimée.');
+        }
+        return $this->redirectToRoute('admin_rubriques');
+    }
+
+    #[Route('/admin/posts', name: 'admin_posts', methods: ['GET'])]
+    public function posts(Request $request, PostRepository $postRepository): Response
+    {
+        $limit = 5;
+        $page = max(1, $request->query->getInt('page', 1));
+        $q = $request->query->get('q');
+        $sort = $request->query->get('sort', 'date_desc');
+
+        $total = $postRepository->countForAdmin($q);
+        $maxPages = (int) ceil($total / $limit) ?: 1;
+        if ($page > $maxPages) {
+            $page = $maxPages;
+        }
+        $offset = ($page - 1) * $limit;
+        $posts = $postRepository->findForAdmin($q, $sort, $limit, $offset);
+
+        return $this->render('backoffice/posts.html.twig', [
+            'posts' => $posts,
+            'currentPage' => $page,
+            'maxPages' => $maxPages,
+            'total' => $total,
+            'q' => $q,
+            'sort' => $sort,
+        ]);
+    }
+
+    #[Route('/admin/posts/{id}/delete', name: 'admin_post_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function postDelete(int $id, Request $request, PostRepository $postRepository, EntityManagerInterface $em): Response
+    {
+        $post = $postRepository->find($id);
+        if ($post && $this->isCsrfTokenValid('admin_post_delete_' . $id, (string) $request->request->get('_token'))) {
+            $em->remove($post);
+            $em->flush();
+            $this->addFlash('success', 'Post supprimé.');
+        }
+        return $this->redirectToRoute('admin_posts');
+    }
+
+    #[Route('/admin/posts/{id}/statut', name: 'admin_post_statut', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function postStatut(int $id, Request $request, PostRepository $postRepository, EntityManagerInterface $em): Response
+    {
+        $post = $postRepository->find($id);
+        $statut = $request->request->get('statut');
+        if ($post && \in_array($statut, ['published', 'archived'], true) && $this->isCsrfTokenValid('admin_post_statut_' . $id, (string) $request->request->get('_token'))) {
+            $post->setStatut($statut);
+            $em->flush();
+            $this->addFlash('success', 'Statut du post mis à jour.');
+        }
+        $page = max(1, (int) $request->request->get('page', $request->query->get('page', 1)));
+        $params = ['page' => $page];
+        $q = $request->request->get('q');
+        $sort = $request->request->get('sort');
+        if ($q !== null && $q !== '') {
+            $params['q'] = $q;
+        }
+        if ($sort !== null && $sort !== '') {
+            $params['sort'] = $sort;
+        }
+        return $this->redirectToRoute('admin_posts', $params);
+    }
+
+    #[Route('/admin/comments', name: 'admin_comments', methods: ['GET'])]
+    public function comments(Request $request, CommentRepository $commentRepository): Response
+    {
+        $limit = 5;
+        $page = max(1, $request->query->getInt('page', 1));
+        $q = $request->query->get('q');
+        $sort = $request->query->get('sort', 'date_desc');
+
+        $total = $commentRepository->countForAdmin($q);
+        $maxPages = (int) ceil($total / $limit) ?: 1;
+        if ($page > $maxPages) {
+            $page = $maxPages;
+        }
+        $offset = ($page - 1) * $limit;
+        $comments = $commentRepository->findForAdminPaginated($q, $sort, $limit, $offset);
+
+        return $this->render('backoffice/comments.html.twig', [
+            'comments' => $comments,
+            'currentPage' => $page,
+            'maxPages' => $maxPages,
+            'total' => $total,
+            'q' => $q,
+            'sort' => $sort,
+        ]);
+    }
+
+    #[Route('/admin/comments/{id}/delete', name: 'admin_comment_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function commentDelete(int $id, Request $request, CommentRepository $commentRepository, EntityManagerInterface $em): Response
+    {
+        $comment = $commentRepository->find($id);
+        if ($comment && $this->isCsrfTokenValid('admin_comment_delete_' . $id, (string) $request->request->get('_token'))) {
+            $em->remove($comment);
+            $em->flush();
+            $this->addFlash('success', 'Commentaire supprimé.');
+        }
+        return $this->redirectToRoute('admin_comments');
+    }
+
+    #[Route('/admin/admins', name: 'admin_admins', methods: ['GET'])]
+    public function admins(AdminRepository $adminRepository): Response
+    {
+        $admins = $adminRepository->findBy([], ['id' => 'ASC']);
+        return $this->render('backoffice/admins.html.twig', [
+            'admins' => $admins,
         ]);
     }
 

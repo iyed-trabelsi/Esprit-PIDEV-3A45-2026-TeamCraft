@@ -36,8 +36,7 @@ security:
                 #always_remember_me: true
 
     access_control:
-        # TEMPORAIRE : accès libre à /admin pendant le développement
-        - { path: ^/admin, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/teams/create, roles: ROLE_USER }
         - { path: ^/my-teams, roles: ROLE_USER }

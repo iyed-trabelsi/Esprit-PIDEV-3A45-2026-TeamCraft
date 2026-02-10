@@ -1,0 +1,61 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Mes rubriques - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <h1 class="h2 fw-bold text-white mb-0">Mes rubriques</h1>
+            <div class="flex-grow-1" style="height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+        </div>
+
+        {% if mes_rubriques|length > 0 %}
+            <div class="row g-4">
+                {% for rubrique in mes_rubriques %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card bg-dark border-0 shadow h-100" style="background-color: #16161a !important; border-radius: 0.75rem;">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="rounded-circle p-1 border border-warning border-opacity-25 flex-shrink-0">
+                                        <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-dark fw-bold fs-4" style="width: 50px; height: 50px;">
+                                            {{ rubrique.nomRubrique|first|upper }}
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="h5 fw-bold text-white mb-0">{{ rubrique.nomRubrique }}</h3>
+                                        <p class="text-secondary mb-0 small">{{ rubrique.description|default(rubrique.topic)|default('—') }}</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="badge-game valorant">{{ rubrique.topic|default('Forum') }}</span>
+                                    <span class="badge-rank green">{{ rubrique.nbPosts }} post{{ rubrique.nbPosts > 1 ? 's' : '' }}</span>
+                                </div>
+                                <div class="mt-auto d-flex flex-wrap gap-2">
+                                    <a href="{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}" class="btn btn-recruit text-decoration-none text-center flex-grow-1">Voir les posts</a>
+                                    <a href="{{ path('app_forum_rubrique_edit', { id: rubrique.id }) }}" class="btn btn-success btn-sm fw-bold" style="font-size: 0.9rem;">Modifier</a>
+                                    <form action="{{ path('app_forum_rubrique_delete', { id: rubrique.id }) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette rubrique et tous ses posts ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_rubrique_' ~ rubrique.id) }}">
+                                        <button type="submit" class="btn btn-danger btn-sm fw-bold" style="font-size: 0.9rem;">Supprimer</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 rounded-3" style="border: 1px dashed rgba(255,255,255,0.2); background: rgba(26,26,31,0.6);">
+                <p class="text-white-50 mb-4">Vous n'avez pas encore créé de rubrique.</p>
+                <a href="{{ path('app_forum_rubrique_new') }}" class="btn btn-primary">Créer ma première rubrique</a>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{{ path('app_forum') }}" class="discovery-view-all text-decoration-none">← Retour au forum</a>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

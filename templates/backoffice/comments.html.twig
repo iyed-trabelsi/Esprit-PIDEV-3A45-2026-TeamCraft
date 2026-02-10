@@ -1,0 +1,107 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des commentaires{% endblock %}
+{% block admin_subheading %}Liste de tous les commentaires du forum avec auteur et post.{% endblock %}
+
+{% block admin_content %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    <form method="get" action="{{ path('admin_comments') }}" class="d-flex flex-wrap gap-3 align-items-center mb-3" id="comments-search-form">
+        <input type="hidden" name="page" value="1">
+        <div class="input-group admin-search-group" style="max-width: 280px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="search" name="q" class="form-control" placeholder="Rechercher dans le contenu…" value="{{ q|default('') }}" aria-label="Recherche">
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label for="sort-comments" class="small text-white-50 mb-0">Trier par</label>
+            <select name="sort" id="sort-comments" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; min-width: 180px;" onchange="this.form.submit()">
+                <option value="date_desc" {{ sort|default('date_desc') == 'date_desc' ? 'selected' : '' }}>Date (récentes d’abord)</option>
+                <option value="date_asc" {{ sort|default('') == 'date_asc' ? 'selected' : '' }}>Date (anciennes d’abord)</option>
+            </select>
+        </div>
+    </form>
+    <script>
+        (function() {
+            var form = document.getElementById('comments-search-form');
+            var input = form && form.querySelector('input[name="q"]');
+            if (!input) return;
+            var timeout;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    form.querySelector('input[name="page"]').value = '1';
+                    form.submit();
+                }, 350);
+            });
+        })();
+    </script>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Contenu</th>
+                        <th class="border-0 px-4 py-3">Auteur</th>
+                        <th class="border-0 px-4 py-3">Rubrique</th>
+                        <th class="border-0 px-4 py-3">Post</th>
+                        <th class="border-0 px-4 py-3">Date</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for comment in comments %}
+                        <tr>
+                            <td class="px-4 py-3 bg-input-match text-white-50" style="max-width: 280px;">{% set txt = comment.contenu %}{{ txt|length > 60 ? txt|slice(0, 60) ~ '…' : txt }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ comment.auteur ? comment.auteur.pseudo : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ comment.post and comment.post.rubrique ? comment.post.rubrique.nomRubrique : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ comment.post ? comment.post.titre : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ comment.dateCommentaire ? comment.dateCommentaire|date('d/m/Y') : '—' }}</td>
+                            <td class="px-4 py-3 text-end bg-input-match">
+                                {% if comment.post %}
+                                    <a href="{{ path('app_forum_post_show', { id: comment.post.id }) }}#comment-{{ comment.id }}" class="action-btn view d-inline-block" title="Voir le post">
+                                        <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                    </a>
+                                {% endif %}
+                                <form method="post" action="{{ path('admin_comment_delete', { id: comment.id }) }}" onsubmit="return confirm('Supprimer ce commentaire ?');" class="d-inline-block">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_comment_delete_' ~ comment.id) }}">
+                                    <button type="submit" class="action-btn delete border-0 bg-transparent" title="Supprimer">
+                                        <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-4 text-center text-white-50">Aucun commentaire.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">Affichage de {{ comments|length }} sur {{ total }} commentaires</span>
+        <nav aria-label="Pagination commentaires">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_comments', { page: currentPage - 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Précédent</a>
+                </li>
+                {% for i in 1..maxPages %}
+                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_comments', { page: i, q: q|default(''), sort: sort|default('date_desc') }) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_comments', { page: currentPage + 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+{% endblock %}

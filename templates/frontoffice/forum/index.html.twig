@@ -1,33 +1,376 @@
 {% extends 'frontoffice/base.html.twig' %}
 
-{% block title %}Forum Discovery - TEAMCRAFT{% endblock %}
+{% block title %}Forum - TEAMCRAFT{% endblock %}
 
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
     <section class="container py-5 flex-grow-1">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <h1 class="h2 fw-bold mb-0 discovery-section-title">
-                {% include 'frontoffice/partials/_icon_people.html.twig' %}
-                Forum Discovery
-            </h1>
-            <a href="#" class="discovery-view-all">VIEW ALL FORUMS →</a>
+        <!-- Page Header & Actions (like Teams) -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 rounded d-inline-flex" style="background: rgba(255,255,255,0.05);">
+                    {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                </div>
+                <div>
+                    <h1 class="h2 fw-bold mb-0 text-white">Forum</h1>
+                    <p class="text-white-50 mb-0">Échangez et découvrez les discussions</p>
+                </div>
+            </div>
+            {% if app.user %}
+                <a href="{{ path('app_forum_rubrique_new') }}" class="btn btn-recruit px-4 py-2 d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    </svg>
+                    Create Section
+                </a>
+            {% endif %}
         </div>
-        <div class="row g-4">
-            {% for post in posts %}
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <div class="discovery-card h-100 d-flex flex-column p-4">
-                        <h3 class="discovery-card-title mb-1">{{ post.title }}</h3>
-                        <p class="discovery-card-subtitle mb-3">{{ post.subtitle }}</p>
-                        <div class="d-flex flex-wrap gap-2 mb-3">
-                            <span class="badge-game {{ post.gameColor }}">{{ post.game }}</span>
-                            <span class="badge-rank {{ post.rankColor }}">{{ post.rank }}</span>
+
+        <!-- Mes rubriques (like My Team) -->
+        {% if app.user %}
+        <div class="mb-5">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h2 class="h4 fw-bold text-white mb-0">My Sections</h2>
+                    <div style="height: 1px; width: 50px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+                </div>
+                
+                {% if mes_rubriques|length > 3 %}
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-tc-outline px-3 js-prev-sections" disabled>
+                        <i class="bi bi-chevron-left">&lt;</i>
+                    </button>
+                    <button class="btn btn-sm btn-tc-outline px-3 js-next-sections">
+                        <i class="bi bi-chevron-right">&gt;</i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if mes_rubriques|length > 0 %}
+                <div class="row g-4" id="my-sections-container">
+                    {% for rubrique in mes_rubriques %}
+                        <div class="col-12 col-md-6 col-lg-4 my-section-item" style="display: {{ loop.index <= 3 ? 'block' : 'none' }}">
+                            <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative overflow-hidden border border-primary border-opacity-50" style="box-shadow: 0 4px 20px rgba(13, 110, 253, 0.15);">
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">AUTEUR</span>
+                                </div>
+                                <div class="discovery-avatar mx-auto mb-3">{{ rubrique.nomRubrique|first|upper }}</div>
+                                <h3 class="discovery-card-title mb-1 text-white">{{ rubrique.nomRubrique }}</h3>
+                                <p class="discovery-card-subtitle mb-3">{{ rubrique.description|default(rubrique.topic)|default('Rubrique du forum') }}</p>
+                                <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                                    <span class="badge-game valorant">{{ rubrique.topic|default('Forum') }}</span>
+                                    <span class="badge-rank green">{{ rubrique.nbPosts }} post{{ rubrique.nbPosts > 1 ? 's' : '' }}</span>
+                                </div>
+                                <div class="mt-auto row g-2">
+                                    <div class="col-12">
+                                        <a href="{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}" class="btn btn-sm btn-outline-light w-100">View Posts</a>
+                                    </div>
+                                    <div class="col-12 d-flex gap-2">
+                                        <a href="{{ path('app_forum_rubrique_edit', { id: rubrique.id }) }}" class="btn btn-success btn-sm flex-grow-1 fw-bold">Edit</a>
+                                        <form action="{{ path('app_forum_rubrique_delete', { id: rubrique.id }) }}" method="post" class="flex-grow-1" onsubmit="return confirm('Supprimer cette rubrique et tous ses posts ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_rubrique_' ~ rubrique.id) }}">
+                                            <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <a href="{{ path('app_forum_show', { id: post.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Forum</a>
+                    {% endfor %}
+                </div>
+
+                {% if mes_rubriques|length > 3 %}
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button class="btn btn-sm btn-tc-outline px-3 js-prev-sections" disabled>
+                        <i class="bi bi-chevron-left">&lt;</i>
+                    </button>
+                    <button class="btn btn-sm btn-tc-outline px-3 js-next-sections">
+                        <i class="bi bi-chevron-right">&gt;</i>
+                    </button>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5 border border-dashed border-secondary rounded-3">
+                    <p class="text-white-50 mb-3">Vous n'avez pas encore créé de rubrique.</p>
+                    <a href="{{ path('app_forum_rubrique_new') }}" class="btn btn-primary btn-sm">Créer ma première rubrique</a>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Forum Discovery (like Teams Discovery) -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h2 class="h4 fw-bold mb-0 discovery-section-title">
+                Forum Discovery
+            </h2>
+            
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="sortDropdownBtn">
+                            <i class="bi bi-sort-down"></i>
+                            <span id="currentSortLabel">Newest First</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item active js-sort-option" href="#" data-sort="desc">Newest First</a></li>
+                            <li><a class="dropdown-item js-sort-option" href="#" data-sort="asc">Oldest First</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="position-relative">
+                        <input type="text" id="discovery-search-input" class="form-control form-control-sm text-white ps-5" placeholder="Search..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                    </div>
+
+                {% if rubriques|length > 6 %}
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-tc-outline px-3 js-prev-discovery" disabled>
+                        <i class="bi bi-chevron-left">&lt;</i>
+                    </button>
+                    <button class="btn btn-sm btn-tc-outline px-3 js-next-discovery">
+                        <i class="bi bi-chevron-right">&gt;</i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row g-4" id="discovery-container">
+            {% for rubrique in rubriques %}
+                <div class="col-12 col-sm-6 col-lg-4 discovery-item" data-name="{{ rubrique.nomRubrique|lower }}" data-date="{{ rubrique.dateCreation ? rubrique.dateCreation|date('U') : 0 }}" data-id="{{ rubrique.id }}" style="display: {{ loop.index <= 6 ? 'block' : 'none' }}">
+                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+                        <div class="discovery-avatar mx-auto mb-3">{{ rubrique.nomRubrique|first|upper }}</div>
+                        <h3 class="discovery-card-title mb-1">{{ rubrique.nomRubrique }}</h3>
+                        <p class="discovery-card-subtitle mb-3">{{ rubrique.description|default(rubrique.topic)|default('—') }}</p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                            <span class="badge-game valorant">{{ rubrique.topic|default('Forum') }}</span>
+                            <span class="badge-rank green">{{ rubrique.nbPosts }} post{{ rubrique.nbPosts > 1 ? 's' : '' }}</span>
+                        </div>
+                        <a href="{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}" class="btn btn-recruit mt-auto text-decoration-none">View All Posts</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="discovery-card p-5 text-center">
+                        <p class="discovery-card-subtitle mb-0">Aucune rubrique pour le moment.</p>
+                        {% if app.user %}
+                            <a href="{{ path('app_forum_rubrique_new') }}" class="btn btn-recruit mt-3">Créer la première rubrique</a>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}
+            <div id="no-results-message" class="col-12 text-center py-5 d-none">
+                <p class="text-white-50">No sections found matching your search.</p>
+            </div>
         </div>
+
+        {% if rubriques|length > 6 %}
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <button class="btn btn-sm btn-tc-outline px-3 js-prev-discovery" disabled>
+                <i class="bi bi-chevron-left">&lt;</i>
+            </button>
+            <button class="btn btn-sm btn-tc-outline px-3 js-next-discovery">
+                <i class="bi bi-chevron-right">&gt;</i>
+            </button>
+        </div>
+        {% endif %}
+        
+        <style>
+            #discovery-search-input::placeholder {
+                color: white !important;
+                opacity: 0.7;
+            }
+        </style>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Forum Script Loaded');
+                
+                function setupPagination(itemClass, prevBtnClass, nextBtnClass, itemsPerPage, containerId) {
+                    const container = containerId ? document.getElementById(containerId) : null;
+                    let allItems = Array.from(document.querySelectorAll('.' + itemClass));
+                    console.log('Setup Pagination for', itemClass, 'Found items:', allItems.length);
+                    
+                    const prevBtns = document.querySelectorAll('.' + prevBtnClass);
+                    const nextBtns = document.querySelectorAll('.' + nextBtnClass);
+                    
+                    if (!allItems.length) return null;
+                    
+                    let currentPage = 0;
+                    let currentFilter = '';
+                    let currentSortDir = 'desc'; // Default sort
+                    let visibleItems = [...allItems]; // Copy for manipulation
+                    
+                    // Initial Sort (Newest First)
+                    sortItems(visibleItems, currentSortDir);
+                    console.log('Initial Sort Complete');
+
+                    // Helper to calculate pages based on currently filtered items
+                    function getTotalPages() {
+                        return Math.ceil(visibleItems.length / itemsPerPage);
+                    }
+
+                    function updateVisibility() {
+                        const totalPages = getTotalPages();
+                        
+                        // Ensure current page is valid after filtering
+                        if (currentPage >= totalPages && totalPages > 0) {
+                            currentPage = totalPages - 1;
+                        }
+                        if (currentPage < 0) currentPage = 0;
+
+                        // First hide EVERYTHING in the original DOM list (to be safe)
+                        allItems.forEach(item => item.style.display = 'none');
+
+                        // Then show only the slice of the FILTERED items for current page
+                        const start = currentPage * itemsPerPage;
+                        const end = start + itemsPerPage;
+                        const pageItems = visibleItems.slice(start, end);
+                        
+                        pageItems.forEach(item => {
+                            item.style.display = 'block';
+                            item.style.opacity = '1'; 
+                        });
+
+                        // Visual update of buttons
+                        prevBtns.forEach(btn => btn.disabled = currentPage === 0 || totalPages === 0);
+                        nextBtns.forEach(btn => btn.disabled = currentPage >= totalPages - 1 || totalPages === 0);
+                        
+                        // If we have a container, we can physically re-order elements for visual flow
+                        if (container) {
+                             visibleItems.forEach(item => container.appendChild(item));
+                        }
+                    }
+
+                    function sortItems(items, direction) {
+                        console.log('Sorting items...', direction);
+                        items.sort((a, b) => {
+                            const dateA = parseInt(a.getAttribute('data-date') || '0');
+                            const dateB = parseInt(b.getAttribute('data-date') || '0');
+                            
+                            // Primary Sort: Date
+                            if (dateA !== dateB) {
+                                return direction === 'asc' ? dateA - dateB : dateB - dateA;
+                            }
+                            
+                            // Secondary Sort (Tie-breaker): ID
+                            // If dates are identical, we sort by ID to ensure deterministic order
+                            const idA = parseInt(a.getAttribute('data-id') || '0');
+                            const idB = parseInt(b.getAttribute('data-id') || '0');
+                            return direction === 'asc' ? idA - idB : idB - idA;
+                        });
+                        console.log('Sorted 1st item Date/ID:', items[0]?.getAttribute('data-date'), items[0]?.getAttribute('data-id'));
+                    }
+
+                    prevBtns.forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (currentPage > 0) {
+                                currentPage--;
+                                updateVisibility();
+                            }
+                        });
+                    });
+
+                    nextBtns.forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (currentPage < getTotalPages() - 1) {
+                                currentPage++;
+                                updateVisibility();
+                            }
+                        });
+                    });
+                    
+                    // Public methods
+                    return {
+                        filter: function(searchTerm) {
+                            console.log('Filtering:', searchTerm);
+                            currentFilter = searchTerm.toLowerCase().trim();
+                            
+                            if (currentFilter === '') {
+                                visibleItems = [...allItems];
+                            } else {
+                                visibleItems = allItems.filter(item => {
+                                    const name = item.getAttribute('data-name');
+                                    return name && name.toLowerCase().includes(currentFilter);
+                                });
+                            }
+                            
+                            // Re-apply sort after filter
+                            sortItems(visibleItems, currentSortDir);
+                            
+                            // Check for no results
+                            const noResultsMsg = document.getElementById('no-results-message');
+                            if (noResultsMsg) {
+                                if (visibleItems.length === 0 && currentFilter !== '') {
+                                    noResultsMsg.classList.remove('d-none');
+                                } else {
+                                    noResultsMsg.classList.add('d-none');
+                                }
+                            }
+                            
+                            currentPage = 0; // Reset to first page
+                            updateVisibility();
+                        },
+                        sort: function(direction) {
+                            console.log('Public Sort Called:', direction);
+                            currentSortDir = direction;
+                            sortItems(visibleItems, currentSortDir);
+                            currentPage = 0; 
+                            updateVisibility();
+                        },
+                        init: function() {
+                            updateVisibility();
+                        }
+                    };
+                }
+
+                // Setup "My Sections" pagination (3 items)
+                const mySectionPaginator = setupPagination('my-section-item', 'js-prev-sections', 'js-next-sections', 3, 'my-sections-container');
+                if (mySectionPaginator) mySectionPaginator.init();
+
+                // Setup "Forum Discovery" pagination (6 items)
+                const discoveryPaginator = setupPagination('discovery-item', 'js-prev-discovery', 'js-next-discovery', 6, 'discovery-container');
+                
+                // Connect Search Input
+                const searchInput = document.getElementById('discovery-search-input');
+                if (searchInput && discoveryPaginator) {
+                    discoveryPaginator.init();
+                    searchInput.addEventListener('input', function(e) {
+                        discoveryPaginator.filter(e.target.value);
+                    });
+                } else if (discoveryPaginator) {
+                    discoveryPaginator.init();
+                }
+
+                // Connect Sorting Options
+                const sortOptions = document.querySelectorAll('.js-sort-option');
+                const currentSortLabel = document.getElementById('currentSortLabel');
+                
+                console.log('Sort Options Found:', sortOptions.length);
+                console.log('Discovery Paginator exists:', !!discoveryPaginator);
+
+                if (sortOptions.length && discoveryPaginator) {
+                    sortOptions.forEach(option => {
+                        option.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            console.log('Sort Option Clicked');
+                            const direction = this.getAttribute('data-sort');
+                            const label = this.textContent;
+                            
+                            // Update Active State
+                            sortOptions.forEach(opt => opt.classList.remove('active'));
+                            this.classList.add('active');
+                            
+                            // Update Button Label
+                            if (currentSortLabel) currentSortLabel.textContent = label;
+                            
+                            // Trigger Sort
+                            discoveryPaginator.sort(direction);
+                        });
+                    });
+                }
+            });
+        </script>
     </section>
 
     {% include 'frontoffice/partials/_footer_full.html.twig' %}

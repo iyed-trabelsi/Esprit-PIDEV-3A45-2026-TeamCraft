@@ -17,11 +17,11 @@
                             {% endif %}
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address</label>
-                                <input type="email" name="_username" id="email" class="form-control" placeholder="you@example.com" value="{{ last_username }}" required autofocus>
+                                <input type="email" name="_username" id="email" class="form-control" placeholder="you@example.com" value="{{ last_username }}" autofocus>
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" name="_password" id="password" class="form-control" placeholder="••••••••" required>
+                                <input type="password" name="_password" id="password" class="form-control" placeholder="••••••••">
                             </div>
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
                             <button type="submit" class="btn btn-tc-primary w-100 py-3">Log In</button>

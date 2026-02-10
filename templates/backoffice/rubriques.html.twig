@@ -1,0 +1,120 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des rubriques{% endblock %}
+{% block admin_subheading %}Liste de toutes les rubriques du forum avec auteur et état.{% endblock %}
+
+{% block admin_content %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    <form method="get" action="{{ path('admin_rubriques') }}" class="d-flex flex-wrap gap-3 align-items-center mb-3" id="rubriques-search-form">
+        <input type="hidden" name="page" value="1">
+        <div class="input-group admin-search-group" style="max-width: 280px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="search" name="q" class="form-control" placeholder="Rechercher par nom ou description…" value="{{ q|default('') }}" aria-label="Recherche">
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label for="sort" class="small text-white-50 mb-0">Trier par</label>
+            <select name="sort" id="sort" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; min-width: 180px;" onchange="this.form.submit()">
+                <option value="date_desc" {{ sort|default('date_desc') == 'date_desc' ? 'selected' : '' }}>Date (récentes d’abord)</option>
+                <option value="date_asc" {{ sort|default('') == 'date_asc' ? 'selected' : '' }}>Date (anciennes d’abord)</option>
+                <option value="name_asc" {{ sort|default('') == 'name_asc' ? 'selected' : '' }}>Nom (A → Z)</option>
+                <option value="name_desc" {{ sort|default('') == 'name_desc' ? 'selected' : '' }}>Nom (Z → A)</option>
+            </select>
+        </div>
+    </form>
+    <script>
+        (function() {
+            var form = document.getElementById('rubriques-search-form');
+            var input = form && form.querySelector('input[name="q"]');
+            if (!input) return;
+            var timeout;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    form.querySelector('input[name="page"]').value = '1';
+                    form.submit();
+                }, 350);
+            });
+        })();
+    </script>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Nom</th>
+                        <th class="border-0 px-4 py-3">Description</th>
+                        <th class="border-0 px-4 py-3">Auteur</th>
+                        <th class="border-0 px-4 py-3">Date création</th>
+                        <th class="border-0 px-4 py-3">Nb posts</th>
+                        <th class="border-0 px-4 py-3">État</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for rubrique in rubriques %}
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ rubrique.nomRubrique }}</td>
+                            <td class="px-4 py-3 bg-input-match text-white-50" style="max-width: 200px;">{% set desc = rubrique.description|default('—') %}{{ desc|length > 50 ? desc|slice(0, 50) ~ '…' : desc }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ rubrique.auteur ? rubrique.auteur.pseudo : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ rubrique.dateCreation ? rubrique.dateCreation|date('d/m/Y') : '—' }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ rubrique.nbPosts }}</td>
+                            <td class="px-4 py-3 bg-input-match">
+                                <form method="post" action="{{ path('admin_rubrique_etat', { id: rubrique.id }) }}" class="d-inline-block" id="etat-form-{{ rubrique.id }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_rubrique_etat_' ~ rubrique.id) }}">
+                                    <input type="hidden" name="page" value="{{ currentPage }}">
+                                    <input type="hidden" name="q" value="{{ q|default('') }}">
+                                    <input type="hidden" name="sort" value="{{ sort|default('date_desc') }}">
+                                    <select name="etat" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; min-width: 100px; font-size: 0.85rem;" onchange="this.form.submit()">
+                                        <option value="active" {{ rubrique.etat == 'active' ? 'selected' : '' }}>Actif</option>
+                                        <option value="archived" {{ rubrique.etat == 'archived' ? 'selected' : '' }}>Archivé</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="px-4 py-3 text-end bg-input-match">
+                                <a href="{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}" class="action-btn view d-inline-block" title="Voir">
+                                    <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                </a>
+                                <form method="post" action="{{ path('admin_rubrique_delete', { id: rubrique.id }) }}" onsubmit="return confirm('Supprimer cette rubrique ?');" class="d-inline-block">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_rubrique_delete_' ~ rubrique.id) }}">
+                                    <button type="submit" class="action-btn delete border-0 bg-transparent" title="Supprimer">
+                                        <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="px-4 py-4 text-center text-white-50">Aucune rubrique.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">Affichage de {{ rubriques|length }} sur {{ total }} rubriques</span>
+        <nav aria-label="Pagination rubriques">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_rubriques', { page: currentPage - 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Précédent</a>
+                </li>
+                {% for i in 1..maxPages %}
+                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_rubriques', { page: i, q: q|default(''), sort: sort|default('date_desc') }) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_rubriques', { page: currentPage + 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+{% endblock %}

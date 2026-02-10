@@ -16,8 +16,14 @@ class EvenementType extends AbstractType
         $builder
             ->add('nomEvenement', null, ['required' => false])
             ->add('typeEvenement', null, ['required' => false])
-            ->add('dateDebut', null, ['required' => false])
-            ->add('dateFin', null, ['required' => false])
+            ->add('dateDebut', null, [
+                'required' => false,
+                'widget' => 'single_text',
+            ])
+            ->add('dateFin', null, [
+                'required' => false,
+                'widget' => 'single_text',
+            ])
             ->add('status', null, ['required' => false])
             ->add('place', EntityType::class, [
                 'class' => Place::class,

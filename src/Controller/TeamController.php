@@ -2,14 +2,17 @@
 
 namespace App\Controller;
 
+use App\Entity\Offer;
 use App\Entity\Team;
 use App\Form\TeamType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class TeamController extends AbstractController
 {
@@ -75,7 +78,7 @@ class TeamController extends AbstractController
         ]);
     }
     #[Route('/teams/{id}/manage', name: 'team_manage')]
-    public function manage(int $id, EntityManagerInterface $em, Request $request): Response
+    public function manage(int $id, EntityManagerInterface $em, Request $request, ValidatorInterface $validator): Response
     {
         $user = $this->getUser();
         if (!$user) {
@@ -92,61 +95,90 @@ class TeamController extends AbstractController
             throw $this->createAccessDeniedException('You are not the owner of this team.');
         }
 
-        // Initialize new Offer
-        $offer = new \App\Entity\Offer();
+        $offer = new Offer();
 
-        // Handle Offer Creation Form
         if ($request->isMethod('POST') && $request->request->has('create_offer')) {
             $offer->setTeam($team);
-            $offer->setTitle($request->request->get('title'));
-            $offer->setDescription($request->request->get('description'));
-            $offer->setGame($request->request->get('game'));
-            $offer->setRole($request->request->get('role'));
-
-            // Handle Rank/Elo
+            $offer->setTitle(trim((string) $request->request->get('title', '')));
+            $offer->setDescription(trim((string) $request->request->get('description', '')));
+            $game = strtoupper(trim((string) $request->request->get('game', '')));
+            $offer->setGame($game === '' ? '' : $game);
+            $offer->setRole(trim((string) $request->request->get('role', '')));
             $rank = $request->request->get('rank');
-            if (!$rank && $request->request->get('elo')) {
+            if ($rank === null || $rank === '') {
                 $rank = $request->request->get('elo');
             }
-            $offer->setRank($rank);
+            $offer->setRank($rank !== null && $rank !== '' ? (string) $rank : '');
 
-            $offer->setNbPlayerRecruited((int) $request->request->get('nbRecruited'));
+            $nbRecruited = $request->request->get('nbRecruited');
+            $offer->setNbPlayerRecruited($nbRecruited !== null && $nbRecruited !== '' ? (int) $nbRecruited : 0);
 
-            if ($request->request->get('dateCreation')) {
-                $offer->setDateCreation(new \DateTime($request->request->get('dateCreation')));
+            $dateCreation = $request->request->get('dateCreation');
+            if ($dateCreation) {
+                try {
+                    $offer->setDateCreation(new \DateTime($dateCreation));
+                } catch (\Exception) {
+                    $offer->setDateCreation(null);
+                }
             }
-            if ($request->request->get('dateExpiration')) {
-                $expirationDate = new \DateTime($request->request->get('dateExpiration'));
-                if ($expirationDate <= $offer->getDateCreation()) {
-                    $this->addFlash('error', 'Expiration date must be after creation date.');
+            $dateExpiration = $request->request->get('dateExpiration');
+            if ($dateExpiration) {
+                try {
+                    $expirationDate = new \DateTime($dateExpiration);
+                    $offer->setDateExpiration($expirationDate);
+                } catch (\Exception) {
+                    $offer->setDateExpiration(null);
+                }
+            }
+
+            // Validation PHP (entité)
+            $errors = $validator->validate($offer);
+            if ($errors->count() > 0) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+                return $this->redirectToRoute('team_manage', ['id' => $id]);
+            }
+
+            if ($offer->getDateExpiration() && $offer->getDateCreation() && $offer->getDateExpiration() <= $offer->getDateCreation()) {
+                $this->addFlash('error', 'La date d\'expiration doit être après la date de création.');
+                return $this->redirectToRoute('team_manage', ['id' => $id]);
+            }
+
+            // Fichier poster : validation PHP (taille, type MIME)
+            $posterFile = $request->files->get('poster');
+            if ($posterFile && $posterFile->getError() === \UPLOAD_ERR_OK) {
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+                $maxSize = 2 * 1024 * 1024; // 2 Mo
+                $mime = $posterFile->getMimeType();
+                if (!\in_array($mime, $allowedMimes, true)) {
+                    $this->addFlash('error', 'Le poster doit être une image (JPEG, PNG ou WebP).');
                     return $this->redirectToRoute('team_manage', ['id' => $id]);
                 }
-                $offer->setDateExpiration($expirationDate);
-            }
-
-            // Handle Poster Upload
-            $posterFile = $request->files->get('poster');
-            if ($posterFile) {
+                if ($posterFile->getSize() > $maxSize) {
+                    $this->addFlash('error', 'Le poster ne doit pas dépasser 2 Mo.');
+                    return $this->redirectToRoute('team_manage', ['id' => $id]);
+                }
                 $originalFilename = pathinfo($posterFile->getClientOriginalName(), PATHINFO_FILENAME);
-                // this is needed to safely include the file name as part of the URL
-                // utilizing the existing slugger service or a simple replacement
                 $safeFilename = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $originalFilename)));
                 $newFilename = $safeFilename . '-' . uniqid() . '.' . $posterFile->guessExtension();
-
                 try {
                     $posterFile->move(
                         $this->getParameter('kernel.project_dir') . '/public/uploads/offers',
                         $newFilename
                     );
                     $offer->setPoster($newFilename);
-                } catch (\Exception $e) {
-                    $this->addFlash('error', 'Error uploading poster');
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload du poster.');
+                    return $this->redirectToRoute('team_manage', ['id' => $id]);
                 }
+            } else {
+                $this->addFlash('error', 'Le poster image est obligatoire.');
+                return $this->redirectToRoute('team_manage', ['id' => $id]);
             }
 
             $em->persist($offer);
             $em->flush();
-
             $this->addFlash('success', 'Offer created successfully!');
             return $this->redirectToRoute('team_manage', ['id' => $id]);
         }

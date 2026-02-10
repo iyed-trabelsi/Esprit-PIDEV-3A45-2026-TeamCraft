@@ -5,40 +5,56 @@ namespace App\Entity;
 use App\Repository\OfferRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: OfferRepository::class)]
 class Offer
 {
+    public const GAMES = ['VALORANT', 'LOL', 'CS2', 'OVERWATCH'];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
+    #[Assert\Length(max: 255)]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotNull(message: 'La date de création est obligatoire.')]
     private ?\DateTimeInterface $dateCreation = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotNull(message: 'La date d\'expiration est obligatoire.')]
     private ?\DateTimeInterface $dateExpiration = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $poster = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le jeu est obligatoire.')]
+    #[Assert\Choice(choices: self::GAMES, message: 'Jeu invalide.')]
     private ?string $game = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le rôle est obligatoire.')]
+    #[Assert\Length(max: 255)]
     private ?string $role = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le rang est obligatoire.')]
+    #[Assert\Length(max: 255)]
     private ?string $rank = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: 'Le nombre de joueurs à recruter est obligatoire.')]
+    #[Assert\Range(min: 1, max: 99, notInRangeMessage: 'Le nombre doit être entre {{ min }} et {{ max }}.')]
     private ?int $nbPlayerRecruited = null;
 
     #[ORM\ManyToOne(inversedBy: 'offers')]

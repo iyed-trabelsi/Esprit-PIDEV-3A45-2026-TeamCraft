@@ -85,6 +85,11 @@
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </a>
+                <a href="{{ path('app_home') }}" 
+                   class="nav-link py-2 px-3 mb-1 rounded-2 d-flex align-items-center gap-3 text-white-50">
+                    <i class="bi bi-house-door"></i>
+                    <span>Home</span>
+                </a>
 
                 <!-- GESTION -->
                 <span class="text-uppercase text-white mt-4 mb-3 px-3" style="font-size: 0.7rem; letter-spacing: 0.12em;">Gestion</span>
@@ -113,10 +118,27 @@
                     <span>Événements</span>
                 </a>
                 
-                <a href="{{ path('admin_forum') }}" 
-                   class="nav-link py-2 px-3 mb-1 rounded-2 d-flex align-items-center gap-3 {% if app.request.attributes.get('_route') starts with 'admin_forum' %}active{% else %}text-white-50{% endif %}">
+                <a href="{{ path('admin_rubriques') }}" 
+                   class="nav-link py-2 px-3 mb-1 rounded-2 d-flex align-items-center gap-3 {% if app.request.attributes.get('_route') starts with 'admin_rubriques' %}active{% else %}text-white-50{% endif %}">
+                    <i class="bi bi-folder"></i>
+                    <span>Rubriques</span>
+                </a>
+                <a href="{{ path('admin_posts') }}" 
+                   class="nav-link py-2 px-3 mb-1 rounded-2 d-flex align-items-center gap-3 {% if app.request.attributes.get('_route') starts with 'admin_posts' %}active{% else %}text-white-50{% endif %}">
                     <i class="bi bi-chat-left-text"></i>
-                    <span>Forum</span>
+                    <span>Posts</span>
+                </a>
+                <a href="{{ path('admin_comments') }}" 
+                   class="nav-link py-2 px-3 mb-1 rounded-2 d-flex align-items-center gap-3 {% if app.request.attributes.get('_route') starts with 'admin_comments' %}active{% else %}text-white-50{% endif %}">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>Commentaires</span>
+                </a>
+
+                <span class="text-uppercase text-white mt-4 mb-3 px-3" style="font-size: 0.7rem; letter-spacing: 0.12em;">Administration</span>
+                <a href="{{ path('admin_admins') }}" 
+                   class="nav-link py-2 px-3 mb-1 rounded-2 d-flex align-items-center gap-3 {% if app.request.attributes.get('_route') starts with 'admin_admins' %}active{% else %}text-white-50{% endif %}">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Admins</span>
                 </a>
             </nav>
         </aside>
