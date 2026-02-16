@@ -1,0 +1,531 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ rubrique.nomRubrique }} - Forum TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_forum') }}" class="text-secondary text-decoration-none">Forum</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ rubrique.nomRubrique }}</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            {% if canEdit %}
+            <div class="col-12 col-lg-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="icon-box p-2 rounded text-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-gear" viewBox="0 0 16 16">
+                            <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm.256 7a4.474 4.474 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.36 10 8 10c.049 0 .098.001.147.005A4.49 4.49 0 0 1 8 13.5a4.49 4.49 0 0 1 4.642-4.745.5.5 0 0 1 .508.495v.005a5.503 5.503 0 0 0 .507.005H14a.5.5 0 0 1 .495.508V14a.5.5 0 0 1-.508.495H8.256Zm-.055-.494A3.5 3.5 0 0 0 12 10.5a3.49 3.49 0 0 0-3.417 3.46c.01.21.03.418.06.621.037.247.112.483.218.705.105.218.243.417.408.598.66.721 1.638 1.116 2.731 1.116s2.07-.395 2.731-1.116c.165-.181.303-.38.408-.598.106-.222.181-.458.218-.705.03-.203.05-.411.06-.621A3.49 3.49 0 0 0 12 10.5Zm-8.497.001a.5.5 0 0 1-.005.494.5.5 0 0 1-.495-.005.5.5 0 0 1-.005-.494.5.5 0 0 1 .495.005.5.5 0 0 1 .005.494Z"/>
+                            <path d="M13.43 12.18c-.027-.378-.073-.75-.138-1.113l-.007-.038a4.507 4.507 0 0 0-.276-1.026l.006-.033a3.507 3.507 0 0 0-.308-.72l.006-.035a2.508 2.508 0 0 0-.29-.53l.004-.025a1.505 1.505 0 0 0-.374-.75h.001l-.002-.002a2.495 2.495 0 0 0-.002 4.28 2.477 2.477 0 0 0 1.396-.008Z"/>
+                        </svg>
+                    </div>
+                    <h1 class="h3 fw-bold text-white mb-0">Manage Section</h1>
+                </div>
+                <div class="card bg-dark border-0 shadow mb-4" style="background-color: #16161a !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="rounded-circle p-1 border border-warning border-opacity-25">
+                                <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-dark fw-bold fs-4" style="width: 60px; height: 60px;">
+                                    {{ rubrique.nomRubrique|first|upper }}
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="h5 fw-bold text-white mb-0">{{ rubrique.nomRubrique }}</h2>
+                                <p class="text-secondary mb-0 small">
+                                    {{ rubrique.description|default(rubrique.topic)|default('Rubrique du forum') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ path('app_forum_rubrique_edit', { id: rubrique.id }) }}" class="btn btn-success flex-grow-1 fw-bold" style="font-size: 0.9rem;">Edit Section</a>
+                            <form action="{{ path('app_forum_rubrique_delete', { id: rubrique.id }) }}" method="post" class="flex-grow-1" onsubmit="return confirm('Supprimer cette rubrique et tous ses posts ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_rubrique_' ~ rubrique.id) }}">
+                                <button type="submit" class="btn btn-danger w-100 fw-bold" style="font-size: 0.9rem;">Delete Section</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="col-12 {% if canEdit %}col-lg-8{% endif %}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div>
+                        <h2 class="h4 fw-bold text-white mb-1">{{ rubrique.nomRubrique }}</h2>
+                        <p class="text-secondary mb-0 small">{{ rubrique.description|default('') }}</p>
+                        {% if not canAddPost %}
+                            <p class="text-warning small mb-0 mt-1">Cette rubrique est archivée. Les nouveaux posts sont désactivés.</p>
+                        {% endif %}
+                        <div class="mt-3">
+                            <button id="btn-generate-ai-summary" class="btn btn-sm btn-tc-outline d-flex align-items-center gap-2" data-rubrique-id="{{ rubrique.id }}">
+                                <i class="bi bi-stars"></i>
+                                <span id="summary-btn-text">Generate AI Summary</span>
+                                <span id="summary-loader" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            </button>
+                        </div>
+                    </div>
+                   
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <!-- Filter by Type Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="typeFilterDropdownBtn">
+                                <i class="bi bi-funnel"></i>
+                                <span id="currentTypeLabel">All Types</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item active js-type-option" href="#" data-type="all">All Types</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item js-type-option" href="#" data-type="discussion">Discussion</a></li>
+                                <li><a class="dropdown-item js-type-option" href="#" data-type="question">Question</a></li>
+                                <li><a class="dropdown-item js-type-option" href="#" data-type="annonce">Annonce</a></li>
+                            </ul>
+                        </div>
+                         <!-- Sort Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="sortDropdownBtn">
+                                <i class="bi bi-sort-down"></i>
+                                <span id="currentSortLabel">Newest First</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item active js-sort-option" href="#" data-sort="desc">Newest First</a></li>
+                                <li><a class="dropdown-item js-sort-option" href="#" data-sort="asc">Oldest First</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item js-sort-option" href="#" data-sort="views_desc">Most Viewed</a></li>
+                                <li><a class="dropdown-item js-sort-option" href="#" data-sort="views_asc">Least Viewed</a></li>
+                            </ul>
+                        </div>
+
+                         <!-- Search Input -->
+                        <div class="position-relative">
+                            <input type="text" id="post-search-input" class="form-control form-control-sm text-white ps-5" placeholder="Search posts..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                         </div>
+
+
+                        
+                        {% if app.user and canAddPost %}
+                            <a href="{{ path('app_forum_post_new', { rubrique: rubrique.id }) }}" class="btn btn-success px-4 fw-bold ms-2">New Post</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+        <div class="row g-4" id="posts-container">
+            {% for post in posts %}
+                <div class="col-12 col-md-6 col-lg-4 post-item" data-name="{{ post.titre|lower }}" data-type="{{ post.typePost|lower }}" data-date="{{ post.dateCreation ? post.dateCreation|date('U') : 0 }}" data-views="{{ post.nbVues }}" data-id="{{ post.id }}">
+                    <div class="discovery-card h-100 d-flex flex-column p-4 position-relative">
+                        
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="badge-game valorant">{{ post.typePost }}</span>
+                            <span class="badge-rank purple">{{ post.nbVues }} vues</span>
+                        </div>
+                        <h3 class="discovery-card-title mb-2">{{ post.titre }}</h3>
+                        <p class="discovery-card-subtitle small mb-3 flex-grow-1">{{ post.contenu|length > 80 ? post.contenu|slice(0, 80) ~ '…' : post.contenu }}</p>
+                        <p class="discovery-card-subtitle small mb-2">Par {{ post.auteur.pseudo|default(post.auteur.username) }} · {{ post.dateCreation|date('d/m/Y') }}</p>
+                        <a href="{{ path('app_forum_post_show', { id: post.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Post</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="discovery-card p-5 text-center">
+                        <p class="discovery-card-subtitle mb-0">Aucun post dans cette rubrique.</p>
+                        {% if app.user %}
+                            <a href="{{ path('app_forum_post_new', { rubrique: rubrique.id }) }}" class="btn btn-recruit mt-3">Créer le premier post</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            <div id="no-results-message" class="col-12 text-center py-5 d-none">
+                <p class="text-white-50">No posts found matching your search.</p>
+            </div>
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <button class="btn btn-sm btn-tc-outline px-3 js-prev-posts" disabled>
+                <i class="bi bi-chevron-left">&lt;</i>
+            </button>
+            <button class="btn btn-sm btn-tc-outline px-3 js-next-posts">
+                <i class="bi bi-chevron-right">&gt;</i>
+            </button>
+        </div>
+
+                <div class="mt-4">
+                    <a href="{{ path('app_forum') }}" class="discovery-view-all text-decoration-none">← Return</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--tc-bg-card); border: 1px solid var(--tc-border); color: var(--tc-text);">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title font-display" id="reportModalLabel">Signaler le post</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="motif" class="form-label text-muted">Motif du signalement</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="motif" name="motif">
+                                <option value="">Choisir un motif...</option>
+                                <option value="Spam">Spam</option>
+                                <option value="Harcèlement">Harcèlement</option>
+                                <option value="Contenu inapproprié">Contenu inapproprié</option>
+                                <option value="Désinformation">Désinformation / Fake News</option>
+                                <option value="Discours haineux">Discours haineux</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label text-muted">Description (optionnel)</label>
+                            <textarea class="form-control bg-dark text-white border-secondary" id="description" name="description" rows="3" placeholder="Détails supplémentaires..."></textarea>
+                        </div>
+                        <div class="alert alert-info bg-dark border-info text-info small">
+                            <i class="bi bi-info-circle me-2"></i> Les signalements sont traités par nos administrateurs dans les plus brefs délais.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger">Envoyer le signalement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- AI Summary Modal -->
+    <div class="modal fade" id="aiSummaryModal" tabindex="-1" aria-labelledby="aiSummaryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background: var(--tc-bg-card); border: 1px solid var(--tc-border); color: var(--tc-text);">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title font-display" id="aiSummaryModalLabel"><i class="bi bi-stars me-2 text-warning"></i>Discussion Summary</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="ai-summary-content" class="lh-lg" style="font-size: 0.95rem;">
+                        <!-- Summary injected here -->
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button id="btn-regenerate-summary" class="btn btn-tc-outline">Regenerate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #post-search-input::placeholder {
+            color: white !important;
+            opacity: 0.7;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Forum Post Script Loaded');
+            
+            function setupPagination(itemClass, prevBtnClass, nextBtnClass, itemsPerPage, containerId) {
+                const container = containerId ? document.getElementById(containerId) : null;
+                let allItems = Array.from(document.querySelectorAll('.' + itemClass));
+                console.log('Setup Pagination for', itemClass, 'Found items:', allItems.length);
+                
+                const prevBtns = document.querySelectorAll('.' + prevBtnClass);
+                const nextBtns = document.querySelectorAll('.' + nextBtnClass);
+                
+                if (!allItems.length) return null;
+                
+                let currentPage = 0;
+                let currentSearch = '';
+                let currentType = 'all';
+                let currentSortDir = 'desc'; // Default sort
+                let visibleItems = [...allItems]; // Copy for manipulation
+                
+                // Initial Sort (Newest First)
+                sortItems(visibleItems, currentSortDir);
+
+                // Helper to calculate pages based on currently filtered items
+                function getTotalPages() {
+                    return Math.ceil(visibleItems.length / itemsPerPage);
+                }
+
+                function updateVisibility() {
+                    const totalPages = getTotalPages();
+                    
+                    // Ensure current page is valid after filtering
+                    if (currentPage >= totalPages && totalPages > 0) {
+                        currentPage = totalPages - 1;
+                    }
+                    if (currentPage < 0) currentPage = 0;
+
+                    // First hide EVERYTHING in the original DOM list (to be safe)
+                    allItems.forEach(item => item.style.display = 'none');
+
+                    // Then show only the slice of the FILTERED items for current page
+                    const start = currentPage * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const pageItems = visibleItems.slice(start, end);
+                    
+                    pageItems.forEach(item => {
+                        item.style.display = 'block';
+                        item.style.opacity = '1'; 
+                    });
+
+                    // Visual update of buttons
+                    prevBtns.forEach(btn => btn.disabled = currentPage === 0 || totalPages === 0);
+                    nextBtns.forEach(btn => btn.disabled = currentPage >= totalPages - 1 || totalPages === 0);
+                    
+                    // If we have a container, we can physically re-order elements for visual flow
+                    if (container) {
+                            visibleItems.forEach(item => container.appendChild(item));
+                    }
+                }
+
+                function sortItems(items, direction) {
+                    console.log('Sorting items...', direction);
+                    items.sort((a, b) => {
+                        const dateA = parseInt(a.getAttribute('data-date') || '0');
+                        const dateB = parseInt(b.getAttribute('data-date') || '0');
+                        
+                        // Sort based on direction
+                        if (direction.startsWith('views')) {
+                            const viewsA = parseInt(a.getAttribute('data-views') || '0');
+                            const viewsB = parseInt(b.getAttribute('data-views') || '0');
+                            
+                            if (viewsA !== viewsB) {
+                                return direction === 'views_desc' ? viewsB - viewsA : viewsA - viewsB;
+                            }
+                        } else {
+                            // Date Sort
+                            if (dateA !== dateB) {
+                                return direction === 'asc' ? dateA - dateB : dateB - dateA;
+                            }
+                        }
+                        
+                        // Secondary Sort (Tie-breaker): ID
+                        const idA = parseInt(a.getAttribute('data-id') || '0');
+                        const idB = parseInt(b.getAttribute('data-id') || '0');
+                        // For consistency, ID sort is always ASC unless we really want other behavior
+                        // But let's keep it simple: always deterministic
+                        return idB - idA; // Newer IDs first by default for tie-breaking
+                    });
+                }
+
+                prevBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (currentPage > 0) {
+                            currentPage--;
+                            updateVisibility();
+                        }
+                    });
+                });
+
+                nextBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (currentPage < getTotalPages() - 1) {
+                            currentPage++;
+                            updateVisibility();
+                        }
+                    });
+                });
+                
+                // Public methods
+                return {
+                    applyFilters: function() {
+                        console.log('Applying Filters:', currentSearch, currentType);
+                        
+                        visibleItems = allItems.filter(item => {
+                            // Search Filter
+                            const name = item.getAttribute('data-name');
+                            const matchesSearch = !currentSearch || (name && name.toLowerCase().includes(currentSearch));
+                            
+                            // Type Filter
+                            const type = item.getAttribute('data-type');
+                            const matchesType = currentType === 'all' || (type && type === currentType);
+                            
+                            return matchesSearch && matchesType;
+                        });
+                        
+                        // Re-apply sort after filter
+                        sortItems(visibleItems, currentSortDir);
+                        
+                        // Check for no results
+                        const noResultsMsg = document.getElementById('no-results-message');
+                        if (noResultsMsg) {
+                            if (visibleItems.length === 0 && (currentSearch !== '' || currentType !== 'all')) {
+                                noResultsMsg.classList.remove('d-none');
+                            } else {
+                                noResultsMsg.classList.add('d-none');
+                            }
+                        }
+                        
+                        currentPage = 0; // Reset to first page
+                        updateVisibility();
+                    },
+                    filterSearch: function(searchTerm) {
+                        currentSearch = searchTerm.toLowerCase().trim();
+                        this.applyFilters();
+                    },
+                    filterType: function(type) {
+                        currentType = type;
+                        this.applyFilters();
+                    },
+                    sort: function(direction) {
+                        console.log('Public Sort Called:', direction);
+                        currentSortDir = direction;
+                        sortItems(visibleItems, currentSortDir);
+                        currentPage = 0; 
+                        updateVisibility();
+                    },
+                    init: function() {
+                        updateVisibility();
+                    }
+                };
+            }
+
+            // Report Modal Logic
+            const reportModal = document.getElementById('reportModal');
+            if (reportModal) {
+                const reportForm = reportModal.querySelector('form');
+                const modalTitle = reportModal.querySelector('.modal-title');
+                
+                document.querySelectorAll('.js-report-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const postId = this.dataset.postId;
+                        const postTitle = this.dataset.postTitle;
+                        
+                        // Update form action
+                        reportForm.action = `/forum/post/${postId}/report`;
+                        modalTitle.textContent = `Signaler: ${postTitle}`;
+                    });
+                });
+            }
+            
+            // Setup Posts pagination (6 items)
+            const postPaginator = setupPagination('post-item', 'js-prev-posts', 'js-next-posts', 6, 'posts-container');
+            if (postPaginator) postPaginator.init();
+            
+            // Connect Search Input
+            const searchInput = document.getElementById('post-search-input');
+            if (searchInput && postPaginator) {
+                searchInput.addEventListener('input', function(e) {
+                    postPaginator.filterSearch(e.target.value);
+                });
+            }
+
+            // Connect Type Filter
+            const typeOptions = document.querySelectorAll('.js-type-option');
+            const currentTypeLabel = document.getElementById('currentTypeLabel');
+            
+            if (typeOptions.length && postPaginator) {
+                typeOptions.forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const type = this.getAttribute('data-type');
+                        const label = this.textContent;
+                        
+                        // Update Active State
+                        typeOptions.forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Update Button Label
+                        if (currentTypeLabel) currentTypeLabel.textContent = label;
+                        
+                        // Trigger Filter
+                        postPaginator.filterType(type);
+                    });
+                });
+            }
+
+            // Connect Sorting Options
+            const sortOptions = document.querySelectorAll('.js-sort-option');
+            const currentSortLabel = document.getElementById('currentSortLabel');
+            
+            if (sortOptions.length && postPaginator) {
+                sortOptions.forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const direction = this.getAttribute('data-sort');
+                        const label = this.textContent;
+                        
+                        // Update Active State
+                        sortOptions.forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Update Button Label
+                        if (currentSortLabel) currentSortLabel.textContent = label;
+                        
+                        // Trigger Sort
+                        postPaginator.sort(direction);
+                    });
+                });
+            }
+
+            // AI Summary Logic
+            const btnGenerate = document.getElementById('btn-generate-ai-summary');
+            const btnRegenerate = document.getElementById('btn-regenerate-summary');
+            const summaryLoader = document.getElementById('summary-loader');
+            const summaryBtnText = document.getElementById('summary-btn-text');
+            const summaryContent = document.getElementById('ai-summary-content');
+            const modalEl = document.getElementById('aiSummaryModal');
+            let aiSummaryModal = null;
+
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                aiSummaryModal = new bootstrap.Modal(modalEl);
+            }
+
+            async function fetchSummary(force = false) {
+                const rubriqueId = btnGenerate.dataset.rubriqueId;
+                summaryLoader.classList.remove('d-none');
+                btnGenerate.disabled = true;
+                if (btnRegenerate) btnRegenerate.disabled = true;
+
+                try {
+                    // We use a small hack if we want to force regeneration (simulated by adding a param)
+                    // though the current backend doesn't handle force param yet, we'll implement it if needed.
+                    // For now, if force is true, we could call a different endpoint or just let the backend handle it.
+                    // The user said "Do not regenerate if already cached" by default, but "Regenerate" button is optional.
+                    // I'll stick to the basic behavior for now.
+                    // Add force parameter if needed
+                    const url = `/api/rubrique/${rubriqueId}/summary${force ? '?force=1' : ''}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                    } else {
+                        // Replace \n with <br> for HTML display
+                        summaryContent.innerHTML = data.summary.replace(/\n/g, '<br>');
+                        if (aiSummaryModal) {
+                            aiSummaryModal.show();
+                        } else {
+                            alert('Modal error: Bootstrap could not be initialized.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('AI Summary Error:', error);
+                    alert('An error occurred while generating the summary.');
+                } finally {
+                    summaryLoader.classList.add('d-none');
+                    btnGenerate.disabled = false;
+                    if (btnRegenerate) btnRegenerate.disabled = false;
+                }
+            }
+
+            if (btnGenerate) {
+                btnGenerate.addEventListener('click', () => fetchSummary(false));
+            }
+
+            if (btnRegenerate) {
+                btnRegenerate.addEventListener('click', () => fetchSummary(true));
+            }
+        });
+    </script>
+    
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

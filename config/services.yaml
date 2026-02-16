@@ -1,0 +1,56 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    team_logos_directory: '%kernel.project_dir%/public/uploads/teams'
+    uploads_post_dir: '%kernel.project_dir%/public/uploads/posts'
+    uploads_comment_dir: '%kernel.project_dir%/public/uploads/comments'
+    perspective_api_key: '%env(default::PERSPECTIVE_API_KEY)%'
+    # Local AI image moderation (Python CLIP script). Override with PYTHON_PATH env (e.g. C:\...\python.exe or path to venv).
+    python_path: 'python'
+    ai_moderation_python_path: '%env(default:python_path:PYTHON_PATH)%'
+    ai_moderation_script_path: '%kernel.project_dir%/ai_moderation/ai_detector.py'
+    # Si true (défaut) : quand le script Python échoue, l'image n'est pas enregistrée. Si false : l'image est acceptée quand la modération est indisponible (pour débloquer sans Python).
+    moderation_required_default: '1'
+    ai_moderation_required: '%env(bool:default:moderation_required_default:AI_MODERATION_REQUIRED)%'
+    
+    # OpenRouter API Key for Smart Writing Assistant
+    openrouter_api_key: '%env(default::OPENROUTER_API_KEY)%'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # Injection explicite de la clé Perspective API pour ContentModeratorService
+    App\Service\ContentModeratorService:
+        arguments:
+            $apiKey: '%perspective_api_key%'
+
+    # Local AI image moderation (no external APIs)
+    App\Service\ImageModerationService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $pythonPath: '%ai_moderation_python_path%'
+            $scriptPath: '%ai_moderation_script_path%'
+            $moderationRequired: '%ai_moderation_required%'
+
+    # Smart Writing Assistant (OpenRouter)
+    App\Service\SmartWritingService:
+        arguments:
+            $apiKey: '%openrouter_api_key%'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

@@ -1,0 +1,49 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ post.title }} - Forum TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_forum') }}" class="text-secondary text-decoration-none">Forum</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ post.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="discovery-card p-4 p-md-5 mb-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge-game {{ post.gameColor }}">{{ post.game }}</span>
+                <span class="badge-rank {{ post.rankColor }}">{{ post.rank }}</span>
+            </div>
+            <h1 class="h2 fw-bold discovery-card-title mb-2">{{ post.title }}</h1>
+            <p class="discovery-card-subtitle mb-4">{{ post.subtitle }}</p>
+            <div class="post-body" style="color: var(--tc-text); line-height: 1.6;">{{ post.body }}</div>
+        </div>
+
+        <h2 class="h5 fw-bold mb-3">Comments ({{ comments|length }})</h2>
+        <div class="d-flex flex-column gap-3">
+            {% for comment in comments %}
+                <div class="discovery-card p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="fw-bold discovery-card-title">{{ comment.author }}</span>
+                        <span class="discovery-card-subtitle small">{{ comment.date }}</span>
+                    </div>
+                    <p class="mb-0" style="color: var(--tc-text);">{{ comment.text }}</p>
+                </div>
+            {% else %}
+                <div class="discovery-card p-4 text-center discovery-card-subtitle">
+                    No comments yet. Be the first to reply!
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <a href="{{ path('app_forum') }}" class="discovery-view-all text-decoration-none">← Back to Forum</a>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

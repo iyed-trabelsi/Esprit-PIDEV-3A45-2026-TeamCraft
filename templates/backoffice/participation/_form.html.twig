@@ -1,0 +1,23 @@
+{{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
+    {{ form_errors(form) }}
+    <div class="admin-form-widgets">
+        <div class="mb-3">
+            {{ form_label(form.dateInscription) }}
+            {{ form_widget(form.dateInscription) }}
+            {{ form_errors(form.dateInscription) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.evenement) }}
+            {{ form_widget(form.evenement) }}
+            {{ form_errors(form.evenement) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.user) }}
+            {{ form_widget(form.user) }}
+            {{ form_errors(form.user) }}
+        </div>
+    </div>
+    <div class="mt-4">
+        <button type="submit" class="btn btn-tc-primary w-100">{{ button_label|default('Enregistrer') }}</button>
+    </div>
+{{ form_end(form) }}

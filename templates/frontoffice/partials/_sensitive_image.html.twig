@@ -1,0 +1,32 @@
+{# imageUrl: full URL or path for the image
+   shouldBlur: if true, show blur overlay and let user choose to view or disable blur
+   imageAlt: optional alt text
+   imageClass: optional CSS classes for the img (e.g. img-fluid rounded)
+   containerId: optional id for the wrapper
+   maxHeight: optional e.g. 300px #}
+<div class="sensitive-image-wrapper position-relative {{ shouldBlur ? 'sensitive-image-blurred' : '' }}" {% if containerId %}id="{{ containerId }}"{% endif %} data-blurred="{{ shouldBlur ? '1' : '0' }}">
+    <img src="{{ imageUrl }}" alt="{{ imageAlt|default('') }}" class="sensitive-image-img {{ imageClass|default('img-fluid rounded') }}" style="max-height: {{ maxHeight|default('300px') }}; object-fit: cover;{{ shouldBlur ? ' filter: blur(20px); pointer-events: none;' : '' }}">
+    {% if shouldBlur %}
+    <div class="sensitive-image-overlay position-absolute top-0 start-0 end-0 bottom-0 rounded p-3" style="background: rgba(0,0,0,0.8);">
+        <div class="sensitive-image-overlay-blurred d-flex flex-column align-items-center justify-content-center h-100">
+            <i class="bi bi-eye-slash text-white mb-3" style="font-size: 2.5rem;"></i>
+            <p class="text-white text-center mb-1 small">Cette image peut inclure du contenu explicite.</p>
+            <p class="text-white-50 text-center small mb-3">Le floutage est activé.</p>
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <button type="button" class="btn btn-outline-light btn-sm sensitive-image-btn-view">Voir l'image</button>
+                <button type="button" class="btn btn-outline-light btn-sm sensitive-image-btn-hide">Masquer l'image</button>
+                {% if postId is defined %}
+                    <form action="{{ path('app_forum_post_report', {id: postId}) }}" method="post" class="d-inline" onsubmit="return confirm('Signaler cette photo comme inappropriée ?');">
+                        <input type="hidden" name="motif" value="Photo Inappropriée">
+                        <input type="hidden" name="description" value="L'utilisateur a signalé cette image floutée comme inappropriée.">
+                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-flag-fill me-1"></i>Signaler</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="sensitive-image-overlay-revealed d-none d-flex align-items-center justify-content-center position-absolute top-0 start-0 end-0 bottom-0">
+            <button type="button" class="btn btn-outline-light btn-sm sensitive-image-btn-reblur">Flouter à nouveau</button>
+        </div>
+    </div>
+    {% endif %}
+</div>
