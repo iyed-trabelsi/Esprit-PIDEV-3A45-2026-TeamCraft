@@ -372,7 +372,7 @@ class AdminController extends AbstractController
         $reports = $signalementRepository->findBy(['status' => 'pending'], ['dateSignalement' => 'DESC']);
 
         // Statistiques par type de post
-        $postsByType = $postRepository->countByType();
+        $postsByType = $postRepository->countByType($q);
 
         if ($request->isXmlHttpRequest()) {
             return new Response($twig->load('backoffice/posts.html.twig')->renderBlock('posts_list', [

@@ -32,7 +32,9 @@ class ForumController extends AbstractController
         private \App\Service\ContentModeratorService $moderator,
         private \App\Service\ImageModerationService $imageModerator,
         private \App\Service\SpamDetectorService $spamDetector,
-        private \App\Service\SmartWritingService $smartWriting
+        private \App\Service\SmartWritingService $smartWriting,
+        private \App\Service\ImageGenerationService $imageGenerator,
+        private \App\Service\PostRecommendationService $recommendationService
     ) {
     }
 
@@ -47,10 +49,13 @@ class ForumController extends AbstractController
         if ($this->getUser()) {
             $mesRubriques = $this->rubriqueRepository->findByAuteur($this->getUser());
         }
+        $recommendations = $this->recommendationService->getRecommendations($this->getUser());
+
         return $this->render('frontoffice/forum/index.html.twig', [
             'rubriques' => $rubriques,
             'mes_rubriques' => $mesRubriques,
             'currentSort' => $sort,
+            'recommendations' => $recommendations,
         ]);
     }
 
@@ -139,6 +144,30 @@ class ForumController extends AbstractController
                 ]);
             }
 
+            // Handle image upload
+            $file = $form->get('image')->getData();
+            $generatedFilename = $request->request->get('generated_image_filename');
+            
+            if ($generatedFilename) {
+                // Use AI-generated image
+                $rubrique->setImage($generatedFilename);
+            } elseif ($file) {
+                // Use uploaded image
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+                try {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    $file->move($uploadDir, $newFilename);
+                    $rubrique->setImage($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
+                }
+            }
+
             $rubrique->setNbPosts(0);
             $this->em->persist($rubrique);
             $this->em->flush();
@@ -209,6 +238,55 @@ class ForumController extends AbstractController
                     'existingRubrique' => $existingRubrique,
                     'toxic_error' => $toxicError
                 ]);
+            }
+
+            // Handle image upload
+            $file = $form->get('image')->getData();
+            $generatedFilename = $request->request->get('generated_image_filename');
+            $deleteCurrentImage = $request->request->get('delete_current_image') === '1';
+            
+            if ($generatedFilename) {
+                // Use AI-generated image (delete old if exists)
+                if ($rubrique->getImage() && $rubrique->getImage() !== $generatedFilename) {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    $oldImage = $uploadDir . DIRECTORY_SEPARATOR . $rubrique->getImage();
+                    if (file_exists($oldImage)) {
+                        @unlink($oldImage);
+                    }
+                }
+                $rubrique->setImage($generatedFilename);
+            } elseif ($file) {
+                // Use uploaded image
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+                try {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    // Delete old image if exists
+                    if ($rubrique->getImage()) {
+                        $oldImage = $uploadDir . DIRECTORY_SEPARATOR . $rubrique->getImage();
+                        if (file_exists($oldImage)) {
+                            @unlink($oldImage);
+                        }
+                    }
+                    $file->move($uploadDir, $newFilename);
+                    $rubrique->setImage($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
+                }
+            } elseif ($deleteCurrentImage) {
+                // Explicitly delete image
+                if ($rubrique->getImage()) {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    $oldImage = $uploadDir . DIRECTORY_SEPARATOR . $rubrique->getImage();
+                    if (file_exists($oldImage)) {
+                        @unlink($oldImage);
+                    }
+                }
+                $rubrique->setImage(null);
             }
 
             $this->em->flush();
@@ -288,6 +366,16 @@ class ForumController extends AbstractController
             if ($rubriqueForPost && $rubriqueForPost->getEtat() !== 'active') {
                 $this->addFlash('error', 'Cette rubrique est archivée. Vous ne pouvez pas y ajouter de post.');
                 return $this->redirectToRoute('app_forum');
+            }
+
+            $spamResult = $this->spamDetector->checkSpam($this->getUser(), $post->getContenu() ?? $post->getTitre() ?? '', 'post');
+            if ($spamResult['isSpam']) {
+                $this->addFlash('warning', '🛑 ACTION BLOQUÉE : ' . $spamResult['reason']);
+                return $this->render('frontoffice/forum/post_form.html.twig', [
+                    'post' => $post,
+                    'form' => $form,
+                    'is_edit' => false,
+                ]);
             }
 
             if ($this->moderator->isToxic($post->getTitre()) || ($post->getContenu() && $this->moderator->isToxic($post->getContenu()))) {
@@ -536,7 +624,7 @@ class ForumController extends AbstractController
             $contenu = $comment->getContenu() ?? '';
 
             // 0. AI Spam Detection Check
-            $spamResult = $this->spamDetector->checkSpam($this->getUser(), $contenu);
+            $spamResult = $this->spamDetector->checkSpam($this->getUser(), $contenu, 'comment');
             if ($spamResult['isSpam']) {
                 $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
                 if ($isAjax) {
@@ -966,5 +1054,35 @@ class ForumController extends AbstractController
             'success' => true,
             'translatedText' => $translated
         ]);
+    }
+
+    #[Route('/api/rubrique/generate-image', name: 'app_forum_rubrique_generate_image', methods: ['POST'])]
+    public function generateRubriqueImage(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
+        $data = json_decode($request->getContent(), true);
+        $name = $data['name'] ?? '';
+        $description = $data['description'] ?? null;
+
+        if (empty(trim($name))) {
+            return new JsonResponse(['error' => 'Le nom de la rubrique est requis'], 400);
+        }
+
+        // Generate image using Hugging Face
+        $result = $this->imageGenerator->generateImageForRubrique($name, $description);
+
+        if ($result['success']) {
+            return new JsonResponse([
+                'success' => true,
+                'filename' => $result['filename'],
+                'url' => '/uploads/rubriques/' . $result['filename']
+            ]);
+        } else {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $result['error'] ?? 'Erreur lors de la génération de l\'image'
+            ], 500);
+        }
     }
 }

@@ -96,12 +96,94 @@ class PostRepository extends ServiceEntityRepository
                 break;
         }
     }
-    public function countByType(): array
+    public function findLikedByUser(\App\Entity\User $user): array
     {
         return $this->createQueryBuilder('p')
-            ->select('p.typePost as type, COUNT(p.id) as count')
-            ->groupBy('p.typePost')
+            ->innerJoin('p.likedBy', 'u')
+            ->where('u = :user')
+            ->setParameter('user', $user)
             ->getQuery()
             ->getResult();
+    }
+
+    public function findCandidatesForRecommendation(\App\Entity\User $user, int $limit = 30): array
+    {
+        // Subquery to get IDs of posts already liked by the user
+        $likedIds = $this->createQueryBuilder('p2')
+            ->select('p2.id')
+            ->innerJoin('p2.likedBy', 'u2')
+            ->where('u2 = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getResult();
+
+        $likedIdsArr = array_column($likedIds, 'id');
+
+        $qb = $this->createQueryBuilder('p')
+            ->where('p.statut = :status')
+            ->setParameter('status', 'published')
+            ->andWhere('p.auteur != :user')
+            ->setParameter('user', $user);
+
+        if (!empty($likedIdsArr)) {
+            $qb->andWhere('p.id NOT IN (:likedIds)')
+               ->setParameter('likedIds', $likedIdsArr);
+        }
+
+        return $qb->orderBy('p.dateCreation', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findRecentPopularPosts(int $limit = 4, ?\App\Entity\User $user = null): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->where('p.statut = :status')
+            ->setParameter('status', 'published');
+
+        if ($user) {
+            // Exclude posts liked by the user
+            $likedIds = $this->createQueryBuilder('p2')
+                ->select('p2.id')
+                ->innerJoin('p2.likedBy', 'u2')
+                ->where('u2 = :user')
+                ->setParameter('user', $user)
+                ->getQuery()
+                ->getResult();
+
+            $likedIdsArr = array_column($likedIds, 'id');
+
+            if (!empty($likedIdsArr)) {
+                $qb->andWhere('p.id NOT IN (:likedIds)')
+                   ->setParameter('likedIds', $likedIdsArr);
+            }
+        }
+
+        return $qb->orderBy('p.nbVues', 'DESC')
+            ->addOrderBy('p.dateCreation', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Counts posts by type, optionally filtered by a search query.
+     * 
+     * @param string|null $q
+     * @return array Array of arrays with 'type' and 'count' keys
+     */
+    public function countByType(?string $q = null): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('p.typePost as type, COUNT(p.id) as count')
+            ->groupBy('p.typePost');
+
+        if ($q !== null && $q !== '') {
+            $qb->andWhere('p.titre LIKE :q OR p.contenu LIKE :q')
+                ->setParameter('q', '%' . trim($q) . '%');
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }
