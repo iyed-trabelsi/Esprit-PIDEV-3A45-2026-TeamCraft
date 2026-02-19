@@ -18,6 +18,10 @@ parameters:
     
     # OpenRouter API Key for Smart Writing Assistant
     openrouter_api_key: '%env(default::OPENROUTER_API_KEY)%'
+    
+    # Hugging Face API Key for Image Generation
+    huggingface_api_key: '%env(default::HUGGINGFACE_API_KEY)%'
+    uploads_rubrique_dir: '%kernel.project_dir%/public/uploads/rubriques'
 
 services:
     # default configuration for services in *this* file
@@ -51,6 +55,12 @@ services:
     App\Service\SmartWritingService:
         arguments:
             $apiKey: '%openrouter_api_key%'
+
+    # Image Generation (Hugging Face)
+    App\Service\ImageGenerationService:
+        arguments:
+            $huggingfaceApiKey: '%huggingface_api_key%'
+            $uploadsRubriqueDir: '%uploads_rubrique_dir%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

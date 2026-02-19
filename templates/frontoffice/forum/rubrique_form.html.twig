@@ -66,6 +66,41 @@
                                 {{ form_errors(form.topic) }}
                             </div>
 
+                            <div class="mb-4">
+                                {{ form_label(form.image, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                <div class="input-group mb-2">
+                                    {{ form_widget(form.image, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'id': 'rubrique_image_upload'}}) }}
+                                    <button type="button" id="btn-generate-ai-image" class="btn btn-tc-outline d-flex align-items-center gap-2" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                        <i class="bi bi-stars"></i>
+                                        <span id="generate-btn-text">Générer avec IA</span>
+                                        <span id="generate-loader" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    </button>
+                                </div>
+                                <small class="text-white-50 d-block mb-3">{{ form_help(form.image) }}</small>
+                                <!-- Image Preview & AI Controls -->
+                                <div id="image-preview-container" class="{{ (is_edit and rubrique.image) ? 'mt-3' : 'd-none mt-3' }}">
+                                    <div class="position-relative">
+                                        <img id="image-preview" src="{{ (is_edit and rubrique.image) ? asset('uploads/rubriques/' ~ rubrique.image) : '' }}" alt="Preview" class="img-fluid rounded w-100" style="max-height: 300px; border: 2px solid var(--tc-cyan); object-fit: cover;">
+                                        <div class="position-absolute top-0 end-0 p-2 d-flex gap-2">
+                                            <button type="button" id="btn-delete-image" class="btn btn-danger btn-sm shadow-sm" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2 mt-2">
+                                        <button type="button" id="btn-regenerate-ai" class="btn btn-tc-outline btn-sm d-flex align-items-center gap-2">
+                                            <i class="bi bi-arrow-clockwise"></i> Regenerate
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-2" id="btn-keep-image">
+                                            <i class="bi bi-check-lg"></i> Keep this logo
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="generated-image-filename" name="generated_image_filename" value="">
+                                    <input type="hidden" id="delete-current-image" name="delete_current_image" value="0">
+                                </div>
+                                {{ form_errors(form.image) }}
+                            </div>
+
                             <div class="d-grid gap-3 d-md-flex justify-content-md-between align-items-center">
                                 <a href="{{ is_edit ? path('app_forum_rubrique_show', { id: rubrique.id }) : path('app_forum') }}" class="btn btn-outline-danger px-4">Cancel</a>
                                 <button type="submit" class="btn btn-success px-5 fw-bold">{{ is_edit ? 'Enregistrer' : 'Créer la rubrique' }}</button>
@@ -87,19 +122,15 @@
 
             function toggleInput() {
                 if (topicSelect.value) {
-                    // Sujet pris uniquement de la liste : on vide l'input et on cache le champ
                     topicInput.value = '';
                     topicInput.removeAttribute('required');
                     topicInputContainer.style.display = 'none';
                 } else {
-                    // Sujet à saisir dans l'input : on affiche le champ (obligatoire côté serveur)
                     topicInputContainer.style.display = 'block';
                     topicInput.focus();
                 }
             }
 
-            // Initial State
-            // If topicInput has a value, try to match it in select
             if (topicInput.value) {
                 let found = false;
                 for(let i=0; i<topicSelect.options.length; i++) {
@@ -110,17 +141,15 @@
                     }
                 }
                 if (!found) {
-                    topicSelect.value = ''; // Reset select to placeholder if custom value
+                    topicSelect.value = ''; 
                 }
             }
             toggleInput();
 
-            // Event Listener
             topicSelect.addEventListener('change', toggleInput);
             
-            // Sync Input change back to Select (if user types matching existing)
             topicInput.addEventListener('input', function() {
-                topicSelect.value = ''; // Default to empty/custom when typing
+                topicSelect.value = ''; 
                 for(let i=0; i<topicSelect.options.length; i++) {
                     if (topicSelect.options[i].value === topicInput.value) {
                         topicSelect.selectedIndex = i;
@@ -128,6 +157,128 @@
                     }
                 }
             });
+
+            // AI Image Generation and Preview Logic
+            const btnGenerateAI = document.getElementById('btn-generate-ai-image');
+            const btnRegenerateAI = document.getElementById('btn-regenerate-ai');
+            const btnDeleteImage = document.getElementById('btn-delete-image');
+            const btnKeepImage = document.getElementById('btn-keep-image');
+            
+            const generateLoader = document.getElementById('generate-loader');
+            const generateBtnText = document.getElementById('generate-btn-text');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const generatedImageFilename = document.getElementById('generated-image-filename');
+            const imageUploadInput = document.getElementById('rubrique_image_upload');
+            const nameInput = document.getElementById('rubrique_nomRubrique');
+            const descriptionInput = document.getElementById('rubrique_description');
+
+            // Initial state for generate button: only hide if preview is actually shown
+            if (!imagePreviewContainer.classList.contains('d-none')) {
+                btnGenerateAI.classList.add('d-none');
+            }
+
+            function clearImage() {
+                imagePreview.src = '';
+                imagePreviewContainer.classList.add('d-none');
+                generatedImageFilename.value = '';
+                imageUploadInput.value = '';
+                document.getElementById('delete-current-image').value = '1';
+                btnGenerateAI.classList.remove('d-none');
+            }
+
+            async function generateImage() {
+                const name = nameInput.value.trim();
+                const description = descriptionInput.value.trim();
+
+                if (!name) {
+                    alert('Veuillez saisir un nom de rubrique avant de générer une image.');
+                    nameInput.focus();
+                    return;
+                }
+
+                // Show loading state
+                generateLoader.classList.remove('d-none');
+                const originalText = generateBtnText.textContent;
+                generateBtnText.textContent = 'Génération...';
+                btnGenerateAI.disabled = true;
+                if (btnRegenerateAI) btnRegenerateAI.disabled = true;
+
+                try {
+                    const response = await fetch('/forum/api/rubrique/generate-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            description: description
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        imagePreview.src = data.url;
+                        imagePreviewContainer.classList.remove('d-none');
+                        generatedImageFilename.value = data.filename;
+                        imageUploadInput.value = '';
+                        document.getElementById('delete-current-image').value = '0';
+                        // Hide main generate button when preview is visible
+                        btnGenerateAI.classList.add('d-none');
+                    } else {
+                        alert('Erreur: ' + (data.error || 'Impossible de générer l\'image'));
+                    }
+                } catch (error) {
+                    console.error('AI Generation Error:', error);
+                    alert('Une erreur est survenue lors de la génération de l\'image.');
+                } finally {
+                    generateLoader.classList.add('d-none');
+                    generateBtnText.textContent = originalText;
+                    btnGenerateAI.disabled = false;
+                    if (btnRegenerateAI) btnRegenerateAI.disabled = false;
+                }
+            }
+
+            if (btnGenerateAI) btnGenerateAI.addEventListener('click', generateImage);
+            if (btnRegenerateAI) btnRegenerateAI.addEventListener('click', generateImage);
+            
+            if (btnDeleteImage) {
+                btnDeleteImage.addEventListener('click', function() {
+                    if (confirm('Voulez-vous supprimer cette image ?')) {
+                        clearImage();
+                    }
+                });
+            }
+
+            if (btnKeepImage) {
+                btnKeepImage.addEventListener('click', function() {
+                    // Visual confirmation
+                    this.innerHTML = '<i class="bi bi-check-all"></i> Image Saved';
+                    this.classList.replace('btn-success', 'btn-primary');
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="bi bi-check-lg"></i> Keep this logo';
+                        this.classList.replace('btn-primary', 'btn-success');
+                    }, 2000);
+                });
+            }
+
+            if (imageUploadInput) {
+                imageUploadInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            imagePreviewContainer.classList.remove('d-none');
+                            generatedImageFilename.value = ''; 
+                            document.getElementById('delete-current-image').value = '0';
+                            btnGenerateAI.classList.add('d-none');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
         });
     </script>
 {% endblock %}

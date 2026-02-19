@@ -27,12 +27,8 @@ class Rubrique
     )]
     private ?string $nomRubrique = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\NotBlank(message: 'La description est obligatoire.')]
-    #[Assert\Length(
-        max: 255,
-        maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
-    )]
     private ?string $description = null;
 
     // 🔹 Nouveau sujet (NON obligatoire si un sujet existant est choisi)
@@ -71,6 +67,9 @@ class Rubrique
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $aiSummary = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
 
     public function __construct()
     {
@@ -225,6 +224,17 @@ class Rubrique
     public function setAiSummary(?string $aiSummary): static
     {
         $this->aiSummary = $aiSummary;
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
         return $this;
     }
 }
