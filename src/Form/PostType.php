@@ -39,7 +39,6 @@ class PostType extends AbstractType
                     'Annonce' => 'annonce',
                 ],
             ])
-
             ->add('image', FileType::class, [
                 'label' => 'Image (optionnel)',
                 'mapped' => false,
@@ -58,6 +57,7 @@ class PostType extends AbstractType
                 'label' => 'Statut',
                 'choices' => [
                     'Publié' => 'published',
+                    'En attente de modération' => 'pending_review',
                     'Archivé' => 'archived',
                 ],
             ]);

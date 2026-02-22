@@ -12,41 +12,57 @@
                     <div class="card card-tc p-4 p-md-5">
                         <h2 class="text-center fw-bold mb-4">Sign Up</h2>
 
-                        {{ form_start(registrationForm, {'attr': {'class': 'form-tc'}}) }}
+                        {# Ajout de novalidate pour forcer le contrôle serveur uniquement #}
+                        {{ form_start(registrationForm, {'attr': {'class': 'form-tc', 'novalidate': 'novalidate'}}) }}
                             
                             <div class="mb-3">
                                 {{ form_label(registrationForm.email, 'Email Address', {'label_attr': {'class': 'form-label'}}) }}
                                 {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control', 'placeholder': 'you@example.com'}}) }}
-                                {{ form_errors(registrationForm.email) }}
+                                <div class="text-danger mt-1">{{ form_errors(registrationForm.email) }}</div>
                             </div>
 
                             <div class="mb-3">
                                 {{ form_label(registrationForm.username, 'Username', {'label_attr': {'class': 'form-label'}}) }}
                                 {{ form_widget(registrationForm.username, {'attr': {'class': 'form-control', 'placeholder': 'Choose a username'}}) }}
-                                {{ form_errors(registrationForm.username) }}
+                                <div class="text-danger mt-1">{{ form_errors(registrationForm.username) }}</div>
+                            </div>
+
+                            {# Champ Mot de passe 1 #}
+                            <div class="mb-3">
+                                {{ form_label(registrationForm.plainPassword.first, 'Password', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(registrationForm.plainPassword.first, {'attr': {'class': 'form-control', 'placeholder': '••••••••'}}) }}
+                                <div class="text-danger mt-1">{{ form_errors(registrationForm.plainPassword.first) }}</div>
+                            </div>
+
+                            {# Champ Confirmation #}
+                            <div class="mb-3">
+                                {{ form_label(registrationForm.plainPassword.second, 'Confirm Password', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(registrationForm.plainPassword.second, {'attr': {'class': 'form-control', 'placeholder': '••••••••'}}) }}
+                                <div class="text-danger mt-1">{{ form_errors(registrationForm.plainPassword.second) }}</div>
+                            </div>
+
+                            <div class="registration-divider text-center my-3">
+                                <span>OR</span>
                             </div>
 
                             <div class="mb-3">
-                                {{ form_label(registrationForm.plainPassword, 'Password', {'label_attr': {'class': 'form-label'}}) }}
-                                {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control', 'placeholder': '••••••••'}}) }}
-                                {{ form_errors(registrationForm.plainPassword) }}
+                                <a href="{{ path('connect_google_start') }}" class="google-btn-full w-100">
+                                    <div class="google-content d-flex align-items-center justify-content-center p-2 border rounded bg-white">
+                                        <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google logo" class="google-logo me-2" style="width: 20px;">
+                                        <span class="google-text text-dark fw-bold">Continue with Google</span>
+                                    </div>
+                                </a>
                             </div>
 
-                            <div class="mb-4">
-                                {{ form_label(registrationForm.userType, 'Role', {'label_attr': {'class': 'form-label'}}) }}
-                                {{ form_widget(registrationForm.userType, {'attr': {'class': 'form-select'}}) }}
-                                {{ form_errors(registrationForm.userType) }}
-                            </div>
-
-                            {# Si vous avez une case à cocher pour les conditions d'utilisation #}
                             {% if registrationForm.agreeTerms is defined %}
-                                <div class="mb-3 form-check">
+                                <div class="mb-4 form-check">
                                     {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'form-check-input'}}) }}
                                     {{ form_label(registrationForm.agreeTerms, 'Agree to terms', {'label_attr': {'class': 'form-check-label'}}) }}
+                                    <div class="text-danger mt-1">{{ form_errors(registrationForm.agreeTerms) }}</div>
                                 </div>
                             {% endif %}
 
-                            <button type="submit" class="btn btn-tc-primary w-100 py-3">Sign Up</button>
+                            <button type="submit" class="btn btn-tc-primary w-100 py-3">SIGN UP</button>
 
                         {{ form_end(registrationForm) }}
                     </div>

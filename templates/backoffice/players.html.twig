@@ -4,22 +4,39 @@
 {% block admin_subheading %}Liste de tous les joueurs avec jeu, rang, rôle et statut.{% endblock %}
 
 {% block admin_content %}
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-        <div class="flex-grow-1" style="max-width: 420px;">
-            <div class="input-group admin-search-group">
-                <span class="input-group-text">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="search" class="form-control" placeholder="Rechercher par pseudo, jeu ou rang">
+    <div class="discovery-filter-container mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="dropdown">
+                    <button class="btn btn-tc-outline dropdown-toggle text-uppercase fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                        <i class="bi bi-funnel me-1"></i> 
+                        {% if sort == 'Active' %}En ligne
+                        {% elseif sort == 'Inactive' %}Hors ligne
+                        {% elseif sort == 'Banned' %}Bannis
+                        {% else %}Filtrer par Statut{% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="{{ path('admin_players', {q: q, sort: 'Active'}) }}">En ligne (Active)</a></li>
+                        <li><a class="dropdown-item" href="{{ path('admin_players', {q: q, sort: 'Inactive'}) }}">Hors ligne (Inactive)</a></li>
+                        <li><a class="dropdown-item" href="{{ path('admin_players', {q: q, sort: 'Banned'}) }}">Bannis (Banned)</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ path('admin_players') }}">Réinitialiser</a></li>
+                    </ul>
+                </div>
             </div>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-tc-outline">
-                <i class="bi bi-funnel me-1"></i> Filtrer
-            </button>
-            <button class="btn btn-sm btn-tc-primary">
-                <i class="bi bi-plus-lg me-1"></i> Nouveau joueur
-            </button>
+
+            <div class="discovery-search-wrapper" style="min-width: 300px;">
+                <form method="get" action="{{ path('admin_players') }}">
+                    <i class="bi bi-search discovery-search-icon"></i>
+                    <input type="search" 
+                        name="q" 
+                        class="form-control discovery-search-input" 
+                        placeholder="Rechercher par pseudo, jeu ou rang" 
+                        value="{{ q }}" 
+                        oninput="this.form.submit()">
+                    <input type="hidden" name="sort" value="{{ sort }}">
+                </form>
+            </div>
         </div>
     </div>
 
@@ -28,11 +45,11 @@
             <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
                 <thead class="custom-table-header">
                     <tr>
-                        <th class="border-0 px-4 py-3">Pseudo</th>
-                        <th class="border-0 px-4 py-3">Jeu</th>
+                        <th class="border-0 px-4 py-3"><a href="{{ path('admin_players', {q: q, sort: 'u.pseudo'}) }}" class="text-white text-decoration-none">Pseudo <i class="bi bi-arrow-down-up small"></i></a></th>
+                        <th class="border-0 px-4 py-3"><a href="{{ path('admin_players', {q: q, sort: 'p.game'}) }}" class="text-white text-decoration-none">Jeu <i class="bi bi-arrow-down-up small"></i></a></th>
                         <th class="border-0 px-4 py-3">Rang</th>
                         <th class="border-0 px-4 py-3">Rôle</th>
-                        <th class="border-0 px-4 py-3">Région</th>
+                        <th class="border-0 px-4 py-3"><a href="{{ path('admin_players', {q: q, sort: 'p.region'}) }}" class="text-white text-decoration-none">Région <i class="bi bi-arrow-down-up small"></i></a></th>
                         <th class="border-0 px-4 py-3">Statut</th>
                         <th class="border-0 px-4 py-3 text-end">Actions</th>
                     </tr>
@@ -40,25 +57,32 @@
                 <tbody class="bg-input-match">
                     {% for player in players %}
                         <tr>
-                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ player.name }}</td>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ player.user ? player.user.pseudo : 'N/A' }}</td>
                             <td class="px-4 py-3 bg-input-match">{{ player.game }}</td>
-                            <td class="px-4 py-3 bg-input-match">{{ player.rank }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ player.gameRank }}</td>
                             <td class="px-4 py-3 bg-input-match">{{ player.role }}</td>
                             <td class="px-4 py-3 bg-input-match">{{ player.region }}</td>
                             <td class="px-4 py-3 bg-input-match">
-                                <span class="badge-status badge-online">Actif</span>
+                                <span class="badge-status {{ player.status|lower }}">{{ player.status }}</span>
                             </td>
                             <td class="px-4 py-3 text-end bg-input-match">
-                                <button class="action-btn view" title="Voir">
+                                <button class="action-btn view" title="Voir" data-bs-toggle="modal" data-bs-target="#playerModal" onclick="prepareModal('view', '{{ player.id }}', '{{ player.user ? player.user.pseudo|e('js') }}', '{{ player.game|e('js') }}', '{{ player.gameRank|e('js') }}', '{{ player.role|e('js') }}', '{{ player.region|e('js') }}', '{{ player.status|e('js') }}')">
                                     <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
                                 </button>
-                                <button class="action-btn edit" title="Modifier">
+                                <button class="action-btn edit" title="Modifier" data-bs-toggle="modal" data-bs-target="#playerModal" onclick="prepareModal('edit', '{{ player.id }}', '{{ player.user ? player.user.pseudo|e('js') }}', '{{ player.game|e('js') }}', '{{ player.gameRank|e('js') }}', '{{ player.role|e('js') }}', '{{ player.region|e('js') }}', '{{ player.status|e('js') }}')">
                                     <img src="{{ asset('images/icons/crud-edit.png') }}" alt="Edit">
                                 </button>
-                                <button class="action-btn delete" title="Supprimer">
-                                    <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
-                                </button>
+                                <form action="{{ path('admin_player_delete', {id: player.id}) }}" method="post" style="display:inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce joueur ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ player.id) }}">
+                                    <button type="submit" class="action-btn delete" title="Supprimer">
+                                        <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                    </button>
+                                </form>
                             </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 bg-input-match">Aucun joueur trouvé.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -72,20 +96,92 @@
         <nav aria-label="Pagination joueurs">
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ path('admin_players', {page: currentPage - 1}) }}">Précédent</a>
+                    <a class="page-link" href="{{ path('admin_players', {page: currentPage - 1, q: q, sort: sort}) }}">Précédent</a>
                 </li>
                 
                 {% for i in 1..maxPages %}
                     <li class="page-item {{ currentPage == i ? 'active' : '' }}">
-                        <a class="page-link" href="{{ path('admin_players', {page: i}) }}">{{ i }}</a>
+                        <a class="page-link" href="{{ path('admin_players', {page: i, q: q, sort: sort}) }}">{{ i }}</a>
                     </li>
                 {% endfor %}
                 
                 <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ path('admin_players', {page: currentPage + 1}) }}">Suivant</a>
+                    <a class="page-link" href="{{ path('admin_players', {page: currentPage + 1, q: q, sort: sort}) }}">Suivant</a>
                 </li>
             </ul>
         </nav>
     </div>
-{% endblock %}
 
+    <div class="modal fade" id="playerModal" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--tc-bg-dark); border: 1px solid var(--tc-border);">
+                <form action="{{ path('admin_player_save') }}" method="post">
+                    <div class="modal-header border-bottom-0">
+                        <h5 class="modal-title text-white" id="modalTitle">Nouveau Joueur</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="playerId">
+                        <div class="mb-3">
+                            <label class="form-label text-light">Pseudo</label>
+                            <input type="text" class="form-control" name="pseudo" id="playerPseudo" required style="background: var(--tc-bg-input); color: white; border: none;">
+                        </div>
+                        <div class="mb-3">
+                             <label class="form-label text-light">Jeu</label>
+                             <input type="text" class="form-control" name="game" id="playerGame" style="background: var(--tc-bg-input); color: white; border: none;">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-light">Rang</label>
+                                <input type="text" class="form-control" name="rank" id="playerRank" style="background: var(--tc-bg-input); color: white; border: none;">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-light">Rôle</label>
+                                <input type="text" class="form-control" name="role" id="playerRole" style="background: var(--tc-bg-input); color: white; border: none;">
+                            </div>
+                        </div>
+                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                 <label class="form-label text-light">Région</label>
+                                 <input type="text" class="form-control" name="region" id="playerRegion" style="background: var(--tc-bg-input); color: white; border: none;">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                 <label class="form-label text-light">Statut</label>
+                                 <select class="form-select" name="status" id="playerStatus" style="background: var(--tc-bg-input); color: white; border: none;">
+                                     <option value="Active">Active</option>
+                                     <option value="Inactive">Inactive</option>
+                                     <option value="Banned">Banned</option>
+                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0">
+                        <button type="button" class="btn btn-tc-outline" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-tc-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function prepareModal(mode, id = '', pseudo = '', game = '', rank = '', role = '', region = '', status = 'Active') {
+            document.getElementById('playerId').value = id;
+            document.getElementById('playerPseudo').value = pseudo;
+            document.getElementById('playerGame').value = game;
+            document.getElementById('playerRank').value = rank;
+            document.getElementById('playerRole').value = role;
+            document.getElementById('playerRegion').value = region;
+            document.getElementById('playerStatus').value = status;
+            
+            const title = document.getElementById('modalTitle');
+            if (mode === 'new') {
+                title.textContent = 'Nouveau Joueur';
+            } else if (mode === 'edit') {
+                title.textContent = 'Modifier Joueur';
+            } else {
+                title.textContent = 'Détails du Joueur';
+            }
+        }
+    </script>
+{% endblock %}

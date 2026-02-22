@@ -79,16 +79,60 @@ class CommentRepository extends ServiceEntityRepository
     }
 
     /**
+     * Top-level comments for a post. Hides pending_review comments from others; author sees their own.
+     *
      * @return Comment[]
      */
-    public function findTopLevelByPost(Post $post): array
+    public function findTopLevelByPost(Post $post, ?\App\Entity\User $currentUser = null): array
     {
-        return $this->createQueryBuilder('c')
+        $qb = $this->createQueryBuilder('c')
             ->andWhere('c.post = :post')
             ->andWhere('c.parent IS NULL')
             ->setParameter('post', $post)
-            ->orderBy('c.dateCommentaire', 'ASC')
+            ->orderBy('c.dateCommentaire', 'ASC');
+
+        if ($currentUser !== null) {
+            $qb->andWhere('c.moderationStatus IS NULL OR (c.moderationStatus = :pending AND c.auteur = :user)')
+               ->setParameter('pending', 'pending_review')
+               ->setParameter('user', $currentUser);
+        } else {
+            $qb->andWhere('c.moderationStatus IS NULL');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Finds the last comment by a user to check for fast posting.
+     */
+    public function findLastCommentByUser(\App\Entity\User $user): ?Comment
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.auteur = :user')
+            ->setParameter('user', $user)
+            ->orderBy('c.dateCommentaire', 'DESC')
+            ->setMaxResults(1)
             ->getQuery()
-            ->getResult();
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Checks if a user has posted the exact same content recently.
+     */
+    public function findDuplicateComment(\App\Entity\User $user, string $contenu, int $minutes = 10): ?Comment
+    {
+        $date = new \DateTime();
+        $date->modify("-" . $minutes . " minutes");
+
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.auteur = :user')
+            ->andWhere('c.contenu = :contenu')
+            ->andWhere('c.dateCommentaire >= :date')
+            ->setParameter('user', $user)
+            ->setParameter('contenu', trim($contenu))
+            ->setParameter('date', $date)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

@@ -18,38 +18,55 @@ class Comment
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'Le contenu du commentaire est obligatoire.')]
-    #[Assert\Length(max: 255, maxMessage: 'Le commentaire ne peut pas dépasser {{ limit }} caractères.')]
+    #[ORM\Column(nullable: true)]
     private ?string $contenu = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateCommentaire = null;
 
     #[ORM\Column]
     private int $nbLikes = 0;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
+    /** approved = null, pending_review = 'pending_review' (rejected content is not persisted) */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $moderationStatus = null;
+
+    /** 'medium' = image was flagged by moderation but accepted; show blur overlay. null = safe */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $imageSensitivity = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $auteur = null;
 
     #[ORM\ManyToOne(targetEntity: Post::class, inversedBy: 'comments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Post $post = null;
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'replies')]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?Comment $parent = null;
 
     /**
      * @var Collection<int, Comment>
      */
-    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class)]
+    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class, cascade: ['remove'])]
     private Collection $replies;
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'comment_likes')]
+    private Collection $likedBy;
 
     public function __construct()
     {
         $this->replies = new ArrayCollection();
+        $this->likedBy = new ArrayCollection();
         $this->dateCommentaire = new \DateTime();
     }
 
@@ -63,7 +80,7 @@ class Comment
         return $this->contenu;
     }
 
-    public function setContenu(string $contenu): static
+    public function setContenu(?string $contenu): static
     {
         $this->contenu = $contenu;
         return $this;
@@ -130,5 +147,68 @@ class Comment
     public function getReplies(): Collection
     {
         return $this->replies;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
+        return $this;
+    }
+
+    public function getModerationStatus(): ?string
+    {
+        return $this->moderationStatus;
+    }
+
+    public function setModerationStatus(?string $moderationStatus): static
+    {
+        $this->moderationStatus = $moderationStatus;
+        return $this;
+    }
+
+    public function getImageSensitivity(): ?string
+    {
+        return $this->imageSensitivity;
+    }
+
+    public function setImageSensitivity(?string $imageSensitivity): static
+    {
+        $this->imageSensitivity = $imageSensitivity;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getLikedBy(): Collection
+    {
+        return $this->likedBy;
+    }
+
+    public function addLikedBy(User $user): static
+    {
+        if (!$this->likedBy->contains($user)) {
+            $this->likedBy->add($user);
+            $this->nbLikes = $this->likedBy->count();
+        }
+        return $this;
+    }
+
+    public function removeLikedBy(User $user): static
+    {
+        if ($this->likedBy->removeElement($user)) {
+            $this->nbLikes = $this->likedBy->count();
+        }
+        return $this;
+    }
+
+    public function isLikedBy(User $user): bool
+    {
+        return $this->likedBy->contains($user);
     }
 }

@@ -19,28 +19,60 @@
     <div class="tab-content" id="adminTabsContent">
         {# Events Tab #}
         <div class="tab-pane fade show active" id="events" role="tabpanel" aria-labelledby="events-tab">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-                <div class="flex-grow-1" style="max-width: 420px;">
-                    <div class="input-group admin-search-group">
-                        <form method="get" action="{{ path('admin_events') }}" class="d-flex w-100">
-                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="hidden" name="tab" value="events">
-                            <input type="search" name="ev_q" class="form-control" placeholder="Rechercher par nom..." value="{{ ev_q }}">
-                        </form>
+            <div class="discovery-filter-container mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="dropdown">
+                            <button class="btn btn-tc-outline dropdown-toggle text-uppercase fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                                <i class="bi bi-funnel me-1"></i>
+                                {% if ev_status == 'open' %}Ouvert
+                                {% elseif ev_status == 'closed' %}Fermé
+                                {% elseif ev_status == 'over' %}Terminé
+                                {% else %}Filtrer par Statut{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_sort: ev_sort, ev_dir: ev_dir, ev_status: 'open', tab: 'events'}) }}">Ouvert (open)</a></li>
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_sort: ev_sort, ev_dir: ev_dir, ev_status: 'closed', tab: 'events'}) }}">Fermé (closed)</a></li>
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_sort: ev_sort, ev_dir: ev_dir, ev_status: 'over', tab: 'events'}) }}">Terminé (over)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_sort: ev_sort, ev_dir: ev_dir, tab: 'events'}) }}">Réinitialiser</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-tc-outline dropdown-toggle text-uppercase fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                                <i class="bi bi-sort-alpha-down me-1"></i>
+                                {% if ev_sort == 'nomEvenement' and ev_dir == 'ASC' %}Nom A→Z
+                                {% elseif ev_sort == 'nomEvenement' and ev_dir == 'DESC' %}Nom Z→A
+                                {% else %}Trier{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item {{ ev_sort == 'nomEvenement' and ev_dir == 'ASC' ? 'active' : '' }}" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_status: ev_status, ev_sort: 'nomEvenement', ev_dir: 'ASC', tab: 'events'}) }}">Nom A → Z</a></li>
+                                <li><a class="dropdown-item {{ ev_sort == 'nomEvenement' and ev_dir == 'DESC' ? 'active' : '' }}" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_status: ev_status, ev_sort: 'nomEvenement', ev_dir: 'DESC', tab: 'events'}) }}">Nom Z → A</a></li>
+                                <li><a class="dropdown-item {{ ev_sort == 'dateDebut' and ev_dir == 'ASC' ? 'active' : '' }}" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_status: ev_status, ev_sort: 'dateDebut', ev_dir: 'ASC', tab: 'events'}) }}">Date ⬇ (plus ancien)</a></li>
+                                <li><a class="dropdown-item {{ ev_sort == 'dateDebut' and ev_dir == 'DESC' ? 'active' : '' }}" data-turbo="false" href="{{ path('admin_events', {ev_q: ev_q, ev_status: ev_status, ev_sort: 'dateDebut', ev_dir: 'DESC', tab: 'events'}) }}">Date ⬆ (plus récent)</a></li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <div class="btn-group me-2" role="group">
-                        <a href="{{ path('admin_events', app.request.query.all|merge({'ev_sort': 'nomEvenement', 'ev_dir': 'ASC', 'tab': 'events'})) }}" class="btn btn-sm btn-outline-secondary {{ ev_sort == 'nomEvenement' and ev_dir == 'ASC' ? 'active' : '' }}" title="Trier par Nom (Croissant)">
-                            Nom ⬇️
-                        </a>
-                        <a href="{{ path('admin_events', app.request.query.all|merge({'ev_sort': 'nomEvenement', 'ev_dir': 'DESC', 'tab': 'events'})) }}" class="btn btn-sm btn-outline-secondary {{ ev_sort == 'nomEvenement' and ev_dir == 'DESC' ? 'active' : '' }}" title="Trier par Nom (Décroissant)">
-                            Nom ⬆️
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="discovery-search-wrapper" style="min-width: 300px;">
+                            <form method="get" action="{{ path('admin_events') }}">
+                                <i class="bi bi-search discovery-search-icon"></i>
+                                <input type="search"
+                                    name="ev_q"
+                                    class="form-control discovery-search-input"
+                                    placeholder="Rechercher par nom..."
+                                    value="{{ ev_q }}"
+                                    oninput="this.form.submit()">
+                                <input type="hidden" name="ev_sort" value="{{ ev_sort }}">
+                                <input type="hidden" name="ev_dir" value="{{ ev_dir }}">
+                                <input type="hidden" name="ev_status" value="{{ ev_status }}">
+                                <input type="hidden" name="tab" value="events">
+                            </form>
+                        </div>
+                        <a href="{{ path('app_evenement_new') }}" class="btn btn-tc-primary text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem; white-space: nowrap;">
+                            <i class="bi bi-plus-lg me-1"></i> Nouvel événement
                         </a>
                     </div>
-                    <a href="{{ path('app_evenement_new') }}" class="btn btn-sm btn-tc-primary">
-                        <i class="bi bi-plus-lg me-1"></i> Nouvel événement
-                    </a>
                 </div>
             </div>
 
@@ -50,6 +82,7 @@
                         <thead class="custom-table-header">
                             <tr>
                                 <th class="border-0 px-4 py-3">Id</th>
+                                <th class="border-0 px-4 py-3">Image</th>
                                 <th class="border-0 px-4 py-3">Nom</th>
                                 <th class="border-0 px-4 py-3">Type</th>
                                 <th class="border-0 px-4 py-3">Lieu</th>
@@ -63,6 +96,15 @@
                         {% for evenement in evenements %}
                             <tr>
                                 <td class="px-4 py-3 bg-input-match">{{ evenement.id }}</td>
+                                <td class="px-4 py-2 bg-input-match">
+                                    {% if evenement.imageEvenement %}
+                                        <img src="{{ asset('uploads/events/' ~ evenement.imageEvenement) }}"
+                                             alt="{{ evenement.nomEvenement }}"
+                                             style="height: 48px; width: 72px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                                    {% else %}
+                                        <span class="text-muted small"><i class="bi bi-image"></i></span>
+                                    {% endif %}
+                                </td>
                                 <td class="px-4 py-3 fw-semibold bg-input-match">{{ evenement.nomEvenement }}</td>
                                 <td class="px-4 py-3 bg-input-match">{{ evenement.typeEvenement }}</td>
                                 <td class="px-4 py-3 bg-input-match">{{ evenement.place ? evenement.place.nomPlace : 'Non défini' }}</td>
@@ -70,19 +112,19 @@
                                 <td class="px-4 py-3 bg-input-match">{{ evenement.dateFin ? evenement.dateFin|date('Y-m-d H:i:s') : '' }}</td>
                                 <td class="px-4 py-3 bg-input-match">{{ evenement.status }}</td>
                                 <td class="px-4 py-3 text-end bg-input-match">
-                                    <a href="{{ path('app_evenement_edit', {'id': evenement.id}) }}" class="btn btn-sm btn-outline-primary border-0" title="Modifier">
-                                        ✏️
+                                    <a href="{{ path('app_evenement_edit', {'id': evenement.id}) }}" class="btn btn-sm btn-outline-info border-0" title="Modifier">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form method="post" action="{{ path('app_evenement_delete', {'id': evenement.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="d-inline-block">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
                                         <button class="btn btn-sm btn-outline-danger border-0" title="Supprimer">
-                                            🗑️
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </td>
                             </tr>
                         {% else %}
-                            <tr><td colspan="8" class="px-4 py-3 text-center bg-input-match">Aucun événement trouvé</td></tr>
+                            <tr><td colspan="9" class="px-4 py-3 text-center bg-input-match">Aucun événement trouvé</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -92,28 +134,47 @@
 
         {# Places Tab #}
         <div class="tab-pane fade" id="places" role="tabpanel" aria-labelledby="places-tab">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-                <div class="flex-grow-1" style="max-width: 420px;">
-                    <div class="input-group admin-search-group">
-                        <form method="get" action="{{ path('admin_events') }}" class="d-flex w-100">
-                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="hidden" name="tab" value="places">
-                            <input type="search" name="pl_q" class="form-control" placeholder="Rechercher par capacité..." value="{{ pl_q }}">
-                        </form>
+            <div class="discovery-filter-container mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="dropdown">
+                            <button class="btn btn-tc-outline dropdown-toggle text-uppercase fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                                <i class="bi bi-sort-numeric-down me-1"></i>
+                                {% if pl_sort == 'capaciteMax' and pl_dir == 'ASC' %}Capacité ⬇
+                                {% elseif pl_sort == 'capaciteMax' and pl_dir == 'DESC' %}Capacité ⬆
+                                {% elseif pl_sort == 'nomPlace' and pl_dir == 'ASC' %}Nom A→Z
+                                {% elseif pl_sort == 'nomPlace' and pl_dir == 'DESC' %}Nom Z→A
+                                {% else %}Trier{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item {{ pl_sort == 'nomPlace' and pl_dir == 'ASC' ? 'active' : '' }}" href="{{ path('admin_events', {pl_q: pl_q, pl_sort: 'nomPlace', pl_dir: 'ASC', tab: 'places'}) }}">Nom A → Z</a></li>
+                                <li><a class="dropdown-item {{ pl_sort == 'nomPlace' and pl_dir == 'DESC' ? 'active' : '' }}" href="{{ path('admin_events', {pl_q: pl_q, pl_sort: 'nomPlace', pl_dir: 'DESC', tab: 'places'}) }}">Nom Z → A</a></li>
+                                <li><a class="dropdown-item {{ pl_sort == 'capaciteMax' and pl_dir == 'ASC' ? 'active' : '' }}" href="{{ path('admin_events', {pl_q: pl_q, pl_sort: 'capaciteMax', pl_dir: 'ASC', tab: 'places'}) }}">Capacité ⬇ (petite → grande)</a></li>
+                                <li><a class="dropdown-item {{ pl_sort == 'capaciteMax' and pl_dir == 'DESC' ? 'active' : '' }}" href="{{ path('admin_events', {pl_q: pl_q, pl_sort: 'capaciteMax', pl_dir: 'DESC', tab: 'places'}) }}">Capacité ⬆ (grande → petite)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ path('admin_events', {tab: 'places'}) }}">Réinitialiser</a></li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <div class="btn-group me-2" role="group">
-                        <a href="{{ path('admin_events', app.request.query.all|merge({'pl_sort': 'capaciteMax', 'pl_dir': 'ASC', 'tab': 'places'})) }}" class="btn btn-sm btn-outline-secondary {{ pl_sort == 'capaciteMax' and pl_dir == 'ASC' ? 'active' : '' }}" title="Trier par Capacité (Croissant)">
-                            Capacité ⬇️
-                        </a>
-                        <a href="{{ path('admin_events', app.request.query.all|merge({'pl_sort': 'capaciteMax', 'pl_dir': 'DESC', 'tab': 'places'})) }}" class="btn btn-sm btn-outline-secondary {{ pl_sort == 'capaciteMax' and pl_dir == 'DESC' ? 'active' : '' }}" title="Trier par Capacité (Décroissant)">
-                            Capacité ⬆️
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="discovery-search-wrapper" style="min-width: 300px;">
+                            <form method="get" action="{{ path('admin_events') }}">
+                                <i class="bi bi-search discovery-search-icon"></i>
+                                <input type="search"
+                                    name="pl_q"
+                                    class="form-control discovery-search-input"
+                                    placeholder="Rechercher par nom de lieu..."
+                                    value="{{ pl_q }}"
+                                    oninput="this.form.submit()">
+                                <input type="hidden" name="pl_sort" value="{{ pl_sort }}">
+                                <input type="hidden" name="pl_dir" value="{{ pl_dir }}">
+                                <input type="hidden" name="tab" value="places">
+                            </form>
+                        </div>
+                        <a href="{{ path('app_place_new') }}" class="btn btn-tc-primary text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem; white-space: nowrap;">
+                            <i class="bi bi-plus-lg me-1"></i> Nouveau lieu
                         </a>
                     </div>
-                    <a href="{{ path('app_place_new') }}" class="btn btn-sm btn-tc-primary">
-                        <i class="bi bi-plus-lg me-1"></i> Nouveau lieu
-                    </a>
                 </div>
             </div>
 
@@ -139,13 +200,13 @@
                                 <td class="px-4 py-3 bg-input-match">{{ place.adresse }}</td>
                                 <td class="px-4 py-3 bg-input-match">{{ place.capaciteMax }}</td>
                                 <td class="px-4 py-3 text-end bg-input-match">
-                                    <a href="{{ path('app_place_edit', {'id': place.id}) }}" class="btn btn-sm btn-outline-primary border-0" title="Modifier">
-                                        ✏️
+                                    <a href="{{ path('app_place_edit', {'id': place.id}) }}" class="btn btn-sm btn-outline-info border-0" title="Modifier">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form method="post" action="{{ path('app_place_delete', {'id': place.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?');" class="d-inline-block">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ place.id) }}">
                                         <button class="btn btn-sm btn-outline-danger border-0" title="Supprimer">
-                                            🗑️
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </td>
@@ -161,28 +222,47 @@
 
         {# Participations Tab #}
         <div class="tab-pane fade" id="participations" role="tabpanel" aria-labelledby="participations-tab">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-                <div class="flex-grow-1" style="max-width: 420px;">
-                    <div class="input-group admin-search-group">
-                        <form method="get" action="{{ path('admin_events') }}" class="d-flex w-100">
-                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="hidden" name="tab" value="participations">
-                            <input type="search" name="pa_q" class="form-control" placeholder="Rechercher par utilisateur..." value="{{ pa_q }}">
-                        </form>
+            <div class="discovery-filter-container mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="dropdown">
+                            <button class="btn btn-tc-outline dropdown-toggle text-uppercase fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                                <i class="bi bi-sort-down me-1"></i>
+                                {% if pa_sort == 'dateInscription' and pa_dir == 'ASC' %}Date ⬇
+                                {% elseif pa_sort == 'dateInscription' and pa_dir == 'DESC' %}Date ⬆
+                                {% elseif pa_sort == 'evenement' %}Par événement
+                                {% elseif pa_sort == 'user' %}Par utilisateur
+                                {% else %}Trier{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item {{ pa_sort == 'dateInscription' and pa_dir == 'DESC' ? 'active' : '' }}" href="{{ path('admin_events', {pa_q: pa_q, pa_sort: 'dateInscription', pa_dir: 'DESC', tab: 'participations'}) }}">Date ⬆ (plus récent)</a></li>
+                                <li><a class="dropdown-item {{ pa_sort == 'dateInscription' and pa_dir == 'ASC' ? 'active' : '' }}" href="{{ path('admin_events', {pa_q: pa_q, pa_sort: 'dateInscription', pa_dir: 'ASC', tab: 'participations'}) }}">Date ⬇ (plus ancien)</a></li>
+                                <li><a class="dropdown-item {{ pa_sort == 'evenement' ? 'active' : '' }}" href="{{ path('admin_events', {pa_q: pa_q, pa_sort: 'evenement', pa_dir: 'ASC', tab: 'participations'}) }}">Par événement</a></li>
+                                <li><a class="dropdown-item {{ pa_sort == 'user' ? 'active' : '' }}" href="{{ path('admin_events', {pa_q: pa_q, pa_sort: 'user', pa_dir: 'ASC', tab: 'participations'}) }}">Par utilisateur</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ path('admin_events', {tab: 'participations'}) }}">Réinitialiser</a></li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <div class="btn-group me-2" role="group">
-                        <a href="{{ path('admin_events', app.request.query.all|merge({'pa_sort': 'dateInscription', 'pa_dir': 'ASC', 'tab': 'participations'})) }}" class="btn btn-sm btn-outline-secondary {{ pa_sort == 'dateInscription' and pa_dir == 'ASC' ? 'active' : '' }}" title="Trier par Date (Croissant)">
-                            Date ⬇️
-                        </a>
-                        <a href="{{ path('admin_events', app.request.query.all|merge({'pa_sort': 'dateInscription', 'pa_dir': 'DESC', 'tab': 'participations'})) }}" class="btn btn-sm btn-outline-secondary {{ pa_sort == 'dateInscription' and pa_dir == 'DESC' ? 'active' : '' }}" title="Trier par Date (Décroissant)">
-                            Date ⬆️
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="discovery-search-wrapper" style="min-width: 300px;">
+                            <form method="get" action="{{ path('admin_events') }}">
+                                <i class="bi bi-search discovery-search-icon"></i>
+                                <input type="search"
+                                    name="pa_q"
+                                    class="form-control discovery-search-input"
+                                    placeholder="Rechercher par utilisateur ou événement..."
+                                    value="{{ pa_q }}"
+                                    oninput="this.form.submit()">
+                                <input type="hidden" name="pa_sort" value="{{ pa_sort }}">
+                                <input type="hidden" name="pa_dir" value="{{ pa_dir }}">
+                                <input type="hidden" name="tab" value="participations">
+                            </form>
+                        </div>
+                        <a href="{{ path('app_participation_new') }}" class="btn btn-tc-primary text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem; white-space: nowrap;">
+                            <i class="bi bi-plus-lg me-1"></i> Nouvelle participation
                         </a>
                     </div>
-                    <a href="{{ path('app_participation_new') }}" class="btn btn-sm btn-tc-primary">
-                        <i class="bi bi-plus-lg me-1"></i> Nouvelle participation
-                    </a>
                 </div>
             </div>
 
@@ -206,13 +286,13 @@
                                 <td class="px-4 py-3 bg-input-match">{{ participation.user ? participation.user.username : '—' }}</td>
                                 <td class="px-4 py-3 bg-input-match">{{ participation.dateInscription ? participation.dateInscription|date('Y-m-d H:i:s') : '' }}</td>
                                 <td class="px-4 py-3 text-end bg-input-match">
-                                    <a href="{{ path('app_participation_edit', {'id': participation.id}) }}" class="btn btn-sm btn-outline-primary border-0" title="Modifier">
-                                        ✏️
+                                    <a href="{{ path('app_participation_edit', {'id': participation.id}) }}" class="btn btn-sm btn-outline-info border-0" title="Modifier">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form method="post" action="{{ path('app_participation_delete', {'id': participation.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette participation ?');" class="d-inline-block">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ participation.id) }}">
                                         <button class="btn btn-sm btn-outline-danger border-0" title="Supprimer">
-                                            🗑️
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </td>
@@ -228,23 +308,33 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const activeTab = urlParams.get('tab');
-            if (activeTab) {
-                const tabButton = document.querySelector(`#${activeTab}-tab`);
-                const tabContent = document.querySelector(`#${activeTab}`);
-                if (tabButton && tabContent) {
-                    // Deactivate all active tabs
-                    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-                    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('show', 'active'));
-                    
-                    // Activate requested tab
-                    tabButton.classList.add('active');
-                    tabContent.classList.add('show', 'active');
+        (function() {
+            function initTabs() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const activeTab = urlParams.get('tab');
+                if (activeTab) {
+                    const tabButton = document.querySelector(`#${activeTab}-tab`);
+                    const tabContent = document.querySelector(`#${activeTab}`);
+                    if (tabButton && tabContent) {
+                        // Deactivate all
+                        document.querySelectorAll('#adminTabs .nav-link').forEach(el => {
+                            el.classList.remove('active');
+                            el.setAttribute('aria-selected', 'false');
+                        });
+                        document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('show', 'active'));
+                        
+                        // Activate requested
+                        tabButton.classList.add('active');
+                        tabButton.setAttribute('aria-selected', 'true');
+                        tabContent.classList.add('show', 'active');
+                    }
                 }
             }
-        });
+
+            // Fire on initial load and after turbo navigation
+            document.addEventListener('DOMContentLoaded', initTabs);
+            document.addEventListener('turbo:load', initTabs);
+        })();
     </script>
 {% endblock %}
 

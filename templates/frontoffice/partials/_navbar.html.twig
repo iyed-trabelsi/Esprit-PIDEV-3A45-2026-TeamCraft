@@ -1,7 +1,7 @@
-<nav class="navbar navbar-expand-lg navbar-dark py-3 bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark py-2 bg-dark">
     <div class="container flex-wrap">
         <a class="navbar-brand d-flex align-items-center" href="{{ path('app_home') }}">
-            <img src="{{ asset('images/logo.png') }}" alt="TEAMCRAFT" height="40" class="d-inline-block align-text-top">
+            <img src="{{ asset('images/logo.png') }}" alt="TEAMCRAFT" height="40" class="d-inline-block align-text-top logo-animated">
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -20,12 +20,17 @@
                     <span class="nav-link text-white-50 small d-none d-md-inline">Bonjour, {{ app.user.pseudo }}</span>
                     {% if is_granted('ROLE_ADMIN') %}
                         <a class="nav-link text-white" href="{{ path('admin_dashboard') }}">Dashboard</a>
+                    {% else %}
+                        <a class="nav-link text-white" href="{{ path('app_profile') }}">Profil</a>
                     {% endif %}
                     <a class="btn btn-tc-primary" href="{{ path('app_logout') }}">Logout</a>
                 {% else %}
                     <a class="nav-link text-white" href="{{ path('app_login') }}">Log in</a>
                     <a class="btn btn-tc-primary" href="{{ path('app_register') }}">Register</a>
                 {% endif %}
+                <button id="bgToggle" class="btn btn-sm btn-tc-outline" title="Toggle Background Animation" style="padding: 0.3rem 0.5rem; font-size: 0.65rem; letter-spacing: 0.05em;">
+                    <span id="bgToggleIcon" class="font-display" style="color: var(--tc-cyan);">VIDEO</span>
+                </button>
             </div>
         </div>
     </div>

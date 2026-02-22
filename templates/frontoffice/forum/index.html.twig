@@ -52,28 +52,44 @@
                 <div class="row g-4" id="my-sections-container">
                     {% for rubrique in mes_rubriques %}
                         <div class="col-12 col-md-6 col-lg-4 my-section-item" style="display: {{ loop.index <= 3 ? 'block' : 'none' }}">
-                            <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative overflow-hidden border border-primary border-opacity-50" style="box-shadow: 0 4px 20px rgba(13, 110, 253, 0.15);">
-                                <div class="position-absolute top-0 end-0 p-2">
+                            <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative overflow-hidden border border-primary border-opacity-50 clickable-card" 
+                                 onclick="if(!event.target.closest('.dropdown')){ window.location.href='{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}'; }" 
+                                 style="box-shadow: 0 4px 20px rgba(13, 110, 253, 0.15);">
+                                
+                                <div class="position-absolute top-0 end-0 p-2 d-flex align-items-center gap-2" style="z-index: 2;">
                                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">AUTEUR</span>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-white-50 p-0 fs-5" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="min-width: auto; padding: 0.5rem;">
+                                            <li class="d-inline-block"><a class="dropdown-item p-2" href="{{ path('app_forum_rubrique_edit', { id: rubrique.id }) }}" title="Edit">
+                                                <i class="bi bi-pencil-square text-success fs-5"></i>
+                                            </a></li>
+                                            <li class="d-inline-block">
+                                                <form action="{{ path('app_forum_rubrique_delete', { id: rubrique.id }) }}" method="post" onsubmit="return confirm('Supprimer cette rubrique et tous ses posts ?');" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_rubrique_' ~ rubrique.id) }}">
+                                                    <button type="submit" class="dropdown-item p-2" title="Delete">
+                                                        <i class="bi bi-trash text-danger fs-5"></i>
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div class="discovery-avatar mx-auto mb-3">{{ rubrique.nomRubrique|first|upper }}</div>
+
+                                <div class="discovery-avatar mx-auto mb-3">
+                                    {% if rubrique.image %}
+                                        <img src="{{ asset('uploads/rubriques/' ~ rubrique.image) }}" alt="{{ rubrique.nomRubrique }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                                    {% else %}
+                                        {{ rubrique.nomRubrique|first|upper }}
+                                    {% endif %}
+                                </div>
                                 <h3 class="discovery-card-title mb-1 text-white">{{ rubrique.nomRubrique }}</h3>
                                 <p class="discovery-card-subtitle mb-3">{{ rubrique.description|default(rubrique.topic)|default('Rubrique du forum') }}</p>
-                                <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                                <div class="d-flex flex-wrap justify-content-center gap-2 mb-2">
                                     <span class="badge-game valorant">{{ rubrique.topic|default('Forum') }}</span>
                                     <span class="badge-rank green">{{ rubrique.nbPosts }} post{{ rubrique.nbPosts > 1 ? 's' : '' }}</span>
-                                </div>
-                                <div class="mt-auto row g-2">
-                                    <div class="col-12">
-                                        <a href="{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}" class="btn btn-sm btn-outline-light w-100">View Posts</a>
-                                    </div>
-                                    <div class="col-12 d-flex gap-2">
-                                        <a href="{{ path('app_forum_rubrique_edit', { id: rubrique.id }) }}" class="btn btn-success btn-sm flex-grow-1 fw-bold">Edit</a>
-                                        <form action="{{ path('app_forum_rubrique_delete', { id: rubrique.id }) }}" method="post" class="flex-grow-1" onsubmit="return confirm('Supprimer cette rubrique et tous ses posts ?');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_rubrique_' ~ rubrique.id) }}">
-                                            <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold">Delete</button>
-                                        </form>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -97,6 +113,53 @@
                     <a href="{{ path('app_forum_rubrique_new') }}" class="btn btn-primary btn-sm">Créer ma première rubrique</a>
                 </div>
             {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- AI Recommendations -->
+        {% if recommendations|length > 0 %}
+        <div class="mb-5">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <h2 class="h4 fw-bold text-white mb-0">Recommended for You <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 fs-6 ms-2">AI powered</span></h2>
+                <div style="height: 1px; width: 50px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
+            </div>
+
+            <div class="row g-4">
+                {% for post in recommendations %}
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="discovery-card h-100 d-flex flex-column p-4 text-center border border-info border-opacity-25 clickable-card position-relative overflow-hidden" 
+                             onclick="window.location.href='{{ path('app_forum_post_show', { id: post.id }) }}';"
+                             style="background: linear-gradient(145deg, rgba(13, 202, 240, 0.05) 0%, rgba(13, 110, 253, 0.02) 100%); transition: all 0.3s ease;">
+                            
+                            <div class="position-absolute top-0 start-0 w-100 h-1" style="background: linear-gradient(90deg, transparent, rgba(13, 202, 240, 0.3), transparent); height: 1px;"></div>
+                            
+                            <div class="discovery-avatar mx-auto mb-3" style="width: 60px; height: 60px; line-height: 52px; font-size: 1.5rem; border: 2px solid rgba(13, 202, 240, 0.2); background: rgba(13, 202, 240, 0.1);">
+                                {% if post.image %}
+                                    <img src="{{ asset('uploads/posts/' ~ post.image) }}" alt="{{ post.titre }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                                {% else %}
+                                    <i class="bi bi-magic text-info"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <h3 class="h6 fw-bold mb-2 text-white text-truncate">{{ post.titre }}</h3>
+                            <p class="small text-white-50 mb-3 text-truncate" style="max-height: 40px;">
+                                {{ post.rubrique.nomRubrique|default('Forum') }}
+                            </p>
+                            
+                            <div class="mt-auto d-flex justify-content-between align-items-center border-top border-white border-opacity-10 pt-3">
+                                <div class="d-flex align-items-center gap-1 text-white-50 small">
+                                    <i class="bi bi-heart-fill text-danger fs-7"></i>
+                                    <span>{{ post.nbLikes }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 text-white-50 small">
+                                    <i class="bi bi-eye text-info fs-7"></i>
+                                    <span>{{ post.nbVues }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
 
@@ -138,15 +201,21 @@
         <div class="row g-4" id="discovery-container">
             {% for rubrique in rubriques %}
                 <div class="col-12 col-sm-6 col-lg-4 discovery-item" data-name="{{ rubrique.nomRubrique|lower }}" data-date="{{ rubrique.dateCreation ? rubrique.dateCreation|date('U') : 0 }}" data-id="{{ rubrique.id }}" style="display: {{ loop.index <= 6 ? 'block' : 'none' }}">
-                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
-                        <div class="discovery-avatar mx-auto mb-3">{{ rubrique.nomRubrique|first|upper }}</div>
-                        <h3 class="discovery-card-title mb-1">{{ rubrique.nomRubrique }}</h3>
+                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center clickable-card" 
+                         onclick="window.location.href='{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}';">
+                        <div class="discovery-avatar mx-auto mb-3">
+                            {% if rubrique.image %}
+                                <img src="{{ asset('uploads/rubriques/' ~ rubrique.image) }}" alt="{{ rubrique.nomRubrique }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                            {% else %}
+                                {{ rubrique.nomRubrique|first|upper }}
+                            {% endif %}
+                        </div>
+                        <h3 class="discovery-card-title mb-1 text-white">{{ rubrique.nomRubrique }}</h3>
                         <p class="discovery-card-subtitle mb-3">{{ rubrique.description|default(rubrique.topic)|default('—') }}</p>
-                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-2">
                             <span class="badge-game valorant">{{ rubrique.topic|default('Forum') }}</span>
                             <span class="badge-rank green">{{ rubrique.nbPosts }} post{{ rubrique.nbPosts > 1 ? 's' : '' }}</span>
                         </div>
-                        <a href="{{ path('app_forum_rubrique_show', { id: rubrique.id }) }}" class="btn btn-recruit mt-auto text-decoration-none">View All Posts</a>
                     </div>
                 </div>
             {% else %}
@@ -184,188 +253,171 @@
         
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('Forum Script Loaded');
                 
                 function setupPagination(itemClass, prevBtnClass, nextBtnClass, itemsPerPage, containerId) {
                     const container = containerId ? document.getElementById(containerId) : null;
-                    let allItems = Array.from(document.querySelectorAll('.' + itemClass));
-                    console.log('Setup Pagination for', itemClass, 'Found items:', allItems.length);
-                    
+                    if (!container) return null;
+
+                    // Capture all initial items as the source of truth
+                    const allItems = Array.from(container.querySelectorAll('.' + itemClass));
+                    if (!allItems.length) return null;
+
                     const prevBtns = document.querySelectorAll('.' + prevBtnClass);
                     const nextBtns = document.querySelectorAll('.' + nextBtnClass);
                     
-                    if (!allItems.length) return null;
-                    
                     let currentPage = 0;
                     let currentFilter = '';
-                    let currentSortDir = 'desc'; // Default sort
-                    let visibleItems = [...allItems]; // Copy for manipulation
-                    
-                    // Initial Sort (Newest First)
-                    sortItems(visibleItems, currentSortDir);
-                    console.log('Initial Sort Complete');
+                    let currentSortDir = 'desc'; // Default
+                    let visibleItems = [...allItems]; 
 
-                    // Helper to calculate pages based on currently filtered items
-                    function getTotalPages() {
-                        return Math.ceil(visibleItems.length / itemsPerPage);
+                    // Helper: Get formatted date/id
+                    function getData(item) {
+                        return {
+                            date: parseInt(item.getAttribute('data-date') || '0'),
+                            id: parseInt(item.getAttribute('data-id') || '0'),
+                            name: (item.getAttribute('data-name') || '').toLowerCase(),
+                            element: item
+                        };
                     }
 
-                    function updateVisibility() {
-                        const totalPages = getTotalPages();
-                        
-                        // Ensure current page is valid after filtering
-                        if (currentPage >= totalPages && totalPages > 0) {
-                            currentPage = totalPages - 1;
-                        }
-                        if (currentPage < 0) currentPage = 0;
+                    // Sort logic
+                    function sortItemsLogic(items, direction) {
+                        return items.sort((a, b) => {
+                            const dataA = getData(a);
+                            const dataB = getData(b);
+                            
+                            // Sort by Date
+                            if (dataA.date !== dataB.date) {
+                                return direction === 'asc' ? dataA.date - dataB.date : dataB.date - dataA.date;
+                            }
+                            // Fallback to ID
+                            return direction === 'asc' ? dataA.id - dataB.id : dataB.id - dataA.id;
+                        });
+                    }
 
-                        // First hide EVERYTHING in the original DOM list (to be safe)
+                    function updateDisplay() {
+                        const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+                        
+                        // Bound check
+                        if (currentPage >= totalPages) currentPage = Math.max(0, totalPages - 1);
+                        
+                        // 1. Detach all items from DOM (to avoid duplication or misordering)
+                        allItems.forEach(item => item.remove());
+                        
+                        // 2. Hide all items (reset display)
                         allItems.forEach(item => item.style.display = 'none');
 
-                        // Then show only the slice of the FILTERED items for current page
+                        // 3. Determine items for current page
                         const start = currentPage * itemsPerPage;
                         const end = start + itemsPerPage;
                         const pageItems = visibleItems.slice(start, end);
-                        
+
+                        // 4. Show and Append only current page items to container in correct order
                         pageItems.forEach(item => {
                             item.style.display = 'block';
-                            item.style.opacity = '1'; 
+                            container.appendChild(item);
                         });
 
-                        // Visual update of buttons
+                        // 5. Update Buttons
                         prevBtns.forEach(btn => btn.disabled = currentPage === 0 || totalPages === 0);
                         nextBtns.forEach(btn => btn.disabled = currentPage >= totalPages - 1 || totalPages === 0);
-                        
-                        // If we have a container, we can physically re-order elements for visual flow
-                        if (container) {
-                             visibleItems.forEach(item => container.appendChild(item));
+
+                        // 6. No Results handling
+                        const noResultsMsg = document.getElementById('no-results-message');
+                        if (noResultsMsg) {
+                            if (visibleItems.length === 0 && currentFilter !== '') {
+                                container.appendChild(noResultsMsg); // Move message to end
+                                noResultsMsg.classList.remove('d-none');
+                            } else {
+                                noResultsMsg.classList.add('d-none');
+                            }
                         }
                     }
 
-                    function sortItems(items, direction) {
-                        console.log('Sorting items...', direction);
-                        items.sort((a, b) => {
-                            const dateA = parseInt(a.getAttribute('data-date') || '0');
-                            const dateB = parseInt(b.getAttribute('data-date') || '0');
-                            
-                            // Primary Sort: Date
-                            if (dateA !== dateB) {
-                                return direction === 'asc' ? dateA - dateB : dateB - dateA;
-                            }
-                            
-                            // Secondary Sort (Tie-breaker): ID
-                            // If dates are identical, we sort by ID to ensure deterministic order
-                            const idA = parseInt(a.getAttribute('data-id') || '0');
-                            const idB = parseInt(b.getAttribute('data-id') || '0');
-                            return direction === 'asc' ? idA - idB : idB - idA;
-                        });
-                        console.log('Sorted 1st item Date/ID:', items[0]?.getAttribute('data-date'), items[0]?.getAttribute('data-id'));
-                    }
-
+                    // Add click event listeners for pagination buttons
                     prevBtns.forEach(btn => {
                         btn.addEventListener('click', function() {
                             if (currentPage > 0) {
                                 currentPage--;
-                                updateVisibility();
+                                updateDisplay();
                             }
                         });
                     });
 
                     nextBtns.forEach(btn => {
                         btn.addEventListener('click', function() {
-                            if (currentPage < getTotalPages() - 1) {
+                            const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+                            if (currentPage < totalPages - 1) {
                                 currentPage++;
-                                updateVisibility();
+                                updateDisplay();
                             }
                         });
                     });
-                    
-                    // Public methods
+
+                    // Public Interface
                     return {
-                        filter: function(searchTerm) {
-                            console.log('Filtering:', searchTerm);
-                            currentFilter = searchTerm.toLowerCase().trim();
+                        filter: function(term) {
+                            currentFilter = term.toLowerCase().trim();
                             
-                            if (currentFilter === '') {
+                            if (!currentFilter) {
                                 visibleItems = [...allItems];
                             } else {
                                 visibleItems = allItems.filter(item => {
-                                    const name = item.getAttribute('data-name');
-                                    return name && name.toLowerCase().includes(currentFilter);
+                                    return getData(item).name.includes(currentFilter);
                                 });
                             }
                             
-                            // Re-apply sort after filter
-                            sortItems(visibleItems, currentSortDir);
+                            // Re-sort filtered items
+                            sortItemsLogic(visibleItems, currentSortDir);
                             
-                            // Check for no results
-                            const noResultsMsg = document.getElementById('no-results-message');
-                            if (noResultsMsg) {
-                                if (visibleItems.length === 0 && currentFilter !== '') {
-                                    noResultsMsg.classList.remove('d-none');
-                                } else {
-                                    noResultsMsg.classList.add('d-none');
-                                }
-                            }
-                            
-                            currentPage = 0; // Reset to first page
-                            updateVisibility();
+                            currentPage = 0;
+                            updateDisplay();
                         },
                         sort: function(direction) {
-                            console.log('Public Sort Called:', direction);
                             currentSortDir = direction;
-                            sortItems(visibleItems, currentSortDir);
-                            currentPage = 0; 
-                            updateVisibility();
+                            sortItemsLogic(visibleItems, currentSortDir);
+                            currentPage = 0;
+                            updateDisplay();
                         },
                         init: function() {
-                            updateVisibility();
+                            // Initial sort matches default
+                            sortItemsLogic(visibleItems, currentSortDir);
+                            updateDisplay();
                         }
                     };
                 }
 
-                // Setup "My Sections" pagination (3 items)
+                // 1. My Sections (Simple pagination, no sort/filter)
                 const mySectionPaginator = setupPagination('my-section-item', 'js-prev-sections', 'js-next-sections', 3, 'my-sections-container');
                 if (mySectionPaginator) mySectionPaginator.init();
 
-                // Setup "Forum Discovery" pagination (6 items)
+                // 2. Forum Discovery (Full features)
                 const discoveryPaginator = setupPagination('discovery-item', 'js-prev-discovery', 'js-next-discovery', 6, 'discovery-container');
-                
-                // Connect Search Input
-                const searchInput = document.getElementById('discovery-search-input');
-                if (searchInput && discoveryPaginator) {
+                if (discoveryPaginator) {
                     discoveryPaginator.init();
-                    searchInput.addEventListener('input', function(e) {
-                        discoveryPaginator.filter(e.target.value);
-                    });
-                } else if (discoveryPaginator) {
-                    discoveryPaginator.init();
-                }
+                    
+                    // Search Input
+                    const searchInput = document.getElementById('discovery-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', (e) => discoveryPaginator.filter(e.target.value));
+                    }
 
-                // Connect Sorting Options
-                const sortOptions = document.querySelectorAll('.js-sort-option');
-                const currentSortLabel = document.getElementById('currentSortLabel');
-                
-                console.log('Sort Options Found:', sortOptions.length);
-                console.log('Discovery Paginator exists:', !!discoveryPaginator);
-
-                if (sortOptions.length && discoveryPaginator) {
+                    // Sort Dropdown
+                    const sortOptions = document.querySelectorAll('.js-sort-option');
+                    const currentSortLabel = document.getElementById('currentSortLabel');
+                    
                     sortOptions.forEach(option => {
                         option.addEventListener('click', function(e) {
                             e.preventDefault();
-                            console.log('Sort Option Clicked');
-                            const direction = this.getAttribute('data-sort');
-                            const label = this.textContent;
+                            const dir = this.getAttribute('data-sort');
                             
-                            // Update Active State
-                            sortOptions.forEach(opt => opt.classList.remove('active'));
+                            // Update UI
+                            sortOptions.forEach(o => o.classList.remove('active'));
                             this.classList.add('active');
-                            
-                            // Update Button Label
-                            if (currentSortLabel) currentSortLabel.textContent = label;
-                            
+                            if (currentSortLabel) currentSortLabel.textContent = this.textContent;
+
                             // Trigger Sort
-                            discoveryPaginator.sort(direction);
+                            discoveryPaginator.sort(dir);
                         });
                     });
                 }

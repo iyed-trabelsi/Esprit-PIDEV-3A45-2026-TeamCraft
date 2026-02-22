@@ -17,6 +17,7 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            user_checker: App\Security\UserChecker
             entry_point: App\Security\AppCustomAuthenticator
             form_login:
                 login_path: app_login
@@ -25,8 +26,9 @@ security:
             logout:
                 path: /logout
                 target: app_home
-            custom_authenticator: App\Security\AppCustomAuthenticator
-
+            custom_authenticators:
+                - App\Security\AppCustomAuthenticator
+                - App\Security\GoogleAuthenticator
             remember_me:
                 secret: '%kernel.secret%'
                 lifetime: 604800

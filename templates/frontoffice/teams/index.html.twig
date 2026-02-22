@@ -25,10 +25,11 @@
             </a>
         </div>
 
+        {% if app.user %}
         <!-- My Team Section -->
         <div class="mb-5">
             <div class="d-flex align-items-center gap-3 mb-4">
-                <h2 class="h4 fw-bold text-white mb-0">My Team</h2>
+                <h2 class="h4 fw-bold text-white mb-0">My Teams</h2>
                 <div class="flex-grow-1" style="height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);"></div>
             </div>
 
@@ -37,9 +38,15 @@
                     {% for team in myTeams %}
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative overflow-hidden border border-primary border-opacity-50" style="box-shadow: 0 4px 20px rgba(13, 110, 253, 0.15);">
+                                {% if team.owner == app.user %}
                                 <div class="position-absolute top-0 end-0 p-2">
                                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">OWNER</span>
                                 </div>
+                                {% else %}
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">MEMBER</span>
+                                </div>
+                                {% endif %}
                                 
                                 <div class="discovery-avatar mx-auto mb-3 bg-gradient-primary text-white border-primary" style="background: linear-gradient(135deg, #0d6efd, #0a58ca);">
                                     {% if team.logo %}
@@ -59,7 +66,11 @@
                                 
                                 <div class="mt-auto row g-2">
                                     <div class="col-12">
-                                        <a href="{{ path('team_manage', {'id': team.id}) }}" class="btn btn-sm btn-outline-light w-100">Manage</a>
+                                        {% if team.owner == app.user %}
+                                            <a href="{{ path('team_manage', {'id': team.id}) }}" class="btn btn-sm btn-outline-light w-100">Manage</a>
+                                        {% else %}
+                                              <button class="btn btn-sm btn-outline-secondary w-100" disabled>Joined</button>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -68,36 +79,330 @@
                 </div>
             {% else %}
                 <div class="text-center py-5 border border-dashed border-secondary rounded-3">
-                    <p class="text-white-50 mb-3">You typically haven't created any teams yet.</p>
+                    <p class="text-white-50 mb-3">You typically haven't created or joined any teams yet.</p>
                      <a href="{{ path('team_create') }}" class="btn btn-primary btn-sm">Create Your First Team</a>
                 </div>
             {% endif %}
         </div>
+        {% endif %}
 
         <!-- Discovery Heading -->
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <h2 class="h4 fw-bold mb-0 discovery-section-title">
                 Teams Discovery
             </h2>
-            <a href="#" class="discovery-view-all">VIEW ALL TEAMS →</a>
-        </div>
-        <div class="row g-4">
-            {% for t in teams %}
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
-                        <div class="discovery-avatar mx-auto mb-3">{{ t.initial }}</div>
-                        <h3 class="discovery-card-title mb-1">{{ t.name }}</h3>
-                        <p class="discovery-card-subtitle mb-3">{{ t.role }}</p>
-                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-                            <span class="badge-game {{ t.gameColor }}">{{ t.game }}</span>
-                            <span class="badge-rank {{ t.rankColor }}">{{ t.rank }}</span>
-                        </div>
-                        <button type="button" class="btn btn-recruit mt-auto">Recruit Me</button>
-                    </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- Sort by Date Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="sortDropdownBtn">
+                        <i class="bi bi-sort-down"></i>
+                        <span id="currentSortLabel">Newest First</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-sort-option" href="#" data-sort="desc">Newest First</a></li>
+                        <li><a class="dropdown-item js-sort-option" href="#" data-sort="asc">Oldest First</a></li>
+                        <li><a class="dropdown-item js-sort-option" href="#" data-sort="name_asc">A-Z</a></li>
+                        <li><a class="dropdown-item js-sort-option" href="#" data-sort="name_desc">Z-A</a></li>
+                    </ul>
                 </div>
-            {% endfor %}
+
+                <!-- Filter by Game Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="gameFilterDropdownBtn">
+                        <i class="bi bi-funnel"></i>
+                        <span id="currentGameLabel">All Games</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-game-option" href="#" data-game="all">All Games</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="valorant">Valorant</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="lol">League of Legends</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="wow">World of Warcraft</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="csgo">CS:GO</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="overwatch">Overwatch</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="fortnite">Fortnite</a></li>
+                    </ul>
+                </div>
+
+                <!-- Search Input -->
+                <div class="position-relative">
+                    <input type="text" id="team-search" class="form-control form-control-sm text-white ps-5" placeholder="Search teams..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            #team-search::placeholder {
+                color: white !important;
+                opacity: 0.7;
+            }
+        </style>
+        
+        <div id="team-list-container">
+            {% block discovery_list %}
+            <div class="row g-4" id="teams-discovery-container">
+                {% for team in teams %}
+                    <div class="col-12 col-sm-6 col-lg-4 discovery-item" 
+                         data-name="{{ team.name|lower }}" 
+                         data-date="{{ team.createdAt ? team.createdAt.timestamp : 0 }}" 
+                         data-games="{{ team.games|join(',')|lower }}"
+                         data-id="{{ team.id }}">
+                        <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+                            <div class="discovery-avatar mx-auto mb-3">
+                                {% if team.logo %}
+                                    <img src="{{ asset('uploads/teams/' ~ team.logo) }}" alt="{{ team.name }}" class="w-100 h-100 object-fit-cover rounded-circle">
+                                {% else %}
+                                    {{ team.name|first|upper }}
+                                {% endif %}
+                            </div>
+                            <h3 class="discovery-card-title mb-1">{{ team.name }}</h3>
+                            <p class="discovery-card-subtitle mb-1 text-white-50" style="font-size: 0.9rem;">
+                                Created by <span class="text-white fw-bold">{{ team.owner.username ?? 'Unknown' }}</span>
+                            </p>
+                            
+                            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3 mt-2">
+                                {% for game in team.games %}
+                                    <span class="badge-game {{ game|lower }}">{{ game }}</span>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- 
+                            <button type="button" class="btn btn-recruit mt-auto">Recruit Me</button>
+                             -->
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center text-white-50">
+                        No teams found.
+                    </div>
+                {% endfor %}
+            </div>
+            <div id="no-results-message" class="col-12 text-center py-5 d-none">
+                <p class="text-white-50">No teams found matching your search.</p>
+            </div>
+            {% endblock %}
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <button class="btn btn-sm btn-tc-outline px-3 js-prev-teams" disabled>
+                <i class="bi bi-chevron-left">&lt;</i>
+            </button>
+            <button class="btn btn-sm btn-tc-outline px-3 js-next-teams">
+                <i class="bi bi-chevron-right">&gt;</i>
+            </button>
         </div>
     </section>
 
     {% include 'frontoffice/partials/_footer_full.html.twig' %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Pagination setup function (reused from forum)
+            function setupPagination(itemClass, prevBtnClass, nextBtnClass, itemsPerPage, containerId) {
+                const container = containerId ? document.getElementById(containerId) : null;
+                if (!container) return null;
+
+                const allItems = Array.from(container.querySelectorAll('.' + itemClass));
+                if (!allItems.length) return null;
+
+                const prevBtns = document.querySelectorAll('.' + prevBtnClass);
+                const nextBtns = document.querySelectorAll('.' + nextBtnClass);
+                
+                let currentPage = 0;
+                let currentFilter = '';
+                let currentGame = 'all';
+                let currentSortDir = 'desc'; // Default
+                let visibleItems = [...allItems]; 
+
+                // Helper: Get data from item
+                function getData(item) {
+                    return {
+                        date: parseInt(item.getAttribute('data-date') || '0'),
+                        id: parseInt(item.getAttribute('data-id') || '0'),
+                        name: (item.getAttribute('data-name') || '').toLowerCase(),
+                        games: (item.getAttribute('data-games') || '').toLowerCase(),
+                        element: item
+                    };
+                }
+
+                // Sort logic
+                function sortItemsLogic(items, direction) {
+                    return items.sort((a, b) => {
+                        const dataA = getData(a);
+                        const dataB = getData(b);
+                        
+                        // Sort by name
+                        if (direction === 'name_asc' || direction === 'name_desc') {
+                            const comparison = dataA.name.localeCompare(dataB.name);
+                            return direction === 'name_asc' ? comparison : -comparison;
+                        }
+                        
+                        // Sort by Date
+                        if (dataA.date !== dataB.date) {
+                            return direction === 'asc' ? dataA.date - dataB.date : dataB.date - dataA.date;
+                        }
+                        // Fallback to ID
+                        return direction === 'asc' ? dataA.id - dataB.id : dataB.id - dataA.id;
+                    });
+                }
+
+                function updateDisplay() {
+                    const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+                    
+                    // Bound check
+                    if (currentPage >= totalPages) currentPage = Math.max(0, totalPages - 1);
+                    
+                    // 1. Detach all items from DOM
+                    allItems.forEach(item => item.remove());
+                    
+                    // 2. Hide all items
+                    allItems.forEach(item => item.style.display = 'none');
+
+                    // 3. Determine items for current page
+                    const start = currentPage * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const pageItems = visibleItems.slice(start, end);
+
+                    // 4. Show and Append only current page items
+                    pageItems.forEach(item => {
+                        item.style.display = 'block';
+                        container.appendChild(item);
+                    });
+
+                    // 5. Update Buttons
+                    prevBtns.forEach(btn => btn.disabled = currentPage === 0 || totalPages === 0);
+                    nextBtns.forEach(btn => btn.disabled = currentPage >= totalPages - 1 || totalPages === 0);
+
+                    // 6. No Results handling
+                    const noResultsMsg = document.getElementById('no-results-message');
+                    if (noResultsMsg) {
+                        if (visibleItems.length === 0 && (currentFilter !== '' || currentGame !== 'all')) {
+                            container.appendChild(noResultsMsg);
+                            noResultsMsg.classList.remove('d-none');
+                        } else {
+                            noResultsMsg.classList.add('d-none');
+                        }
+                    }
+                }
+
+                // Add click event listeners for pagination buttons
+                prevBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (currentPage > 0) {
+                            currentPage--;
+                            updateDisplay();
+                        }
+                    });
+                });
+
+                nextBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+                        if (currentPage < totalPages - 1) {
+                            currentPage++;
+                            updateDisplay();
+                        }
+                    });
+                });
+
+                // Public Interface
+                return {
+                    filter: function(term) {
+                        currentFilter = term.toLowerCase().trim();
+                        this.applyFilters();
+                    },
+                    filterGame: function(game) {
+                        currentGame = game;
+                        this.applyFilters();
+                    },
+                    applyFilters: function() {
+                        visibleItems = allItems.filter(item => {
+                            const data = getData(item);
+                            
+                            // Search filter (name or games)
+                            const matchesSearch = !currentFilter || 
+                                data.name.includes(currentFilter) || 
+                                data.games.includes(currentFilter);
+                            
+                            // Game filter
+                            const matchesGame = currentGame === 'all' || 
+                                data.games.includes(currentGame);
+                            
+                            return matchesSearch && matchesGame;
+                        });
+                        
+                        // Re-sort filtered items
+                        sortItemsLogic(visibleItems, currentSortDir);
+                        
+                        currentPage = 0;
+                        updateDisplay();
+                    },
+                    sort: function(direction) {
+                        currentSortDir = direction;
+                        sortItemsLogic(visibleItems, currentSortDir);
+                        currentPage = 0;
+                        updateDisplay();
+                    },
+                    init: function() {
+                        // Initial sort
+                        sortItemsLogic(visibleItems, currentSortDir);
+                        updateDisplay();
+                    }
+                };
+            }
+
+            // Setup Teams Discovery pagination (6 items per page)
+            const teamsPaginator = setupPagination('discovery-item', 'js-prev-teams', 'js-next-teams', 6, 'teams-discovery-container');
+            if (teamsPaginator) {
+                teamsPaginator.init();
+                
+                // Connect Search Input
+                const searchInput = document.getElementById('team-search');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => teamsPaginator.filter(e.target.value));
+                }
+
+                // Connect Sort Dropdown
+                const sortOptions = document.querySelectorAll('.js-sort-option');
+                const currentSortLabel = document.getElementById('currentSortLabel');
+                
+                sortOptions.forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const dir = this.getAttribute('data-sort');
+                        
+                        // Update UI
+                        sortOptions.forEach(o => o.classList.remove('active'));
+                        this.classList.add('active');
+                        if (currentSortLabel) currentSortLabel.textContent = this.textContent;
+
+                        // Trigger Sort
+                        teamsPaginator.sort(dir);
+                    });
+                });
+
+                // Connect Game Filter
+                const gameOptions = document.querySelectorAll('.js-game-option');
+                const currentGameLabel = document.getElementById('currentGameLabel');
+                
+                gameOptions.forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const game = this.getAttribute('data-game');
+                        
+                        // Update UI
+                        gameOptions.forEach(o => o.classList.remove('active'));
+                        this.classList.add('active');
+                        if (currentGameLabel) currentGameLabel.textContent = this.textContent;
+
+                        // Trigger Filter
+                        teamsPaginator.filterGame(game);
+                    });
+                });
+            }
+        });
+    </script>
 {% endblock %}

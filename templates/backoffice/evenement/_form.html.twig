@@ -1,38 +1,85 @@
-{{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
+{{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false', enctype: 'multipart/form-data' } }) }}
     {{ form_errors(form) }}
     <div class="admin-form-widgets">
-        <div class="mb-3">
-            {{ form_label(form.nomEvenement) }}
-            {{ form_widget(form.nomEvenement) }}
+        <div class="mb-4">
+            {{ form_label(form.nomEvenement, 'Nom de l\'événement', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-tag"></i></span>
+                {{ form_widget(form.nomEvenement, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Tournoi Valorant 2024'} }) }}
+            </div>
             {{ form_errors(form.nomEvenement) }}
         </div>
-        <div class="mb-3">
-            {{ form_label(form.typeEvenement) }}
-            {{ form_widget(form.typeEvenement) }}
+
+        <div class="mb-4">
+            {{ form_label(form.typeEvenement, 'Type d\'événement', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-layers"></i></span>
+                {{ form_widget(form.typeEvenement, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Compétition, Social, etc.'} }) }}
+            </div>
             {{ form_errors(form.typeEvenement) }}
         </div>
-        <div class="mb-3">
-            {{ form_label(form.dateDebut) }}
-            {{ form_widget(form.dateDebut) }}
-            {{ form_errors(form.dateDebut) }}
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                {{ form_label(form.dateDebut, 'Date de début', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-calendar-check"></i></span>
+                    {{ form_widget(form.dateDebut, { 'attr': {'class': 'form-control'} }) }}
+                </div>
+                {{ form_errors(form.dateDebut) }}
+            </div>
+            <div class="col-md-6 mb-4">
+                {{ form_label(form.dateFin, 'Date de fin', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-calendar-x"></i></span>
+                    {{ form_widget(form.dateFin, { 'attr': {'class': 'form-control'} }) }}
+                </div>
+                {{ form_errors(form.dateFin) }}
+            </div>
         </div>
-        <div class="mb-3">
-            {{ form_label(form.dateFin) }}
-            {{ form_widget(form.dateFin) }}
-            {{ form_errors(form.dateFin) }}
-        </div>
-        <div class="mb-3">
-            {{ form_label(form.status) }}
-            {{ form_widget(form.status) }}
+
+        <div class="mb-4">
+            {{ form_label(form.status, 'Statut', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-info-circle"></i></span>
+                {{ form_widget(form.status, { 'attr': {'class': 'form-select'} }) }}
+            </div>
+            <div class="form-text mt-1" style="color: rgba(255, 255, 255, 0.9) !important;">Choisissez si l'événement est ouvert ou fermé aux inscriptions.</div>
             {{ form_errors(form.status) }}
         </div>
-        <div class="mb-3">
-            {{ form_label(form.place) }}
-            {{ form_widget(form.place) }}
+
+        <div class="mb-4">
+            {{ form_label(form.place, 'Lieu / Place', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-geo-alt"></i></span>
+                {{ form_widget(form.place, { 'attr': {'class': 'form-select'} }) }}
+            </div>
             {{ form_errors(form.place) }}
         </div>
+
+        <div class="mb-4">
+            {{ form_label(form.imageFile, 'Image de l\'événement (facultatif)', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            {% if evenement is defined and evenement.imageEvenement %}
+                <div class="mb-2 d-flex align-items-center gap-3">
+                    <img src="{{ asset('uploads/events/' ~ evenement.imageEvenement) }}"
+                         alt="Image actuelle"
+                         style="height: 80px; width: 120px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                    <span class="text-muted small"><i class="bi bi-image me-1"></i>Image actuelle — remplacez-la en téléchargeant une nouvelle ci-dessous.</span>
+                </div>
+            {% endif %}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-image"></i></span>
+                {{ form_widget(form.imageFile, { 'attr': {'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'} }) }}
+            </div>
+            <div class="form-text mt-1" style="color: rgba(255, 255, 255, 0.6) !important;">Formats acceptés : jpeg, png, webp — Taille max : 2 Mo.</div>
+            {{ form_errors(form.imageFile) }}
+        </div>
     </div>
-    <div class="mt-4">
-        <button type="submit" class="btn btn-tc-primary w-100">{{ button_label|default('Enregistrer') }}</button>
+    
+    <div class="mt-4 pt-2">
+        <button type="submit" class="btn btn-tc-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-check-circle"></i>
+            <span>{{ button_label|default('Enregistrer les modifications') }}</span>
+        </button>
     </div>
 {{ form_end(form) }}

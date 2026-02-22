@@ -17,12 +17,19 @@
                             {% endif %}
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address</label>
-                                <input type="email" name="_username" id="email" class="form-control" placeholder="you@example.com" value="{{ last_username }}" autofocus>
+                                <input type="email" name="_username" id="email" class="form-control" placeholder="you@example.com" value="{{ last_username }}" required autofocus>
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" name="_password" id="password" class="form-control" placeholder="••••••••">
+                                <input type="password" name="_password" id="password" class="form-control" placeholder="••••••••" required>
                             </div>
+                            <hr>
+                        <a href="{{ path('connect_google_start') }}" class="google-btn-full mb-4">
+                            <div class="google-content">
+                                <img src="	https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google logo" class="google-logo">
+                                <span class="google-text">Continue with Google</span>
+                            </div>
+                        </a>    
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
                             <button type="submit" class="btn btn-tc-primary w-100 py-3">Log In</button>
                         </form>

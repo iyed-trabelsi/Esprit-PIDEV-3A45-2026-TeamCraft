@@ -18,27 +18,26 @@ class Post
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 30)]
+    #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
-    #[Assert\Length(max: 30, maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.')]
+    #[Assert\Length(max: 50, maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $titre = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\Length(max: 255, maxMessage: 'Le contenu ne peut pas dépasser {{ limit }} caractères.')]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $contenu = null;
 
     #[ORM\Column(length: 30)]
     #[Assert\Choice(choices: ['discussion', 'question', 'annonce'], message: 'Type de post invalide.')]
     private ?string $typePost = 'discussion';
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateCreation = null;
 
     #[ORM\Column]
     private int $nbVues = 0;
 
     #[ORM\Column(length: 20)]
-    #[Assert\Choice(choices: ['published', 'archived'], message: 'Statut invalide.')]
+    #[Assert\Choice(choices: ['published', 'archived', 'pending_review'], message: 'Statut invalide.')]
     private ?string $statut = 'published';
 
     #[ORM\Column]
@@ -47,6 +46,10 @@ class Post
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
+    /** 'medium' = image was flagged by moderation but accepted; show blur overlay. null = safe */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $imageSensitivity = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $auteur = null;
@@ -54,6 +57,13 @@ class Post
     #[ORM\ManyToOne(targetEntity: Rubrique::class, inversedBy: 'posts')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Rubrique $rubrique = null;
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'post_likes')]
+    private Collection $likedBy;
 
     /**
      * @var Collection<int, Comment>
@@ -65,6 +75,8 @@ class Post
     public function __construct()
     {
         $this->comments = new ArrayCollection();
+        $this->likedBy = new ArrayCollection();
+        $this->signalements = new ArrayCollection();
         $this->dateCreation = new \DateTime();
     }
 
@@ -167,6 +179,17 @@ class Post
         return $this;
     }
 
+    public function getImageSensitivity(): ?string
+    {
+        return $this->imageSensitivity;
+    }
+
+    public function setImageSensitivity(?string $imageSensitivity): static
+    {
+        $this->imageSensitivity = $imageSensitivity;
+        return $this;
+    }
+
     public function getAuteur(): ?User
     {
         return $this->auteur;
@@ -213,6 +236,69 @@ class Post
                 $comment->setPost(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getLikedBy(): Collection
+    {
+        return $this->likedBy;
+    }
+
+    public function addLikedBy(User $user): static
+    {
+        if (!$this->likedBy->contains($user)) {
+            $this->likedBy->add($user);
+            $this->nbLikes = $this->likedBy->count();
+        }
+        return $this;
+    }
+
+    public function removeLikedBy(User $user): static
+    {
+        if ($this->likedBy->removeElement($user)) {
+            $this->nbLikes = $this->likedBy->count();
+        }
+        return $this;
+    }
+
+    public function isLikedBy(User $user): bool
+    {
+        return $this->likedBy->contains($user);
+    }
+
+    /**
+     * @var Collection<int, Signalement>
+     */
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Signalement::class, orphanRemoval: true)]
+    private Collection $signalements;
+
+    public function getSignalements(): Collection
+    {
+        return $this->signalements;
+    }
+
+    public function addSignalement(Signalement $signalement): static
+    {
+        if (!$this->signalements->contains($signalement)) {
+            $this->signalements->add($signalement);
+            $signalement->setPost($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSignalement(Signalement $signalement): static
+    {
+        if ($this->signalements->removeElement($signalement)) {
+            // set the owning side to null (unless already changed)
+            if ($signalement->getPost() === $this) {
+                $signalement->setPost(null);
+            }
+        }
+
         return $this;
     }
 }

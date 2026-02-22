@@ -15,7 +15,7 @@
                             <p class="text-white-50">Create your esports team and start competing</p>
                         </div>
 
-                        {{ form_start(form) }}
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
                             
                             <!-- Team Logo -->
                             <div class="mb-4 text-center">
@@ -41,7 +41,7 @@
                             <!-- Team Name -->
                             <div class="mb-4">
                                 {{ form_label(form.name, null, {'label_attr': {'class': 'form-label text-white'}}) }}
-                                {{ form_widget(form.name, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_widget(form.name, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'required': false}}) }}
                                 {{ form_errors(form.name) }}
                             </div>
 
@@ -118,4 +118,5 @@
             }
         });
     </script>
+
 {% endblock %}

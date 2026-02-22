@@ -4,22 +4,21 @@
 {% block admin_subheading %}Liste de toutes les offres de recrutement avec leur jeu et statut.{% endblock %}
 
 {% block admin_content %}
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-        <div class="flex-grow-1" style="max-width: 420px;">
-            <div class="input-group admin-search-group">
-                <span class="input-group-text">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="search" class="form-control" placeholder="Recherche par titre, équipe ou jeu">
+    <div class="discovery-filter-container mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-tc-outline text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                    <i class="bi bi-funnel me-1"></i> Filtrer
+                </button>
+                <button class="btn btn-tc-primary text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                    <i class="bi bi-plus-lg me-1"></i> Nouvelle offre
+                </button>
             </div>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-tc-outline">
-                <i class="bi bi-funnel me-1"></i> Filtrer
-            </button>
-            <button class="btn btn-sm btn-tc-primary">
-                <i class="bi bi-plus-lg me-1"></i> Nouvelle offre
-            </button>
+
+            <div class="discovery-search-wrapper" style="min-width: 300px;">
+                <i class="bi bi-search discovery-search-icon"></i>
+                <input type="search" class="form-control discovery-search-input" placeholder="Recherche par titre, équipe ou jeu">
+            </div>
         </div>
     </div>
 
@@ -49,6 +48,8 @@
                                 {% endif %}
                             </td>
                             <td class="px-4 py-3 text-end bg-input-match">
+
+
                                 <a href="{{ path('app_offres_show', {'id': offer.id}) }}" class="action-btn view d-inline-block" title="Consulter">
                                     <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
                                 </a>

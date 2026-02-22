@@ -182,7 +182,7 @@ class FrontEventController extends AbstractController
         return $this->redirectToRoute('app_events', [], Response::HTTP_SEE_OTHER);
     }
 
-    private function validateEvenement(Evenement $evenement, bool $isNew = false): array
+    private function validateEvenement(Evenement $evenement, \Symfony\Component\Form\FormInterface $form, bool $isNew = false): array
     {
         $errors = [];
         
@@ -195,8 +195,8 @@ class FrontEventController extends AbstractController
         }
         
         if ($isNew) {
-            if ($evenement->getDateDebut() === null) {
-                $errors[] = 'La date de début doit être renseignée.';
+            if ($evenement->getDateDebut() === null || $evenement->getDateDebut() < new \DateTime('today')) {
+                $errors[] = 'La date de début ne peut pas être dans le passé et doit être renseignée.';
             }
         }
         
@@ -204,15 +204,32 @@ class FrontEventController extends AbstractController
             $errors[] = 'La date de fin doit être postérieure à la date de début.';
         }
         
-        if (!in_array($evenement->getStatus(), ['open', 'closed'])) {
-            $errors[] = 'Le statut doit être "open" ou "closed".';
+        if (!in_array($evenement->getStatus(), ['open', 'closed', 'over'])) {
+            $errors[] = 'Le statut doit être "open", "closed" ou "over".';
+        }
+
+        // Manual Photo Validation
+        $imageFile = $form->get('imageFile')->getData();
+        if ($imageFile) {
+            $ext = strtolower($imageFile->guessExtension());
+            $allowed = ['jpeg', 'jpg', 'png', 'webp'];
+            if (!in_array($ext, $allowed)) {
+                $msg = 'Seuls les formats jpeg, png et webp sont acceptés.';
+                $errors[] = $msg;
+                $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
+            }
+            if ($imageFile->getSize() > 2 * 1024 * 1024) {
+                $msg = 'L\'image ne doit pas dépasser 2 Mo.';
+                $errors[] = $msg;
+                $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
+            }
         }
         
         return $errors;
     }
 
     #[Route('/events/edit/{id}', name: 'app_front_event_edit', methods: ['POST'])]
-    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $entityManager, EvenementRepository $evenementRepository): Response
+    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $entityManager, EvenementRepository $evenementRepository, \Symfony\Component\String\Slugger\SluggerInterface $slugger): Response
     {
         // Check if user is the organizer
         if ($this->getUser() !== $evenement->getOrganisateur()) {
@@ -228,7 +245,7 @@ class FrontEventController extends AbstractController
 
         if ($form->isSubmitted()) {
             // Manual Validation (same as backoffice) - ignore Symfony validation
-            $errors = $this->validateEvenement($evenement, false);
+            $errors = $this->validateEvenement($evenement, $form, false);
 
             if (count($errors) > 0) {
                 foreach ($errors as $error) {
@@ -239,6 +256,19 @@ class FrontEventController extends AbstractController
                 $request->getSession()->set('reopen_edit_event_modal_' . $evenement->getId(), true);
                 return $this->redirectToRoute($redirectRoute, $redirectParams);
             } else {
+                // Handle image upload (facultatif)
+                $imageFile = $form->get('imageFile')->getData();
+                if ($imageFile) {
+                    $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir') . '/public/uploads/events',
+                        $newFilename
+                    );
+                    $evenement->setImageEvenement($newFilename);
+                }
+
                 $entityManager->flush();
                 $this->addFlash('success', 'Événement modifié avec succès.');
                 return $this->redirectToRoute($redirectRoute, $redirectParams, Response::HTTP_SEE_OTHER);
@@ -249,7 +279,7 @@ class FrontEventController extends AbstractController
     }
 
     #[Route('/events/create', name: 'app_front_event_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): Response
+    public function create(Request $request, EntityManagerInterface $entityManager, \Symfony\Component\String\Slugger\SluggerInterface $slugger): Response
     {
         $evenement = new Evenement();
         $form = $this->createForm(EvenementType::class, $evenement);
@@ -260,7 +290,7 @@ class FrontEventController extends AbstractController
 
         if ($form->isSubmitted()) {
             // Manual Validation (same as backoffice) - ignore Symfony validation
-            $errors = $this->validateEvenement($evenement, true);
+            $errors = $this->validateEvenement($evenement, $form, true);
 
             if (count($errors) > 0) {
                 foreach ($errors as $error) {
@@ -270,6 +300,19 @@ class FrontEventController extends AbstractController
                 $request->getSession()->set('reopen_create_event_modal', true);
                 return $this->redirectToRoute($redirectRoute, $redirectParams);
             } else {
+                // Handle image upload (facultatif)
+                $imageFile = $form->get('imageFile')->getData();
+                if ($imageFile) {
+                    $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir') . '/public/uploads/events',
+                        $newFilename
+                    );
+                    $evenement->setImageEvenement($newFilename);
+                }
+
                 $evenement->setOrganisateur($this->getUser());
                 $entityManager->persist($evenement);
                 $entityManager->flush();
@@ -309,7 +352,8 @@ class FrontEventController extends AbstractController
 
         return $this->render('frontoffice/events/_my_events_section.html.twig', [
             'myEvents' => $myEvents,
-            'eventForms' => $eventForms
+            'eventForms' => $eventForms,
+            'is_team_manage' => true
         ]);
     }
 }

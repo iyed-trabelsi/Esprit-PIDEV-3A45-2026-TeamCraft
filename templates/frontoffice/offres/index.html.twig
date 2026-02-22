@@ -13,24 +13,95 @@
             </h1>
             <a href="#" class="discovery-view-all">VIEW ALL OFFERS →</a>
         </div>
-        <div class="row g-4">
-            {% for o in offres %}
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
-                        <div class="discovery-avatar mx-auto mb-3">{{ o.team.name|first|upper }}</div>
-                        <h3 class="discovery-card-title mb-1">{{ o.title }}</h3>
-                        <p class="discovery-card-subtitle mb-3 text-muted small text-uppercase fw-bold">{{ o.team.name }}</p>
-                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-                            {% set gameClass = o.game|lower == 'league of legends' ? 'lol' : o.game|lower %}
-                            <span class="badge-game {{ gameClass }}">{{ o.game }}</span>
-                            <span class="badge-rank purple">{{ o.rank }}</span>
-                        </div>
-                        <a href="{{ path('app_offres_show', { id: o.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Offer</a>
+
+        <!-- Filter Bar -->
+        <div class="discovery-filter-container mb-5">
+            <form action="{{ path('app_offres') }}" method="get" class="row g-3 align-items-center">
+                <div class="col-12 col-md-4">
+                    <div class="discovery-search-wrapper">
+                        <i class="fas fa-search discovery-search-icon"></i>
+                        <input type="text" name="search" class="form-control discovery-search-input" placeholder="Rechercher une offre..." value="{{ app.request.query.get('search') }}">
                     </div>
                 </div>
-            {% endfor %}
+                <div class="col-6 col-md-3">
+                    <select name="game" class="form-select discovery-filter-select">
+                        <option value="">Tous les jeux</option>
+                        <option value="valorant" {{ app.request.query.get('game') == 'valorant' ? 'selected' : '' }}>VALORANT</option>
+                        <option value="league of legends" {{ app.request.query.get('game') == 'league of legends' ? 'selected' : '' }}>LEAGUE OF LEGENDS</option>
+                        <option value="cs2" {{ app.request.query.get('game') == 'cs2' ? 'selected' : '' }}>CS2</option>
+                        <option value="overwatch 2" {{ app.request.query.get('game') == 'overwatch 2' ? 'selected' : '' }}>OVERWATCH 2</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <select name="rank" class="form-select discovery-filter-select">
+                        <option value="">Tous les rangs</option>
+                        <option value="gold" {{ app.request.query.get('rank') == 'gold' ? 'selected' : '' }}>GOLD</option>
+                        <option value="platinum" {{ app.request.query.get('rank') == 'platinum' ? 'selected' : '' }}>PLATINUM</option>
+                        <option value="diamond" {{ app.request.query.get('rank') == 'diamond' ? 'selected' : '' }}>DIAMOND</option>
+                        <option value="master" {{ app.request.query.get('rank') == 'master' ? 'selected' : '' }}>MASTER</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-discovery-ok w-100">FILTRER</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="row g-4" id="offer-list">
+            {% include 'frontoffice/offres/_offer_cards.html.twig' %}
         </div>
     </section>
 
     {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.querySelector('.discovery-filter-container form');
+    const offerList = document.getElementById('offer-list');
+    const searchInput = filterForm.querySelector('input[name="search"]');
+    const selects = filterForm.querySelectorAll('select');
+    
+    let debounceTimer;
+
+    const updateFilters = () => {
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData);
+        
+        offerList.style.opacity = '0.5';
+        
+        fetch(`${window.location.pathname}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            offerList.innerHTML = html;
+            offerList.style.opacity = '1';
+            window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+        })
+        .catch(error => {
+            console.error('Error fetching offers:', error);
+            offerList.style.opacity = '1';
+        });
+    };
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updateFilters, 300);
+    });
+
+    selects.forEach(select => {
+        select.addEventListener('change', updateFilters);
+    });
+
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        updateFilters();
+    });
+});
+</script>
 {% endblock %}

@@ -16,18 +16,36 @@ class EvenementRepository extends ServiceEntityRepository
         parent::__construct($registry, Evenement::class);
     }
 
-    public function searchByName(?string $query, string $sort = 'nomEvenement', string $direction = 'ASC'): array
+    public function searchByName(?string $query, string $sort = 'nomEvenement', string $direction = 'ASC', ?string $status = null): array
     {
         $qb = $this->createQueryBuilder('e');
-        
+
         if ($query) {
             $qb->andWhere('e.nomEvenement LIKE :query')
                ->setParameter('query', $query . '%');
         }
 
+        if ($status) {
+            $qb->andWhere('e.status = :status')
+               ->setParameter('status', $status);
+        }
+
         return $qb->orderBy('e.' . $sort, $direction)
             ->getQuery()
             ->getResult();
+    }
+
+    public function updateExpiredStatuses(): void
+    {
+        $this->createQueryBuilder('e')
+            ->update()
+            ->set('e.status', ':over')
+            ->where('e.dateFin < :now')
+            ->andWhere('e.status != :over')
+            ->setParameter('over', 'over')
+            ->setParameter('now', new \DateTime())
+            ->getQuery()
+            ->execute();
     }
 
     //    /**

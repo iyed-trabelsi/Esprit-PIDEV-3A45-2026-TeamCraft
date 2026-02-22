@@ -168,6 +168,9 @@ class Evenement
         return $this;
     }
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $imageEvenement = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $organisateur = null;
@@ -215,6 +218,18 @@ class Evenement
     public function setOrganisateur(?User $organisateur): static
     {
         $this->organisateur = $organisateur;
+
+        return $this;
+    }
+
+    public function getImageEvenement(): ?string
+    {
+        return $this->imageEvenement;
+    }
+
+    public function setImageEvenement(?string $imageEvenement): static
+    {
+        $this->imageEvenement = $imageEvenement;
 
         return $this;
     }

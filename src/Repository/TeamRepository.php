@@ -42,10 +42,36 @@ class TeamRepository extends ServiceEntityRepository
     //    }
     public function searchByNameOrGame(?string $query, ?string $game, ?string $sort, int $limit, int $offset): array
     {
-        $qb = $this->createQueryBuilder('t');
+        $qb = $this->createQueryBuilder('t')
+            ->leftJoin('t.owner', 'o'); // Join owner
 
         if ($query) {
-            $qb->andWhere('t.name LIKE :val OR t.games LIKE :val')
+            $orX = $qb->expr()->orX();
+            $orX->add($qb->expr()->like('t.name', ':val'));
+            $orX->add($qb->expr()->like('t.games', ':val'));
+            $orX->add($qb->expr()->like('o.username', ':val'));
+
+            // Check if query matches a game label
+            $gameMap = [
+                'lol' => ['league', 'legend', 'lol'],
+                'wow' => ['warcraft', 'wow'],
+                'csgo' => ['cs', 'go', 'counter'],
+                'valorant' => ['valorant'],
+                'overwatch' => ['overwatch'],
+                'fortnite' => ['fortnite']
+            ];
+
+            foreach ($gameMap as $code => $keywords) {
+                foreach ($keywords as $keyword) {
+                    if (stripos($query, $keyword) !== false) {
+                        $orX->add($qb->expr()->like('t.games', ':game_' . $code));
+                        $qb->setParameter('game_' . $code, '%' . $code . '%');
+                        break; 
+                    }
+                }
+            }
+
+            $qb->andWhere($orX)
                 ->setParameter('val', '%' . $query . '%');
         }
 
@@ -72,10 +98,36 @@ class TeamRepository extends ServiceEntityRepository
     public function countSearchByNameOrGame(?string $query, ?string $game): int
     {
         $qb = $this->createQueryBuilder('t')
-            ->select('count(t.id)');
+            ->select('count(t.id)')
+            ->leftJoin('t.owner', 'o');
 
         if ($query) {
-            $qb->andWhere('t.name LIKE :val OR t.games LIKE :val')
+            $orX = $qb->expr()->orX();
+            $orX->add($qb->expr()->like('t.name', ':val'));
+            $orX->add($qb->expr()->like('t.games', ':val'));
+            $orX->add($qb->expr()->like('o.username', ':val'));
+
+            // Check if query matches a game label
+            $gameMap = [
+                'lol' => ['league', 'legend', 'lol'],
+                'wow' => ['warcraft', 'wow'],
+                'csgo' => ['cs', 'go', 'counter'],
+                'valorant' => ['valorant'],
+                'overwatch' => ['overwatch'],
+                'fortnite' => ['fortnite']
+            ];
+
+            foreach ($gameMap as $code => $keywords) {
+                foreach ($keywords as $keyword) {
+                    if (stripos($query, $keyword) !== false) {
+                        $orX->add($qb->expr()->like('t.games', ':game_' . $code));
+                        $qb->setParameter('game_' . $code, '%' . $code . '%');
+                        break; 
+                    }
+                }
+            }
+
+            $qb->andWhere($orX)
                 ->setParameter('val', '%' . $query . '%');
         }
 
@@ -85,5 +137,18 @@ class TeamRepository extends ServiceEntityRepository
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @return Team[] Returns an array of Team objects where user is a member
+     */
+    public function findTeamsByMember(\App\Entity\User $user): array
+    {
+        return $this->createQueryBuilder('t')
+            ->join('t.members', 'm')
+            ->where('m.id = :userId')
+            ->setParameter('userId', $user->getId())
+            ->getQuery()
+            ->getResult();
     }
 }

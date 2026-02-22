@@ -17,7 +17,7 @@ class Team
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'Le nom de l\'équipe est obligatoire.')]
+    #[Assert\NotBlank(message: "Le nom de l'équipe est obligatoire.")]
     #[Assert\Length(max: 255)]
     private ?string $name = null;
 
@@ -25,8 +25,15 @@ class Team
     private ?string $logo = null;
 
     #[ORM\Column(type: 'json')]
-    #[Assert\Count(min: 1, minMessage: 'Sélectionnez au moins un jeu.')]
+    #[Assert\Count(min: 1, minMessage: "Vous devez sélectionner au moins un jeu.")]
     private array $games = [];
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'team_members')]
+    private Collection $members;
 
     #[ORM\ManyToOne(inversedBy: 'teams')]
     #[ORM\JoinColumn(nullable: false)]
@@ -45,7 +52,7 @@ class Team
         return $this->name;
     }
 
-    public function setName(string $name): static
+    public function setName(?string $name): static
     {
         $this->name = $name;
 
@@ -106,6 +113,31 @@ class Team
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->offers = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->members = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getMembers(): Collection
+    {
+        return $this->members;
+    }
+
+    public function addMember(User $member): static
+    {
+        if (!$this->members->contains($member)) {
+            $this->members->add($member);
+        }
+
+        return $this;
+    }
+
+    public function removeMember(User $member): static
+    {
+        $this->members->removeElement($member);
+
+        return $this;
     }
 
     /**

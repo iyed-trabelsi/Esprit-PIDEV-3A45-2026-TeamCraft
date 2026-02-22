@@ -12,46 +12,50 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints\Regex;
 
 class RegistrationFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('email', null, ['required' => false])
-            ->add('username', null, ['required' => false])
-            ->add('agreeTerms', CheckboxType::class, [
-                                'mapped' => false,
+            ->add('email', EmailType::class, [
                 'constraints' => [
-                    new IsTrue([
-                        'message' => 'You should agree to our terms.',
-                    ]),
+                    new NotBlank(['message' => 'L\'email est obligatoire.']),
+                    new Email(['message' => 'Format d\'email invalide.']),
                 ],
             ])
-            ->add('plainPassword', PasswordType::class, [
-                'mapped' => false,
-                'required' => false,
-                'attr' => ['autocomplete' => 'new-password'],
+            ->add('username', TextType::class, [
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'Please enter a password',
-                    ]),
+                    new NotBlank(['message' => 'Le pseudo est obligatoire.']),
                     new Length([
-                        'min' => 6,
-                        'minMessage' => 'Your password should be at least {{ limit }} characters',
-                        // max length allowed by Symfony for security reasons
-                        'max' => 4096,
+                        'min' => 3,
+                        'minMessage' => 'Le pseudo doit faire au moins {{ limit }} caractères.',
                     ]),
                 ],
             ])
-            ->add('userType', ChoiceType::class, [
-                'required' => false,
-                'choices' => [
-                    'Player' => 'player',
-                    'Manager' => 'team',
+            ->add('plainPassword', RepeatedType::class, [
+                'type' => PasswordType::class,
+                'mapped' => false,
+                'invalid_message' => 'Les mots de passe ne correspondent pas.',
+                'first_options'  => ['label' => 'Password'],
+                'second_options' => ['label' => 'Confirm Password'],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le mot de passe est obligatoire.']),
+                    new Length([
+                        'min' => 8,
+                        'minMessage' => 'Le mot de passe doit faire au moins {{ limit }} caractères.',
+                    ]),
+                    new Regex([
+                        'pattern' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+                        'message' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre.',
+                    ]),
                 ],
-            ])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

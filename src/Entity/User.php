@@ -40,16 +40,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
     private ?string $pseudo = null;
 
     #[ORM\Column(length: 100)]
-    #[Assert\NotBlank(message: 'Le pseudo est obligatoire.')]
-    #[Assert\Length(max: 100)]
     private ?string $username = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $userType = null;
+    private ?string $userType = 'player';
 
     #[ORM\Column(length: 100)]
     private ?string $name = null;
@@ -59,6 +57,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private ?bool $isActive = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $bio = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $country = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $profilePicture = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Player $playerProfile = null;
@@ -75,9 +82,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Team::class)]
     private Collection $teams;
 
+    #[ORM\Column(options: ["default" => false])]
+    private bool $isBanned = false;
+
     public function __construct()
     {
         $this->teams = new ArrayCollection();
+        $this->signalements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -114,9 +125,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        if ($this->adminProfile !== null) {
-            $roles[] = 'ROLE_ADMIN';
-        }
+        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
@@ -301,6 +310,82 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
+        return $this;
+    }
+
+    public function getBio(): ?string
+    {
+        return $this->bio;
+    }
+
+    public function setBio(?string $bio): static
+    {
+        $this->bio = $bio;
+        return $this;
+    }
+
+    public function getCountry(): ?string
+    {
+        return $this->country;
+    }
+
+    public function setCountry(?string $country): static
+    {
+        $this->country = $country;
+        return $this;
+    }
+
+    public function getProfilePicture(): ?string
+    {
+        return $this->profilePicture;
+    }
+
+    public function setProfilePicture(?string $profilePicture): static
+    {
+        $this->profilePicture = $profilePicture;
+        return $this;
+    }
+
+    /**
+     * @var Collection<int, Signalement>
+     */
+    #[ORM\OneToMany(mappedBy: 'reporter', targetEntity: Signalement::class, orphanRemoval: true)]
+    private Collection $signalements;
+
+    public function getSignalements(): Collection
+    {
+        return $this->signalements;
+    }
+
+    public function addSignalement(Signalement $signalement): static
+    {
+        if (!$this->signalements->contains($signalement)) {
+            $this->signalements->add($signalement);
+            $signalement->setReporter($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSignalement(Signalement $signalement): static
+    {
+        if ($this->signalements->removeElement($signalement)) {
+            // set the owning side to null (unless already changed)
+            if ($signalement->getReporter() === $this) {
+                $signalement->setReporter(null);
+            }
+        }
+
+        return $this;
+    }
+    public function isBanned(): bool
+    {
+        return $this->isBanned;
+    }
+
+    public function setIsBanned(bool $isBanned): static
+    {
+        $this->isBanned = $isBanned;
         return $this;
     }
 }

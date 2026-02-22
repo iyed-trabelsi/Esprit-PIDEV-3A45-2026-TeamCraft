@@ -29,9 +29,16 @@ class ForumController extends AbstractController
         private PostRepository $postRepository,
         private CommentRepository $commentRepository,
         private SluggerInterface $slugger,
-        private \App\Service\ContentModeratorService $moderator
+        private \App\Service\ContentModeratorService $moderator,
+        private \App\Service\ImageModerationService $imageModerator,
+        private \App\Service\SpamDetectorService $spamDetector,
+        private \App\Service\SmartWritingService $smartWriting,
+        private \App\Service\ImageGenerationService $imageGenerator,
+        private \App\Service\PostRecommendationService $recommendationService
     ) {
     }
+
+
 
     #[Route('', name: 'app_forum', methods: ['GET'])]
     public function index(Request $request): Response
@@ -42,10 +49,13 @@ class ForumController extends AbstractController
         if ($this->getUser()) {
             $mesRubriques = $this->rubriqueRepository->findByAuteur($this->getUser());
         }
+        $recommendations = $this->recommendationService->getRecommendations($this->getUser());
+
         return $this->render('frontoffice/forum/index.html.twig', [
             'rubriques' => $rubriques,
             'mes_rubriques' => $mesRubriques,
             'currentSort' => $sort,
+            'recommendations' => $recommendations,
         ]);
     }
 
@@ -110,7 +120,54 @@ class ForumController extends AbstractController
             }
         }
 
+        if ($form->isSubmitted()) {
+             // Debug form validity
+             // dd("Form Valid: " . ($form->isValid() ? 'YES' : 'NO'));
+        }
+
         if ($form->isSubmitted() && $form->isValid() && !$existingRubrique) {
+            $nomRubrique = $rubrique->getNomRubrique();
+            $description = $rubrique->getDescription();
+            $topic = $rubrique->getTopic();
+            if (($nomRubrique && $this->moderator->isToxic($nomRubrique)) ||
+                ($description && $this->moderator->isToxic($description)) ||
+                ($topic && $this->moderator->isToxic($topic))) {
+                
+                $toxicError = '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Veuillez modifier le contenu de votre rubrique.';
+                $this->addFlash('warning', $toxicError);
+                return $this->render('frontoffice/forum/rubrique_form.html.twig', [
+                    'rubrique' => $rubrique,
+                    'form' => $form,
+                    'is_edit' => false,
+                    'existingRubrique' => $existingRubrique,
+                    'toxic_error' => $toxicError
+                ]);
+            }
+
+            // Handle image upload
+            $file = $form->get('image')->getData();
+            $generatedFilename = $request->request->get('generated_image_filename');
+            
+            if ($generatedFilename) {
+                // Use AI-generated image
+                $rubrique->setImage($generatedFilename);
+            } elseif ($file) {
+                // Use uploaded image
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+                try {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    $file->move($uploadDir, $newFilename);
+                    $rubrique->setImage($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
+                }
+            }
+
             $rubrique->setNbPosts(0);
             $this->em->persist($rubrique);
             $this->em->flush();
@@ -164,6 +221,74 @@ class ForumController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid() && !$existingRubrique) {
+            $nomRubrique = $rubrique->getNomRubrique();
+            $description = $rubrique->getDescription();
+            $topic = $rubrique->getTopic();
+
+            if (($nomRubrique && $this->moderator->isToxic($nomRubrique)) ||
+                ($description && $this->moderator->isToxic($description)) ||
+                ($topic && $this->moderator->isToxic($topic))) {
+                
+                $toxicError = '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Veuillez modifier le contenu de votre rubrique.';
+                $this->addFlash('warning', $toxicError);
+                return $this->render('frontoffice/forum/rubrique_form.html.twig', [
+                    'rubrique' => $rubrique,
+                    'form' => $form,
+                    'is_edit' => true,
+                    'existingRubrique' => $existingRubrique,
+                    'toxic_error' => $toxicError
+                ]);
+            }
+
+            // Handle image upload
+            $file = $form->get('image')->getData();
+            $generatedFilename = $request->request->get('generated_image_filename');
+            $deleteCurrentImage = $request->request->get('delete_current_image') === '1';
+            
+            if ($generatedFilename) {
+                // Use AI-generated image (delete old if exists)
+                if ($rubrique->getImage() && $rubrique->getImage() !== $generatedFilename) {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    $oldImage = $uploadDir . DIRECTORY_SEPARATOR . $rubrique->getImage();
+                    if (file_exists($oldImage)) {
+                        @unlink($oldImage);
+                    }
+                }
+                $rubrique->setImage($generatedFilename);
+            } elseif ($file) {
+                // Use uploaded image
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+                try {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    // Delete old image if exists
+                    if ($rubrique->getImage()) {
+                        $oldImage = $uploadDir . DIRECTORY_SEPARATOR . $rubrique->getImage();
+                        if (file_exists($oldImage)) {
+                            @unlink($oldImage);
+                        }
+                    }
+                    $file->move($uploadDir, $newFilename);
+                    $rubrique->setImage($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
+                }
+            } elseif ($deleteCurrentImage) {
+                // Explicitly delete image
+                if ($rubrique->getImage()) {
+                    $uploadDir = $this->getParameter('uploads_rubrique_dir');
+                    $oldImage = $uploadDir . DIRECTORY_SEPARATOR . $rubrique->getImage();
+                    if (file_exists($oldImage)) {
+                        @unlink($oldImage);
+                    }
+                }
+                $rubrique->setImage(null);
+            }
+
             $this->em->flush();
             $this->addFlash('success', 'Rubrique mise à jour.');
             return $this->redirectToRoute('app_forum_rubrique_show', ['id' => $id]);
@@ -203,12 +328,12 @@ class ForumController extends AbstractController
         if (!$post) {
             throw $this->createNotFoundException('Post introuvable.');
         }
-        if ($post->getStatut() !== 'published' && !$this->isAuthor($post->getAuteur())) {
+        if ($post->getStatut() !== 'published' && $post->getStatut() !== 'pending_review' && !$this->isAuthor($post->getAuteur())) {
             throw $this->createNotFoundException('Ce post n\'est pas accessible.');
         }
         $post->incrementNbVues();
         $this->em->flush();
-        $comments = $this->commentRepository->findTopLevelByPost($post);
+        $comments = $this->commentRepository->findTopLevelByPost($post, $this->getUser());
         $canEdit = $this->isAuthor($post->getAuteur());
         $commentForm = $this->createForm(CommentType::class, new Comment());
         return $this->render('frontoffice/forum/post_show.html.twig', [
@@ -243,12 +368,24 @@ class ForumController extends AbstractController
                 return $this->redirectToRoute('app_forum');
             }
 
-            if ($this->moderator->isToxic($post->getTitre()) || ($post->getContenu() && $this->moderator->isToxic($post->getContenu()))) {
-                $this->addFlash('error', 'Votre post contient des propos inappropriés.');
+            $spamResult = $this->spamDetector->checkSpam($this->getUser(), $post->getContenu() ?? $post->getTitre() ?? '', 'post');
+            if ($spamResult['isSpam']) {
+                $this->addFlash('warning', '🛑 ACTION BLOQUÉE : ' . $spamResult['reason']);
                 return $this->render('frontoffice/forum/post_form.html.twig', [
                     'post' => $post,
                     'form' => $form,
                     'is_edit' => false,
+                ]);
+            }
+
+            if ($this->moderator->isToxic($post->getTitre()) || ($post->getContenu() && $this->moderator->isToxic($post->getContenu()))) {
+                $toxicError = '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Votre post contient des propos offensants, des insultes ou du langage vulgaire. Veuillez modifier votre message et respecter la communauté.';
+                $this->addFlash('warning', $toxicError);
+                return $this->render('frontoffice/forum/post_form.html.twig', [
+                    'post' => $post,
+                    'form' => $form,
+                    'is_edit' => false,
+                    'toxic_error' => $toxicError
                 ]);
             }
 
@@ -258,8 +395,40 @@ class ForumController extends AbstractController
                 $safeFilename = $this->slugger->slug($originalFilename);
                 $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
                 try {
-                    $file->move($this->getParameter('uploads_post_dir'), $newFilename);
-                    $post->setImage($newFilename);
+                    $uploadDir = $this->getParameter('uploads_post_dir');
+                    $file->move($uploadDir, $newFilename);
+                    $absolutePath = realpath($uploadDir . \DIRECTORY_SEPARATOR . $newFilename) ?: $uploadDir . \DIRECTORY_SEPARATOR . $newFilename;
+                    $result = $this->imageModerator->analyzeImage($absolutePath);
+                    if ($result['status'] === 'reject') {
+                        @unlink($absolutePath);
+                        // Erreur technique (script indisponible) → on enregistre le post SANS l'image
+                        if (isset($result['error'])) {
+                            $this->addFlash('warning', $result['message'] ?? 'L\'image n\'a pas pu être vérifiée et n\'a pas été ajoutée. Votre post a été enregistré.');
+                            // on continue : le post sera sauvegardé sans image
+                        } else {
+                            // Contenu sensible détecté (nudité, etc.) → on ne sauvegarde pas le post
+                            $this->addFlash('warning', $result['message'] ?? 'Cette image n\'est pas autorisée.');
+                            return $this->render('frontoffice/forum/post_form.html.twig', [
+                                'post' => $post,
+                                'form' => $form,
+                                'is_edit' => false,
+                                'toxic_error' => $result['message'] ?? null,
+                            ]);
+                        }
+                    } else {
+                        $post->setImage($newFilename);
+                        $post->setImageSensitivity((!empty($result['warning_message']) || $result['status'] === 'pending_review') ? 'medium' : null);
+                        if (isset($result['error'])) {
+                            $this->addFlash('notice', $result['message'] ?? 'Modération indisponible; image enregistrée.');
+                        }
+                        if ($result['status'] === 'pending_review') {
+                            $post->setStatut('pending_review');
+                            $this->addFlash('notice', $result['message'] ?? 'Votre post sera visible après modération.');
+                        }
+                        if (!empty($result['warning_message'])) {
+                            $this->addFlash('warning', $result['warning_message']);
+                        }
+                    }
                 } catch (FileException $e) {
                     $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
                 }
@@ -298,7 +467,7 @@ class ForumController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             if ($this->moderator->isToxic($post->getTitre()) || ($post->getContenu() && $this->moderator->isToxic($post->getContenu()))) {
-                $this->addFlash('error', 'Votre post contient des propos inappropriés.');
+                $this->addFlash('warning', '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Votre post contient des propos offensants, des insultes ou du langage vulgaire. Veuillez modifier votre message et respecter la communauté.');
                 return $this->render('frontoffice/forum/post_form.html.twig', [
                     'post' => $post,
                     'form' => $form,
@@ -312,8 +481,37 @@ class ForumController extends AbstractController
                 $safeFilename = $this->slugger->slug($originalFilename);
                 $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
                 try {
-                    $file->move($this->getParameter('uploads_post_dir'), $newFilename);
-                    $post->setImage($newFilename);
+                    $uploadDir = $this->getParameter('uploads_post_dir');
+                    $file->move($uploadDir, $newFilename);
+                    $absolutePath = realpath($uploadDir . \DIRECTORY_SEPARATOR . $newFilename) ?: $uploadDir . \DIRECTORY_SEPARATOR . $newFilename;
+                    $result = $this->imageModerator->analyzeImage($absolutePath);
+                    if ($result['status'] === 'reject') {
+                        @unlink($absolutePath);
+                        if (isset($result['error'])) {
+                            $this->addFlash('warning', $result['message'] ?? 'L\'image n\'a pas pu être vérifiée et n\'a pas été ajoutée.');
+                        } else {
+                            $this->addFlash('warning', $result['message'] ?? 'Cette image n\'est pas autorisée.');
+                            return $this->render('frontoffice/forum/post_form.html.twig', [
+                                'post' => $post,
+                                'form' => $form,
+                                'is_edit' => true,
+                                'toxic_error' => $result['message'] ?? null,
+                            ]);
+                        }
+                    } else {
+                        $post->setImage($newFilename);
+                        $post->setImageSensitivity((!empty($result['warning_message']) || $result['status'] === 'pending_review') ? 'medium' : null);
+                        if (isset($result['error'])) {
+                            $this->addFlash('notice', $result['message'] ?? 'Modération indisponible; image enregistrée.');
+                        }
+                        if ($result['status'] === 'pending_review') {
+                            $post->setStatut('pending_review');
+                            $this->addFlash('notice', $result['message'] ?? 'Votre post sera visible après modération.');
+                        }
+                        if (!empty($result['warning_message'])) {
+                            $this->addFlash('warning', $result['warning_message']);
+                        }
+                    }
                 } catch (FileException $e) {
                     $this->addFlash('error', 'Erreur lors de l\'upload de l\'image.');
                 }
@@ -335,6 +533,36 @@ class ForumController extends AbstractController
             'post' => $post,
             'form' => $form,
             'is_edit' => true,
+        ]);
+    }
+
+    #[Route('/post/{id}/like', name: 'app_forum_post_like', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function postLike(int $id): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Veuillez vous connecter pour aimer ce post.'], 403);
+        }
+
+        $post = $this->postRepository->find($id);
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post non trouvé.'], 404);
+        }
+
+        if ($post->isLikedBy($user)) {
+            $post->removeLikedBy($user);
+            $liked = false;
+        } else {
+            $post->addLikedBy($user);
+            $liked = true;
+        }
+
+        $this->em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'liked' => $liked,
+            'nbLikes' => $post->getNbLikes()
         ]);
     }
 
@@ -365,15 +593,19 @@ class ForumController extends AbstractController
         return $this->redirectToRoute($rubriqueId ? 'app_forum_rubrique_show' : 'app_forum', $rubriqueId ? ['id' => $rubriqueId] : []);
     }
 
-    #[Route('/post/{id}/comment', name: 'app_forum_comment_new', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[Route('/post/{id}/comment', name: 'app_forum_comment_new', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function commentNew(Request $request, int $id): Response
     {
+        // Si accès en GET (ex: redirection après login), on redirige vers l'affichage du post
+        if ($request->isMethod('GET')) {
+            return $this->redirectToRoute('app_forum_post_show', ['id' => $id]);
+        }
         $this->denyAccessUnlessGranted('ROLE_USER');
         $post = $this->postRepository->find($id);
         if (!$post) {
             throw $this->createNotFoundException('Post introuvable.');
         }
-        if ($post->getStatut() !== 'published') {
+        if ($post->getStatut() !== 'published' && $post->getStatut() !== 'pending_review' && !$this->isAuthor($post->getAuteur())) {
             throw $this->createNotFoundException('Ce post n\'est pas accessible.');
         }
         $comment = new Comment();
@@ -390,13 +622,86 @@ class ForumController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $contenu = $comment->getContenu() ?? '';
-            if ($this->moderator->isToxic($contenu)) {
+
+            // 0. AI Spam Detection Check
+            $spamResult = $this->spamDetector->checkSpam($this->getUser(), $contenu, 'comment');
+            if ($spamResult['isSpam']) {
                 $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
                 if ($isAjax) {
-                    return new JsonResponse(['success' => false, 'errors' => ['Votre commentaire contient des propos inappropriés.']], 400);
+                    return new JsonResponse(['success' => false, 'errors' => [$spamResult['reason']]], 403);
                 }
-                $this->addFlash('error', 'Votre commentaire contient des propos inappropriés.');
+                $this->addFlash('warning', '🛑 ACTION BLOQUÉE : ' . $spamResult['reason']);
                 return $this->redirect($this->generateUrl('app_forum_post_show', ['id' => $id]) . '#comments');
+            }
+            $file = $form->get('image')->getData();
+
+            // S'assurer qu'il y a au moins du texte ou une image
+            if (empty($contenu) && !$file && !$comment->getImage()) {
+                $errorMsg = 'Votre commentaire doit contenir au moins du texte ou une image.';
+                $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
+                if ($isAjax) {
+                    return new JsonResponse(['success' => false, 'errors' => [$errorMsg]], 400);
+                }
+                $this->addFlash('error', $errorMsg);
+                return $this->redirect($this->generateUrl('app_forum_post_show', ['id' => $id]) . '#comments');
+            }
+
+            if ($contenu && $this->moderator->isToxic($contenu)) {
+                $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
+                if ($isAjax) {
+                    return new JsonResponse(['success' => false, 'errors' => ['⚠️ CONTENU INAPPROPRIÉ ! Votre commentaire contient des insultes ou du langage offensant. Respectez la communauté.']], 400);
+                }
+                $this->addFlash('warning', '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Votre commentaire contient des propos offensants, des insultes ou du langage vulgaire. Veuillez modifier votre message et respecter la communauté.');
+                return $this->redirect($this->generateUrl('app_forum_post_show', ['id' => $id]) . '#comments');
+            }
+
+            // Gestion de l'image ou AUDIO du commentaire + modération IA locale
+            $commentImageWarning = null;
+            if ($file) {
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+                try {
+                    $uploadDir = $this->getParameter('uploads_comment_dir');
+                    $file->move($uploadDir, $newFilename);
+                    $absolutePath = realpath($uploadDir . \DIRECTORY_SEPARATOR . $newFilename) ?: $uploadDir . \DIRECTORY_SEPARATOR . $newFilename;
+                    
+                    // Check if it's an image before moderation
+                    $mimeType = mime_content_type($absolutePath);
+                    $isImage = str_starts_with($mimeType, 'image/');
+
+                    if ($isImage) {
+                        $result = $this->imageModerator->analyzeImage($absolutePath);
+                        if ($result['status'] === 'reject') {
+                            @unlink($absolutePath);
+                            if (!isset($result['error'])) {
+                                // Contenu sensible détecté → on ne sauvegarde pas le commentaire
+                                $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
+                                if ($isAjax) {
+                                    return new JsonResponse(['success' => false, 'errors' => [$result['message'] ?? 'Cette image n\'est pas autorisée.']], 400);
+                                }
+                                $this->addFlash('warning', $result['message'] ?? 'Cette image n\'est pas autorisée.');
+                                return $this->redirect($this->generateUrl('app_forum_post_show', ['id' => $id]) . '#comments');
+                            }
+                            $this->addFlash('warning', $result['message'] ?? 'L\'image n\'a pas pu être vérifiée et n\'a pas été ajoutée. Votre commentaire a été enregistré.');
+                        } else {
+                            $comment->setImage($newFilename);
+                            $comment->setImageSensitivity((!empty($result['warning_message']) || $result['status'] === 'pending_review') ? 'medium' : null);
+                            if ($result['status'] === 'pending_review') {
+                                $comment->setModerationStatus('pending_review');
+                            }
+                            if (!empty($result['warning_message'])) {
+                                $commentImageWarning = $result['warning_message'];
+                                $this->addFlash('warning', $result['warning_message']);
+                            }
+                        }
+                    } else {
+                        // It's likely audio or other allowed type -> just save it
+                        $comment->setImage($newFilename); 
+                    }
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload du fichier.');
+                }
             }
 
             $this->em->persist($comment);
@@ -407,22 +712,35 @@ class ForumController extends AbstractController
             if ($isAjax) {
                 $auteur = $comment->getAuteur();
                 $csrfTokenManager = $this->container->get('security.csrf.token_manager');
-                return new JsonResponse([
+                
+                // Calculate relative time manually for the immediate response
+                // Since it's just created, it's "à l'instant"
+                $timeAgo = "à l'instant";
+
+                $json = [
                     'success' => true,
                     'comment' => [
                         'id' => $comment->getId(),
-                        'contenu' => $comment->getContenu(),
+                        'contenu' => $comment->getContenu() ?? '',
+                        'image' => $comment->getImage() ? '/uploads/comments/' . $comment->getImage() : null,
                         'auteur' => $auteur ? ($auteur->getPseudo() ?: $auteur->getUsername()) : 'Anonyme',
                         'dateCommentaire' => $comment->getDateCommentaire()?->format('d/m/Y H:i'),
+                        'timeAgo' => $timeAgo,
                         'parentId' => $comment->getParent()?->getId(),
                         'isSubreply' => $comment->getParent() && $comment->getParent()->getParent() !== null,
                         'tokenDelete' => $csrfTokenManager->getToken('delete_comment_' . $comment->getId())->getValue(),
                         'editUrl' => $this->generateUrl('app_forum_comment_edit', ['id' => $comment->getId()]),
                         'deleteUrl' => $this->generateUrl('app_forum_comment_delete', ['id' => $comment->getId()]),
+                        'nbLikes' => $comment->getNbLikes(),
                     ],
-                ]);
+                ];
+                if ($commentImageWarning !== null) {
+                    $json['warning_message'] = $commentImageWarning;
+                }
+                return new JsonResponse($json);
             }
-        } else {
+        }
+ else {
             $errors = [];
             foreach ($form->getErrors(true) as $error) {
                 $errors[] = $error->getMessage();
@@ -451,20 +769,118 @@ class ForumController extends AbstractController
         }
         $form = $this->createForm(CommentType::class, $comment);
         $form->handleRequest($request);
+        
         if ($form->isSubmitted() && $form->isValid()) {
             $contenu = $comment->getContenu() ?? '';
-            if ($this->moderator->isToxic($contenu)) {
-                $this->addFlash('error', 'Votre commentaire contient des propos inappropriés.');
+            $contenu = trim($contenu);
+            
+            $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
+
+            if ($contenu && $this->moderator->isToxic($contenu)) {
+                $errorMsg = '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Votre commentaire contient des propos offensants.';
+                if ($isAjax) {
+                    return new JsonResponse(['success' => false, 'errors' => [$errorMsg]], 400);
+                }
+                $this->addFlash('warning', $errorMsg);
                 return $this->render('frontoffice/forum/comment_edit.html.twig', [
                     'comment' => $comment,
                     'form' => $form,
                 ]);
             }
 
+            // Gestion de l'image ou AUDIO du commentaire + modération IA locale
+            $deleteImage = $request->request->get('delete_image');
+            if ($deleteImage) {
+                $oldImage = $comment->getImage();
+                if ($oldImage) {
+                    $uploadDir = $this->getParameter('uploads_comment_dir');
+                    @unlink($uploadDir . \DIRECTORY_SEPARATOR . $oldImage);
+                    $comment->setImage(null);
+                    $comment->setImageSensitivity(null);
+                    $comment->setModerationStatus(null);
+                }
+            }
+
+            $file = $form->get('image')->getData();
+            if ($file) {
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+                try {
+                    $uploadDir = $this->getParameter('uploads_comment_dir');
+                    $file->move($uploadDir, $newFilename);
+                    $absolutePath = realpath($uploadDir . \DIRECTORY_SEPARATOR . $newFilename) ?: $uploadDir . \DIRECTORY_SEPARATOR . $newFilename;
+                    
+                    // Check if it's an image before moderation
+                    $mimeType = mime_content_type($absolutePath);
+                    $isImage = str_starts_with($mimeType, 'image/');
+
+                    if ($isImage) {
+                        $result = $this->imageModerator->analyzeImage($absolutePath);
+                        if ($result['status'] === 'reject') {
+                            @unlink($absolutePath);
+                            if (!isset($result['error'])) {
+                                if ($isAjax) {
+                                    return new JsonResponse(['success' => false, 'errors' => [$result['message'] ?? 'Cette image n\'est pas autorisée.']], 400);
+                                }
+                                $this->addFlash('warning', $result['message'] ?? 'Cette image n\'est pas autorisée.');
+                                return $this->render('frontoffice/forum/comment_edit.html.twig', ['comment' => $comment, 'form' => $form]);
+                            }
+                            $this->addFlash('warning', $result['message'] ?? 'L\'image n\'a pas pu être vérifiée et n\'a pas été ajoutée.');
+                        } else {
+                            $comment->setImage($newFilename);
+                            $comment->setImageSensitivity((!empty($result['warning_message']) || $result['status'] === 'pending_review') ? 'medium' : null);
+                            if ($result['status'] === 'pending_review') {
+                                $comment->setModerationStatus('pending_review');
+                            } else {
+                                $comment->setModerationStatus(null);
+                            }
+                            if (!empty($result['warning_message'])) {
+                                $this->addFlash('warning', $result['warning_message']);
+                            }
+                        }
+                    } else {
+                         // It's likely audio or other allowed type -> just save it
+                        $comment->setImage($newFilename);
+                    }
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors de l\'upload du fichier.');
+                }
+            }
+
+            // Si erreurs ajoutées manuellement
+            if ($form->getErrors(true)->count() > 0) {
+                 if ($isAjax) {
+                    $errors = [];
+                    foreach ($form->getErrors(true) as $error) {
+                        $errors[] = $error->getMessage();
+                    }
+                    return new JsonResponse(['success' => false, 'errors' => $errors], 400);
+                 }
+                 return $this->render('frontoffice/forum/comment_edit.html.twig', [
+                    'comment' => $comment,
+                    'form' => $form,
+                ]);
+            }
+
             $this->em->flush();
+
+            if ($isAjax) {
+                return new JsonResponse([
+                    'success' => true,
+                    'comment' => [
+                        'id' => $comment->getId(),
+                        'contenu' => $comment->getContenu(),
+                        'image' => $comment->getImage() ? '/uploads/comments/' . $comment->getImage() : null,
+                        'dateCommentaire' => $comment->getDateCommentaire()?->format('d/m/Y H:i'),
+                    ]
+                ]);
+            }
+
             $this->addFlash('success', 'Commentaire mis à jour.');
             return $this->redirect($this->generateUrl('app_forum_post_show', ['id' => $comment->getPost()->getId()]) . '#comments');
         }
+
         return $this->render('frontoffice/forum/comment_edit.html.twig', [
             'comment' => $comment,
             'form' => $form,
@@ -497,6 +913,100 @@ class ForumController extends AbstractController
         return $user && $auteur && $auteur->getId() === $user->getId();
     }
 
+    #[Route('/comment/{id}/like', name: 'app_forum_comment_like', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function commentLike(int $id): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Veuillez vous connecter pour aimer ce commentaire.'], 403);
+        }
+
+        $comment = $this->commentRepository->find($id);
+        if (!$comment) {
+            return new JsonResponse(['error' => 'Commentaire non trouvé.'], 404);
+        }
+
+        if ($comment->isLikedBy($user)) {
+            $comment->removeLikedBy($user);
+            $liked = false;
+        } else {
+            $comment->addLikedBy($user);
+            $liked = true;
+        }
+
+        $this->em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'liked' => $liked,
+            'nbLikes' => $comment->getNbLikes()
+        ]);
+    }
+
+    #[Route('/post/{id}/report', name: 'app_forum_post_report', methods: ['POST'])]
+    public function reportPost(int $id, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
+        $post = $this->postRepository->find($id);
+        if (!$post) {
+            throw $this->createNotFoundException('Post introuvable');
+        }
+
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        // Prevent self-reporting
+        if ($post->getAuteur() === $user) {
+            $this->addFlash('error', 'Vous ne pouvez pas signaler votre propre post.');
+            return $this->redirectToRoute('app_forum_post_show', ['id' => $id]);
+        }
+
+        $motif = trim((string)$request->request->get('motif'));
+        $description = $request->request->get('description');
+
+        if (empty($motif)) {
+            $this->addFlash('error', 'Le motif est obligatoire.');
+            return $this->redirectToRoute('app_forum_post_show', ['id' => $id]);
+        }
+
+        $signalement = new \App\Entity\Signalement();
+        $signalement->setPost($post);
+        $signalement->setReporter($user);
+        $signalement->setMotif($motif);
+        $signalement->setDescription($description);
+        $signalement->setStatus('pending');
+
+        $this->em->persist($signalement);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Le post a été signalé aux administrateurs.');
+
+        return $this->redirectToRoute('app_forum_post_show', ['id' => $id]);
+    }
+
+    /**
+     * Debug: test image moderation. GET /forum/test-image-moderation?path=<absolute_path>
+     * Or with no path, returns config and how to run the Python script manually.
+     */
+    #[Route('/test-image-moderation', name: 'app_forum_test_image_moderation', methods: ['GET'])]
+    public function testImageModeration(Request $request): JsonResponse
+    {
+        $path = $request->query->get('path');
+        if ($path === null || $path === '') {
+            return new JsonResponse([
+                'usage' => 'Add ?path=<absolute_path_to_image> to test the AI image moderator.',
+                'python_path' => $this->getParameter('ai_moderation_python_path'),
+                'script_path' => $this->getParameter('ai_moderation_script_path'),
+                'uploads_post_dir' => $this->getParameter('uploads_post_dir'),
+            ], 200, ['Content-Type' => 'application/json']);
+        }
+        $result = $this->imageModerator->analyzeImage($path);
+        return new JsonResponse($result, 200, ['Content-Type' => 'application/json']);
+    }
+
     #[Route('/test-moderation', name: 'app_forum_test_moderation', methods: ['GET'])]
     public function testModeration(Request $request): Response
     {
@@ -524,5 +1034,55 @@ class ForumController extends AbstractController
         $html .= '<p><small>Ajoutez <code>?text=votre+texte</code> dans l’URL pour tester un autre texte.</small></p>';
 
         return new Response($html);
+    }
+    #[Route('/translate', name: 'app_forum_translate', methods: ['POST'])]
+    public function translate(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
+        $data = json_decode($request->getContent(), true);
+        $text = $data['text'] ?? '';
+        $targetLanguage = $data['targetLanguage'] ?? 'English';
+
+        if (empty(trim($text))) {
+            return new JsonResponse(['error' => 'Texte vide'], 400);
+        }
+
+        $translated = $this->smartWriting->translateText($text, $targetLanguage);
+
+        return new JsonResponse([
+            'success' => true,
+            'translatedText' => $translated
+        ]);
+    }
+
+    #[Route('/api/rubrique/generate-image', name: 'app_forum_rubrique_generate_image', methods: ['POST'])]
+    public function generateRubriqueImage(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
+        $data = json_decode($request->getContent(), true);
+        $name = $data['name'] ?? '';
+        $description = $data['description'] ?? null;
+
+        if (empty(trim($name))) {
+            return new JsonResponse(['error' => 'Le nom de la rubrique est requis'], 400);
+        }
+
+        // Generate image using Hugging Face
+        $result = $this->imageGenerator->generateImageForRubrique($name, $description);
+
+        if ($result['success']) {
+            return new JsonResponse([
+                'success' => true,
+                'filename' => $result['filename'],
+                'url' => '/uploads/rubriques/' . $result['filename']
+            ]);
+        } else {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $result['error'] ?? 'Erreur lors de la génération de l\'image'
+            ], 500);
+        }
     }
 }

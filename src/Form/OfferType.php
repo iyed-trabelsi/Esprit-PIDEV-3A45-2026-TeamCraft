@@ -16,11 +16,9 @@ class OfferType extends AbstractType
         $builder
             ->add('title', \Symfony\Component\Form\Extension\Core\Type\TextType::class, [
                 'label' => 'Title',
-                'required' => false,
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
             ])
             ->add('game', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
-                'required' => false,
                 'choices' => [
                     'Valorant' => 'VALORANT',
                     'League of Legends' => 'LOL',
@@ -30,19 +28,15 @@ class OfferType extends AbstractType
                 'attr' => ['class' => 'form-select bg-dark text-white border-secondary border-opacity-25']
             ])
             ->add('role', \Symfony\Component\Form\Extension\Core\Type\TextType::class, [
-                'required' => false,
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
             ])
             ->add('rank', \Symfony\Component\Form\Extension\Core\Type\TextType::class, [
-                'required' => false,
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
             ])
             ->add('nbPlayerRecruited', \Symfony\Component\Form\Extension\Core\Type\IntegerType::class, [
-                'required' => false,
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
             ])
             ->add('dateExpiration', \Symfony\Component\Form\Extension\Core\Type\DateType::class, [
-                'required' => false,
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
             ])
