@@ -1,0 +1,64 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ offre.title }} - Offres de recrutement TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_offres') }}" class="text-secondary text-decoration-none">Offres de recrutement</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ offre.title }}</li>
+            </ol>
+        </nav>
+
+        {# Flash messages #}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="discovery-card p-4 p-md-5 mb-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% set gameClass = offre.game|lower == 'league of legends' ? 'lol' : offre.game|lower %}
+                <span class="badge-game {{ gameClass }}">{{ offre.game }}</span>
+                <span class="badge-rank purple">{{ offre.rank }}</span>
+            </div>
+            <h1 class="h2 fw-bold discovery-card-title mb-2">{{ offre.title }}</h1>
+            <p class="discovery-card-subtitle mb-4 text-muted small text-uppercase fw-bold">{{ offre.team.name }}</p>
+            <div class="post-body mb-4" style="color: var(--tc-text); line-height: 1.6;">{{ offre.description }}</div>
+            
+            {% if hasApplied %}
+                <div class="alert alert-info d-inline-block px-4 py-3 border-0 bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-check-circle-fill me-2"></i> Vous avez déjà postulé à cette offre.
+                </div>
+            {% elseif app.user and is_granted('ROLE_USER') %}
+                <div class="mt-4" style="max-width: 600px;">
+                    <h3 class="h4 text-white fw-bold mb-4">Postuler à cette offre</h3>
+                    {{ form_start(form, {'action': path('app_offres_postuler', {'id': offre.id})}) }}
+                        <div class="mb-3">
+                            {{ form_label(form.message, null, {'label_attr': {'class': 'form-label text-white-50 small text-uppercase fw-bold'}}) }}
+                            {{ form_widget(form.message, {'attr': {'class': 'form-control discovery-search-input bg-dark text-white border-secondary border-opacity-25', 'style': 'min-height: 120px;'}}) }}
+                            {{ form_errors(form.message) }}
+                        </div>
+                        <button type="submit" class="btn btn-recruit px-5 py-3 fw-bold">ENVOYER MA CANDIDATURE</button>
+                    {{ form_end(form) }}
+                </div>
+            {% else %}
+                <div class="alert alert-warning d-inline-block px-4 py-3 border-0 bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+                    <a href="{{ path('app_login') }}" class="text-warning fw-bold">Connectez-vous</a> pour postuler à cette offre.
+                </div>
+            {% endif %}
+        </div>
+
+        <a href="{{ path('app_offres') }}" class="discovery-view-all text-decoration-none">← Retour aux offres</a>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

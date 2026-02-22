@@ -1,0 +1,49 @@
+{% if app.user %}
+    <div id="tc-music-player-container">
+        <!-- Minimized Floating Button -->
+        <button id="tc-music-toggle" class="btn btn-dark rounded-circle shadow-lg d-flex align-items-center justify-content-center">
+            <i class="bi bi-headphones"></i>
+        </button>
+
+        <!-- Music Panel -->
+        <div id="tc-music-panel" class="card bg-dark text-white shadow-lg border-secondary d-none">
+            <div class="card-header border-secondary d-flex justify-content-between align-items-center py-2 px-3">
+                <small class="text-uppercase text-white-50" style="font-size: 0.7rem; letter-spacing: 1px;">Gaming Mix</small>
+                <button id="tc-music-close" class="btn btn-sm btn-link text-white-50 p-0"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="card-body p-3 text-center">
+                
+                <!-- Hidden YouTube Iframe -->
+                <div id="yt-player-container" class="d-none"></div>
+
+                <!-- Track Info -->
+                <div class="mb-3">
+                    <h6 id="tc-track-title" class="mb-0 text-truncate">Select a track</h6>
+                    <small id="tc-track-artist" class="text-white-50">...</small>
+                </div>
+
+                <!-- Controls -->
+                <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+                    <button id="tc-prev" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-skip-start-fill"></i></button>
+                    <button id="tc-play-pause" class="btn btn-tc-primary rounded-circle p-2" style="width: 40px; height: 40px;">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
+                    <button id="tc-next" class="btn btn-sm btn-outline-secondary rounded-circle"><i class="bi bi-skip-end-fill"></i></button>
+                </div>
+
+                <!-- Volume -->
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-volume-down text-white-50 small"></i>
+                    <input type="range" class="form-range" id="tc-volume" min="0" max="100" value="50">
+                    <i class="bi bi-volume-up text-white-50 small"></i>
+                </div>
+            </div>
+            <div class="card-footer border-secondary py-1 text-center">
+               <div class="form-check form-switch d-inline-block">
+                    <input class="form-check-input" type="checkbox" id="tc-music-enabled" {% if app.user.isMusicEnabled %}checked{% endif %}>
+                    <label class="form-check-label small text-white-50" for="tc-music-enabled">Enabled</label>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

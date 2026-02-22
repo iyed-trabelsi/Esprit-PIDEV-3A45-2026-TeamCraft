@@ -1,0 +1,84 @@
+{% for p in players %}
+    <div class="col-12 col-sm-6 col-lg-4 player-card"
+         data-name="{{ p.name|lower }}"
+         data-games="{{ p.game|lower }}"
+         data-rank="{{ p.rank|lower }}"
+         data-date="0">
+        <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+            <div class="discovery-avatar mx-auto mb-3">{{ p.initial }}</div>
+            <h3 class="discovery-card-title mb-1">{{ p.name }}</h3>
+            <p class="discovery-card-subtitle mb-3">{{ p.role }}</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <span class="badge-game {{ p.gameColor }}">{{ p.game }}</span>
+                <span class="badge-rank {{ p.rankColor }}">{{ p.rank }}</span>
+            </div>
+            
+            <!-- Section des boutons avec espacement -->
+            <div class="mt-auto d-flex justify-content-between align-items-center player-actions" style="gap: 12px;">
+                <!-- Bouton View Profil -->
+                <a href="{{ path('app_profile_show', {id: p.id}) }}" class="btn btn-recruit" style="flex: 1;">View Profil</a>
+                
+                {% set friendInfo = friendStatuses[p.id]|default(null) %}
+                {% set status = friendInfo ? friendInfo.status : null %}
+                {% set requestId = friendInfo ? friendInfo.requestId : null %}
+
+                {% if status == 'friends' %}
+                    <!-- Icône Already Friends - non cliquable -->
+                    <span class="d-flex align-items-center justify-content-center text-success" 
+                          title="Already Friends" 
+                          style="cursor: default; width: 40px; height: 40px;">
+                        <i class="bi bi-people-fill" style="font-size: 1.6rem;"></i>
+                    </span>
+                    
+                {% elseif status == 'pending_received' %}
+                    <!-- Icône Respond to Request - cliquable -->
+                    <a href="{{ path('app_friend_list') }}" 
+                       class="d-flex align-items-center justify-content-center text-info" 
+                       title="Respond to Request" 
+                       style="text-decoration: none; width: 40px; height: 40px; transition: transform 0.2s;"
+                       onmouseover="this.style.transform='scale(1.1)'" 
+                       onmouseout="this.style.transform='scale(1)'">
+                        <i class="bi bi-envelope-exclamation" style="font-size: 1.6rem;"></i>
+                    </a>
+                    
+                {% elseif status == 'pending_sent' %}
+                    <!-- Icône Cancel Request - cliquable (ROUGE maintenant) -->
+                    <a href="#" 
+                       class="d-flex align-items-center justify-content-center js-friend-toggle text-danger" 
+                       data-action="cancel" 
+                       data-url="{{ path('app_friend_action', {id: requestId, action: 'cancel'}) }}" 
+                       data-send-url="{{ path('app_friend_send', {id: p.id}) }}"
+                       title="Cancel Request" 
+                       style="text-decoration: none; width: 40px; height: 40px; transition: transform 0.2s;"
+                       onmouseover="this.style.transform='scale(1.1)'" 
+                       onmouseout="this.style.transform='scale(1)'">
+                        <i class="bi bi-x-circle-fill" style="font-size: 1.6rem;"></i>
+                    </a>
+                    
+                {% else %}
+                    <!-- Icône Add Friend - cliquable -->
+                    <a href="#" 
+                       class="d-flex align-items-center justify-content-center js-friend-toggle" 
+                       data-action="send" 
+                       data-url="{{ path('app_friend_send', {id: p.id}) }}" 
+                       title="Add Friend" 
+                       style="text-decoration: none; width: 40px; height: 40px; transition: transform 0.2s;"
+                       onmouseover="this.style.transform='scale(1.1)'" 
+                       onmouseout="this.style.transform='scale(1)'">
+                        <i class="bi bi-person-plus-fill text-white" style="font-size: 1.6rem;"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <!-- Message si aucun joueur trouvé -->
+    <div class="col-12 text-center py-5">
+        <div class="mb-3">
+            <i class="fas fa-user-slash fa-3x text-muted"></i>
+        </div>
+        <h3 class="text-white">Aucun joueur trouvé</h3>
+        <p class="text-muted">Essayez de modifier vos filtres ou votre recherche.</p>
+        <a href="{{ path('app_players') }}" class="btn btn-tc-secondary mt-3">Réinitialiser les filtres</a>
+    </div>
+{% endfor %}
