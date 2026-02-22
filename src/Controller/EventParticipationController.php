@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Evenement;
 use App\Entity\Participation;
+use App\Repository\ParticipationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,12 +38,17 @@ class EventParticipationController extends AbstractController
             return $this->redirectToRoute('app_events');
         }
 
-        // Check capacity
+        // Check capacity Strict Block
         $currentParticipants = count($evenement->getParticipations());
         $maxCapacity = $evenement->getPlace()->getCapaciteMax();
 
-        if ($currentParticipants >= $maxCapacity) {
+        if ($currentParticipants >= $maxCapacity || $evenement->getStatus() === 'closed') {
             $this->addFlash('error', 'Désolé, cet événement est complet.');
+            return $this->redirectToRoute('app_events');
+        }
+
+        if ($evenement->getStatus() === 'over') {
+            $this->addFlash('error', 'Désolé, cet événement est déjà terminé.');
             return $this->redirectToRoute('app_events');
         }
 
@@ -56,6 +62,35 @@ class EventParticipationController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', 'Votre participation a été confirmée !');
+
+        return $this->redirectToRoute('app_events');
+    }
+
+    #[Route('/{id}/cancel-participation', name: 'app_event_cancel_participation', methods: ['POST', 'GET'])]
+    public function cancelParticipation(Evenement $evenement, EntityManagerInterface $entityManager, ParticipationRepository $participationRepository): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            $this->addFlash('error', 'Vous devez être connecté.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        // Find the specific participation for this user and event
+        $participation = $participationRepository->findOneBy([
+            'evenement' => $evenement,
+            'user' => $user
+        ]);
+
+        if (!$participation) {
+            $this->addFlash('warning', 'Vous ne participez pas à cet événement.');
+            return $this->redirectToRoute('app_events');
+        }
+
+        // Remove the participation
+        $entityManager->remove($participation);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Votre participation a été annulée avec succès.');
 
         return $this->redirectToRoute('app_events');
     }

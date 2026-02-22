@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Place;
 use App\Entity\Evenement;
 use App\Form\EvenementType;
 use App\Repository\EvenementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -409,5 +411,52 @@ class FrontEventController extends AbstractController
         }
 
         return $this->json($eventsData);
+    }
+
+    #[Route('/api/place/add', name: 'api_add_place', methods: ['POST'])]
+    public function addPlace(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!$data) {
+            return $this->json(['success' => false, 'errors' => ['Requête invalide.']]);
+        }
+
+        $place = new Place();
+        $place->setNomPlace($data['nomPlace'] ?? '');
+        $place->setTypePlace($data['typePlace'] ?? '');
+        $place->setAdresse($data['adresse'] ?? '');
+        $place->setCapaciteMax((int) ($data['capaciteMax'] ?? 0));
+
+        // Manual PHP Validation (matching BackOffice logic exactly)
+        $errors = [];
+        if (empty($place->getNomPlace()) || strlen($place->getNomPlace()) < 3) {
+            $errors['nomPlace'] = 'Le nom du lieu doit contenir au moins 3 caractères.';
+        }
+        if (empty($place->getTypePlace()) || strlen($place->getTypePlace()) < 3) {
+            $errors['typePlace'] = 'Le type du lieu doit contenir au moins 3 caractères.';
+        }
+        if (empty($place->getAdresse()) || strlen($place->getAdresse()) < 5) {
+            $errors['adresse'] = "L'adresse doit contenir au moins 5 caractères.";
+        }
+        if ($place->getCapaciteMax() < 1 || $place->getCapaciteMax() > 50000) {
+            $errors['capaciteMax'] = 'La capacité doit être comprise entre 1 et 50000.';
+        }
+
+        if (count($errors) > 0) {
+            return $this->json(['success' => false, 'errors' => $errors]);
+        }
+
+        $entityManager->persist($place);
+        $entityManager->flush();
+
+        return $this->json([
+            'success' => true, 
+            'message' => 'Lieu ajouté avec succès!',
+            'place' => [
+                'id' => $place->getId(),
+                'nomPlace' => $place->getNomPlace(),
+                'adresse' => $place->getAdresse()
+            ]
+        ]);
     }
 }

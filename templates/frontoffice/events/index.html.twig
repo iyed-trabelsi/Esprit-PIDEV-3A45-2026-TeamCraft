@@ -224,8 +224,10 @@
         50% { transform: translateX(3px) rotate(15deg) scale(1.1); }
     }
 </style>
-<!-- FullCalendar CSS -->
+<!-- FullCalendar & Leaflet CSS -->
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 {% endblock %}
 
 {% block body %}
@@ -238,9 +240,14 @@
                     {% include 'frontoffice/partials/_icon_people.html.twig' %}
                     Mes Événements
                 </h1>
-                <button type="button" class="btn btn-outline-info fw-bold" data-bs-toggle="modal" data-bs-target="#calendarModal">
-                    <i class="bi bi-calendar3 me-2"></i>📅 Mon Calendrier
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#addPlaceModal">
+                        <i class="bi bi-geo-alt me-2"></i>📍 Ajouter un Lieu
+                    </button>
+                    <button type="button" class="btn btn-outline-info fw-bold" data-bs-toggle="modal" data-bs-target="#calendarModal">
+                        <i class="bi bi-calendar3 me-2"></i>📅 Mon Calendrier
+                    </button>
+                </div>
             </div>
 
             {# Search and Sort for My Events #}
@@ -391,10 +398,29 @@
                             <div><span class="date-label">Fin:</span> {{ e.dateFin|date('d M Y, H:i') }}</div>
                         </div>
                         
-                        {% if e.participations|length >= e.place.capaciteMax %}
-                            <button class="btn btn-secondary mt-auto text-decoration-none text-center" disabled>Complet</button>
+                        {% set isParticipating = false %}
+                        {% if app.user %}
+                            {% for p in e.participations %}
+                                {% if p.user == app.user %}
+                                    {% set isParticipating = true %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if isParticipating %}
+                            {% if e.status == 'over' %}
+                                <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold" disabled>Terminé</button>
+                            {% else %}
+                                <form method="post" action="{{ path('app_event_cancel_participation', {'id': e.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler votre participation à cet événement ?');" class="mt-auto">
+                                    <button type="submit" class="btn btn-outline-danger w-100 fw-bold">Annuler ma participation</button>
+                                </form>
+                            {% endif %}
+                        {% elseif e.status == 'closed' or e.participations|length >= e.place.capaciteMax %}
+                            <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold" disabled>Complet</button>
+                        {% elseif e.status == 'over' %}
+                            <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold" disabled>Terminé</button>
                         {% else %}
-                            <a href="{{ path('app_event_participate', {id: e.getId()}) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">Participer</a>
+                            <a href="{{ path('app_event_participate', {id: e.getId()}) }}" class="btn btn-recruit mt-auto text-decoration-none text-center w-100 fw-bold">Participer</a>
                         {% endif %}
                     </div>
                 </div>
@@ -522,11 +548,66 @@
         </div>
     </div>
 
+    {# Add Place Modal (Leaflet Form) #}
+    <div class="modal fade" id="addPlaceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content calendar-modal-content text-white" style="background: var(--tc-bg-card, #1a1a2e); color: var(--tc-text, #fff);">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">📍 Ajouter un Lieu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPlaceForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">Nom du Lieu</label>
+                            <input type="text" id="place_nom" name="nomPlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
+                            <div class="text-danger small mt-1 place-error" id="error-nomPlace"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Type du Lieu</label>
+                            <input type="text" id="place_type" name="typePlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
+                            <div class="text-danger small mt-1 place-error" id="error-typePlace"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Capacité Maximum</label>
+                            <input type="number" id="place_capacite" name="capaciteMax" class="form-control bg-dark text-white border-secondary" required min="1" max="50000">
+                            <div class="text-danger small mt-1 place-error" id="error-capaciteMax"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white text-info"><i class="bi bi-hand-index"></i> Recherchez, cliquez sur la carte, ou utilisez votre position</label>
+                            <div class="mb-2">
+                                <button type="button" id="btnCurrentLocation" class="btn btn-sm btn-outline-info rounded-pill fw-bold">
+                                    <i class="bi bi-geo"></i> Utiliser ma position actuelle
+                                </button>
+                            </div>
+                            <!-- Note the z-index fix to prevent search dropdown from being hidden in modal -->
+                            <div id="placeMap" style="height: 300px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); z-index: 1;"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Adresse générée par la carte</label>
+                            <input type="text" id="place_adresse" name="adresse" class="form-control bg-dark text-white border-secondary" readonly placeholder="L'adresse apparaîtra ici...">
+                            <div class="text-danger small mt-1 place-error" id="error-adresse"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary border-opacity-25 bg-black bg-opacity-25">
+                    <button type="button" class="btn btn-secondary border-0 px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-success px-4 fw-bold" id="btnSubmitPlace">
+                        <span id="placeSubmitText">Enregistrer le Lieu</span>
+                        <div class="spinner-border spinner-border-sm d-none" id="placeSubmitLoader" role="status"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% include 'frontoffice/partials/_footer.html.twig' %}
 {% endblock %}
 
 {% block javascripts %}
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
@@ -583,6 +664,172 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalEl = document.getElementById('calendarModal');
     modalEl.addEventListener('shown.bs.modal', function () {
         calendar.render();
+    });
+
+    // --- LEAFLET JS FOR "ADD PLACE" MODAL ---
+    let placeMap = null;
+    let placeMarker = null;
+    const addPlaceModalEl = document.getElementById('addPlaceModal');
+    const latInput = document.getElementById('place_lat');
+    const lngInput = document.getElementById('place_lng');
+    const addressInput = document.getElementById('place_adresse');
+    const saveBtn = document.getElementById('btnSubmitPlace');
+
+    function updateLocation(lat, lng) {
+        if (placeMarker) {
+            placeMarker.setLatLng([lat, lng]);
+        } else {
+            placeMarker = L.marker([lat, lng]).addTo(placeMap);
+        }
+
+        addressInput.value = "Recherche d'adresse en cours...";
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+            headers: { 'Accept-Language': 'fr' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.display_name) {
+                addressInput.value = data.display_name;
+            } else {
+                addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+        })
+        .catch(err => {
+            console.error("Geocoding failed", err);
+            addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        });
+    }
+
+    addPlaceModalEl.addEventListener('shown.bs.modal', function () {
+        // Initialize map only once
+        if (!placeMap) {
+            // Default center
+            placeMap = L.map('placeMap').setView([36.8065, 10.1815], 10);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(placeMap);
+
+            // Add Search Control (Leaflet Geocoder plugin)
+            var geocoder = L.Control.geocoder({
+                defaultMarkGeocode: false,
+                placeholder: "Rechercher un lieu...",
+                errorMessage: "Adresse non trouvée."
+            })
+            .on('markgeocode', function(e) {
+                var latlng = e.geocode.center;
+                
+                // Auto-center & Zoom on search result
+                placeMap.setView(latlng, 16); 
+                
+                if (placeMarker) {
+                    placeMarker.setLatLng(latlng);
+                } else {
+                    placeMarker = L.marker(latlng).addTo(placeMap);
+                }
+                
+                // For direct search result, use the Geocoder returned name
+                const resolvedAddress = e.geocode.name || Object.values(e.geocode.properties.address).join(', ');
+                addressInput.value = resolvedAddress;
+            })
+            .addTo(placeMap);
+
+            // Map click handler
+            placeMap.on('click', function(e) {
+                updateLocation(e.latlng.lat, e.latlng.lng);
+            });
+
+            // Use My Location handler
+            document.getElementById('btnCurrentLocation').addEventListener('click', function() {
+                if ("geolocation" in navigator) {
+                    const btn = document.getElementById('btnCurrentLocation');
+                    const originalHTML = btn.innerHTML;
+                    
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Localisation...';
+                    btn.disabled = true;
+
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Auto-center & Zoom on Current Location
+                        placeMap.setView([lat, lng], 16); 
+                        updateLocation(lat, lng);
+
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                    }, function(error) {
+                        alert("Erreur de localisation. Veuillez autoriser l'accès à votre position.");
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                    }, {
+                        timeout: 10000,
+                        enableHighAccuracy: true
+                    });
+                } else {
+                    alert("La géolocalisation n'est pas supportée par votre navigateur.");
+                }
+            });
+        }
+        
+        // Very important: Fix Leaflet gray boxes inside Bootstrap Modal
+        setTimeout(() => { placeMap.invalidateSize(); }, 200);
+    });
+
+    // AJAX Form Submission
+    saveBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        document.querySelectorAll('.place-error').forEach(el => el.innerText = '');
+        
+        const payload = {
+            nomPlace: document.getElementById('place_nom').value,
+            typePlace: document.getElementById('place_type').value,
+            capaciteMax: document.getElementById('place_capacite').value,
+            adresse: addressInput.value
+        };
+
+        const btnText = document.getElementById('placeSubmitText');
+        const loader = document.getElementById('placeSubmitLoader');
+        
+        btnText.classList.add('d-none');
+        loader.classList.remove('d-none');
+        saveBtn.disabled = true;
+
+        fetch('/api/place/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Success: Hide modal & optionally reload to show new places in dropdown (if there's one)
+                const modal = bootstrap.Modal.getInstance(addPlaceModalEl);
+                modal.hide();
+                alert(data.message); // simple notification
+                window.location.reload(); // Quickest way to refresh states for now
+            } else {
+                // Display Validation Errors directly under inputs
+                for (const [field, msg] of Object.entries(data.errors)) {
+                    const errEl = document.getElementById('error-' + field);
+                    if (errEl) errEl.innerText = msg;
+                }
+            }
+        })
+        .catch(err => {
+            alert("Erreur système lors de l'ajout.");
+            console.error(err);
+        })
+        .finally(() => {
+            btnText.classList.remove('d-none');
+            loader.classList.add('d-none');
+            saveBtn.disabled = false;
+        });
     });
 });
 </script>
