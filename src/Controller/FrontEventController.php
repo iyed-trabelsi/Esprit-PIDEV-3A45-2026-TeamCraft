@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\EventReview;
+use App\Repository\EventReviewRepository;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class FrontEventController extends AbstractController
 {
@@ -220,8 +223,8 @@ class FrontEventController extends AbstractController
                 $errors[] = $msg;
                 $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
             }
-            if ($imageFile->getSize() > 2 * 1024 * 1024) {
-                $msg = 'L\'image ne doit pas dépasser 2 Mo.';
+            if ($imageFile->getSize() > 3 * 1024 * 1024) {
+                $msg = 'L\'image ne doit pas dépasser 3 Mo.';
                 $errors[] = $msg;
                 $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
             }
@@ -457,6 +460,111 @@ class FrontEventController extends AbstractController
                 'nomPlace' => $place->getNomPlace(),
                 'adresse' => $place->getAdresse()
             ]
+        ]);
+    }
+
+    #[Route('/events/{id}/reviews', name: 'app_front_event_reviews', methods: ['GET'])]
+    public function getReviews(Evenement $evenement, EventReviewRepository $reviewRepo): JsonResponse
+    {
+        $reviews = $reviewRepo->findBy(['evenement' => $evenement], ['createdAt' => 'DESC']);
+        
+        $data = [];
+        foreach ($reviews as $review) {
+            $user = $review->getUser();
+            $data[] = [
+                'id' => $review->getId(),
+                'username' => $user->getUsername() ?: ($user->getPseudo() ?: 'Utilisateur'),
+                'userAvatar' => $user->getProfilePicture(),
+                'rating' => (float) $review->getRating(),
+                'message' => $review->getMessage(),
+                'createdAt' => $review->getCreatedAt()->format('Y-m-d H:i:s')
+            ];
+        }
+
+        return $this->json([
+            'averageRating' => $evenement->getAverageRating(),
+            'reviewCount' => $evenement->getReviewCount(),
+            'reviews' => $data
+        ]);
+    }
+
+    #[Route('/events/{id}/review/submit', name: 'app_front_event_review_submit', methods: ['POST'])]
+    public function submitReview(Request $request, Evenement $evenement, EntityManagerInterface $em, EventReviewRepository $reviewRepo, ValidatorInterface $validator): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['success' => false, 'error' => 'Vous devez être connecté pour laisser un avis.'], 401);
+        }
+
+        if ($evenement->getStatus() !== 'over') {
+            return $this->json(['success' => false, 'error' => 'Cet événement n\'est pas encore terminé.'], 403);
+        }
+
+        // Check participation
+        $hasParticipated = false;
+        foreach ($evenement->getParticipations() as $p) {
+            if ($p->getUser() === $user) {
+                $hasParticipated = true;
+                break;
+            }
+        }
+
+        if (!$hasParticipated) {
+            return $this->json(['success' => false, 'error' => 'Vous n\'avez pas participé à cet événement.'], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (!$data || !isset($data['rating'])) {
+            return $this->json(['success' => false, 'error' => 'Données invalides.'], 400);
+        }
+
+        $rating = (float) $data['rating'];
+        $message = isset($data['message']) ? trim($data['message']) : null;
+        if (empty($message)) {
+            $message = null;
+        }
+
+        // Check if review already exists -> Update instead of Create
+        $review = $reviewRepo->findOneBy(['user' => $user, 'evenement' => $evenement]);
+        $isNew = false;
+        if (!$review) {
+            $review = new EventReview();
+            $review->setUser($user);
+            $review->setEvenement($evenement);
+            $isNew = true;
+        }
+
+        $review->setRating((string) $rating);
+        $review->setMessage($message);
+
+        $errors = $validator->validate($review);
+        if (count($errors) > 0) {
+            return $this->json(['success' => false, 'error' => $errors[0]->getMessage()], 400);
+        }
+
+        if ($isNew) {
+            $em->persist($review);
+        }
+        $em->flush();
+
+        // Recalculate average
+        $allReviews = $reviewRepo->findBy(['evenement' => $evenement]);
+        $totalRating = 0.0;
+        foreach ($allReviews as $r) {
+            $totalRating += (float) $r->getRating();
+        }
+        $count = count($allReviews);
+        if ($count > 0) {
+            $evenement->setAverageRating(round($totalRating / $count, 1));
+            $evenement->setReviewCount($count);
+        }
+        $em->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Avis ' . ($isNew ? 'ajouté' : 'modifié') . ' avec succès.',
+            'averageRating' => $evenement->getAverageRating(),
+            'reviewCount' => $count
         ]);
     }
 }

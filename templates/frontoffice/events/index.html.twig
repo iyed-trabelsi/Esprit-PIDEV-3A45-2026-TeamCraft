@@ -241,44 +241,50 @@
                     Mes Événements
                 </h1>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#addPlaceModal">
-                        <i class="bi bi-geo-alt me-2"></i>📍 Ajouter un Lieu
-                    </button>
                     <button type="button" class="btn btn-outline-info fw-bold" data-bs-toggle="modal" data-bs-target="#calendarModal">
                         <i class="bi bi-calendar3 me-2"></i>📅 Mon Calendrier
                     </button>
                 </div>
             </div>
 
-            {# Search and Sort for My Events #}
-            <div class="card bg-dark border-0 shadow mb-4" style="background-color: #16161a !important;">
-                <div class="card-body p-3">
-                    <form method="GET" action="{{ path('app_events') }}" class="row g-3">
-                        <div class="col-12 col-md-8">
-                            <input type="text" name="my_search" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="🔍 Rechercher dans mes événements..." value="{{ mySearch }}">
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <select name="my_sort" class="form-select bg-dark text-white border-secondary border-opacity-25">
-                                <option value="">Trier par...</option>
-                                <option value="date_desc" {% if mySort == 'date_desc' %}selected{% endif %}>Date (Plus récent)</option>
-                                <option value="date_asc" {% if mySort == 'date_asc' %}selected{% endif %}>Date (Plus ancien)</option>
-                                <option value="name_asc" {% if mySort == 'name_asc' %}selected{% endif %}>Nom (A-Z)</option>
-                                <option value="name_desc" {% if mySort == 'name_desc' %}selected{% endif %}>Nom (Z-A)</option>
-                                <option value="status_open" {% if mySort == 'status_open' %}selected{% endif %}>Statut (Open first)</option>
-                                <option value="status_closed" {% if mySort == 'status_closed' %}selected{% endif %}>Statut (Closed first)</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-md-1">
-                            <button type="submit" class="btn btn-primary w-100">OK</button>
-                        </div>
-                    </form>
+            {# Live Search and Sort for My Events #}
+            <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mb-4">
+                <div class="d-flex justify-content-end align-items-center gap-3 w-100 flex-wrap">
+                    <!-- Sort by Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="mySortDropdownBtn">
+                            <i class="bi bi-sort-down"></i>
+                            <span id="myCurrentSortLabel">Date (Plus récent)</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item active js-my-sort-option" href="#" data-sort="date_desc">Date (Plus récent)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="date_asc">Date (Plus ancien)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="rating_desc">Mieux noté</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="rating_asc">Moins bien noté</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="name_asc">Nom (A-Z)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="name_desc">Nom (Z-A)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="status_open">Statut (Open first)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="status_closed">Statut (Closed first)</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="position-relative">
+                        <input type="text" id="my-event-search" class="form-control form-control-sm text-white ps-5" placeholder="Rechercher mes événements..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                    </div>
                 </div>
             </div>
 
-            <div class="row g-4 mb-5">
+            <div class="row g-4 mb-5" id="my-events-container">
                 {% if myEvents is not empty %}
                     {% for e in myEvents %}
-                    <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="col-12 col-sm-6 col-lg-4 my-event-item"
+                         data-name="{{ e.nomEvenement|lower }}"
+                         data-date="{{ e.dateDebut.timestamp }}"
+                         data-status="{{ e.status|lower }}"
+                         data-rating="{{ e.averageRating }}"
+                         data-id="{{ e.id }}">
                         <div class="discovery-card h-100 d-flex flex-column p-4 text-center" style="border: 2px solid #a855f7;">
                             {% if e.imageEvenement %}
                                 <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
@@ -288,6 +294,17 @@
                                 </div>
                             {% endif %}
                             <h3 class="discovery-card-title mb-1">{{ e.nomEvenement }}</h3>
+                            <div class="mb-3 d-flex justify-content-center">
+                                <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill" style="background-color: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3);" id="rating-display-my-{{ e.id }}">
+                                    {% if e.reviewCount > 0 %}
+                                        <span class="text-warning fw-bold" style="font-size: 0.95rem;">{{ e.averageRating|number_format(1) }}</span>
+                                        <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));"></i>
+                                        <span class="text-white-50 ms-1" style="font-size: 0.8rem;">({{ e.reviewCount }} avis)</span>
+                                    {% else %}
+                                        <span class="text-white-50 fst-italic" style="font-size: 0.85rem;">Aucun avis</span>
+                                    {% endif %}
+                                </div>
+                            </div>
                             <p class="discovery-card-subtitle mb-2"><span class="badge {{ e.status == 'open' ? 'status-open' : 'bg-secondary' }}">{{ e.status|upper }}</span> • {{ e.participations|length }} / {{ e.place.capaciteMax }}</p>
                             <div class="mb-2">
                                 <i class="bi bi-geo-alt-fill place-label" style="font-size: 0.85rem;"></i> 
@@ -307,19 +324,12 @@
                         </div>
                     </div>
                 {% endfor %}
-                {% else %}
-                    <div class="col-12">
-                        <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
-                            <p class="text-white-50 mb-0">
-                                {% if mySearch %}
-                                    Aucun événement trouvé pour "{{ mySearch }}".
-                                {% else %}
-                                    Vous n'avez créé aucun événement.
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
                 {% endif %}
+            </div>
+            <div id="my-events-no-results" class="col-12 d-none">
+                <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                    <p class="text-white-50 mb-0">Aucun événement ne correspond à votre recherche.</p>
+                </div>
             </div>
             <hr class="mb-5" style="border-color: rgba(255,255,255,0.1);">
         {% endif %}
@@ -332,50 +342,96 @@
             <a href="#" class="discovery-view-all">VOIR TOUS LES ÉVÉNEMENTS →</a>
         </div>
 
-        {# Search and Filter Section #}
-        <div class="card bg-dark border-0 shadow mb-4" style="background-color: #16161a !important;">
-            <div class="card-body p-3">
-                <form method="GET" action="{{ path('app_events') }}" class="row g-3">
-                    <div class="col-12 col-md-4">
-                        <input type="text" name="search" class="form-control bg-dark text-white border-secondary border-opacity-25" placeholder="🔍 Rechercher par nom..." value="{{ search }}">
-                    </div>
-                    <div class="col-12 col-md-2">
-                        <select name="type" class="form-select bg-dark text-white border-secondary border-opacity-25">
-                            <option value="">Tous les types</option>
-                            <option value="Tournament" {% if filterType == 'Tournament' %}selected{% endif %}>Tournament</option>
-                            <option value="Scrim" {% if filterType == 'Scrim' %}selected{% endif %}>Scrim</option>
-                            <option value="Practice" {% if filterType == 'Practice' %}selected{% endif %}>Practice</option>
-                            <option value="Competition" {% if filterType == 'Competition' %}selected{% endif %}>Competition</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-2">
-                        <select name="status" class="form-select bg-dark text-white border-secondary border-opacity-25">
-                            <option value="">Tous statuts</option>
-                            <option value="open" {% if filterStatus == 'open' %}selected{% endif %}>Open</option>
-                            <option value="closed" {% if filterStatus == 'closed' %}selected{% endif %}>Closed</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <select name="sort" class="form-select bg-dark text-white border-secondary border-opacity-25">
-                            <option value="">Trier par...</option>
-                            <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Date (Plus récent)</option>
-                            <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Date (Plus ancien)</option>
-                            <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>Nom (A-Z)</option>
-                            <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Nom (Z-A)</option>
-                            <option value="status_open" {% if sort == 'status_open' %}selected{% endif %}>Statut (Open first)</option>
-                            <option value="status_closed" {% if sort == 'status_closed' %}selected{% endif %}>Statut (Closed first)</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-1">
-                        <button type="submit" class="btn btn-primary w-100">OK</button>
-                    </div>
-                </form>
+        {# Live Search and Filter Section for All Events #}
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mb-4">
+            <div class="d-flex justify-content-end align-items-center gap-3 w-100 flex-wrap">
+                <!-- Sort by Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="allSortDropdownBtn">
+                        <i class="bi bi-sort-down"></i>
+                        <span id="allCurrentSortLabel">Date (Plus récent)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-all-sort-option" href="#" data-sort="date_desc">Date (Plus récent)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="date_asc">Date (Plus ancien)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="rating_desc">Mieux noté</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="rating_asc">Moins bien noté</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="name_asc">Nom (A-Z)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="name_desc">Nom (Z-A)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="status_open">Statut (Open first)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="status_closed">Statut (Closed first)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Filter by Type Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="typeFilterDropdownBtn">
+                        <i class="bi bi-funnel"></i>
+                        <span id="currentTypeLabel">Tous les types</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-type-option" href="#" data-type="all">Tous les types</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="tournament">Tournament</a></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="scrim">Scrim</a></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="practice">Practice</a></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="competition">Competition</a></li>
+                    </ul>
+                </div>
+
+                <!-- Filter by Status Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="statusFilterDropdownBtn">
+                        <i class="bi bi-check-circle"></i>
+                        <span id="currentStatusLabel">Tous statuts</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-status-option" href="#" data-status="all">Tous statuts</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-status-option" href="#" data-status="open">Open</a></li>
+                        <li><a class="dropdown-item js-status-option" href="#" data-status="closed">Closed</a></li>
+                        <li><a class="dropdown-item js-status-option" href="#" data-status="over">Over</a></li>
+                    </ul>
+                </div>
+
+                <!-- Search Input -->
+                <div class="position-relative">
+                    <input type="text" id="all-event-search" class="form-control form-control-sm text-white ps-5" placeholder="Rechercher par nom..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                </div>
             </div>
         </div>
 
-        <div class="row g-4">
+        <style>
+            #my-event-search::placeholder, #all-event-search::placeholder {
+                color: white !important;
+                opacity: 0.7;
+            }
+            .btn-tc-outline {
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.2);
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            .btn-tc-outline:hover, .btn-tc-outline:focus {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            .dropdown-menu-dark .dropdown-item.active {
+                background-color: var(--tc-cyan, #0dcaf0);
+                color: #000;
+            }
+        </style>
+
+        <div class="row g-4" id="all-events-container">
             {% for e in events %}
-                <div class="col-12 col-sm-6 col-lg-4">
+                <div class="col-12 col-sm-6 col-lg-4 all-event-item"
+                     data-name="{{ e.nomEvenement|lower }}"
+                     data-date="{{ e.dateDebut.timestamp }}"
+                     data-status="{{ e.status|lower }}"
+                     data-type="{{ e.typeEvenement|lower }}"
+                     data-rating="{{ e.averageRating }}"
+                     data-id="{{ e.id }}">
                     <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
                         {% if e.imageEvenement %}
                             <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
@@ -385,6 +441,17 @@
                             </div>
                         {% endif %}
                         <h3 class="discovery-card-title mb-1">{{ e.nomEvenement }}</h3>
+                        <div class="mb-3 d-flex justify-content-center">
+                            <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill" style="background-color: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3);" id="rating-display-all-{{ e.id }}">
+                                {% if e.reviewCount > 0 %}
+                                    <span class="text-warning fw-bold" style="font-size: 0.95rem;">{{ e.averageRating|number_format(1) }}</span>
+                                    <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));"></i>
+                                    <span class="text-white-50 ms-1" style="font-size: 0.8rem;">({{ e.reviewCount }} avis)</span>
+                                {% else %}
+                                    <span class="text-white-50 fst-italic" style="font-size: 0.85rem;">Aucun avis</span>
+                                {% endif %}
+                            </div>
+                        </div>
                         <div class="text-white-50 small mb-1">
                             <span class="badge {{ e.status == 'open' ? 'status-open' : (e.status == 'over' ? 'bg-secondary' : 'bg-danger') }}">{{ e.status|upper }}</span>
                             <span class="ms-2 fw-bold text-white">{{ e.participations|length }}/{{ e.place.capaciteMax }}</span>
@@ -409,7 +476,8 @@
 
                         {% if isParticipating %}
                             {% if e.status == 'over' %}
-                                <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold" disabled>Terminé</button>
+                                <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold mb-2" disabled>Terminé</button>
+                                <button class="btn btn-outline-warning text-decoration-none text-center w-100 fw-bold open-review-modal" data-event-id="{{ e.id }}" data-event-name="{{ e.nomEvenement }}" data-bs-toggle="modal" data-bs-target="#reviewModal">⭐ Laisser un avis</button>
                             {% else %}
                                 <form method="post" action="{{ path('app_event_cancel_participation', {'id': e.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler votre participation à cet événement ?');" class="mt-auto">
                                     <button type="submit" class="btn btn-outline-danger w-100 fw-bold">Annuler ma participation</button>
@@ -424,21 +492,69 @@
                         {% endif %}
                     </div>
                 </div>
-            {% else %}
-                <div class="col-12">
-                    <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
-                        <p class="text-white-50 mb-0">
-                            {% if search or filterType or filterStatus %}
-                                Aucun événement ne correspond à vos critères de recherche.
-                            {% else %}
-                                Aucun événement disponible pour le moment.
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
             {% endfor %}
         </div>
+        
+        <div id="all-events-no-results" class="col-12 mt-4 pb-4 d-none">
+            <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                <p class="text-white-50 mb-0">
+                    Aucun événement ne correspond à vos critères de recherche.
+                </p>
+            </div>
+        </div>
     </section>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">Avis pour <span id="reviewModalEventName" class="text-primary"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Form Section -->
+                    <div class="p-4" style="background-color: rgba(255,255,255,0.02);">
+                        <h6 class="text-center mb-3">Quelle est votre note ?</h6>
+                        <!-- Interactive Stars -->
+                        <div class="d-flex justify-content-center mb-2">
+                            <div id="star-rater" class="position-relative" style="cursor: pointer; width: 190px; height: 40px; transition: transform 0.1s;">
+                                <!-- Background Stars (Empty/Grey) -->
+                                <div class="position-absolute top-0 start-0 d-flex gap-2 text-secondary" style="font-size: 2rem;">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                </div>
+                                <!-- Foreground Stars (Filled/Warning) -->
+                                <div id="star-rater-fill" class="position-absolute top-0 start-0 h-100 overflow-hidden text-warning" style="font-size: 2rem; width: 0%; pointer-events: none;">
+                                    <div class="d-flex gap-2" style="width: 190px;">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center text-warning fw-bold fs-4 mb-4"><span id="review-rating-display">0.0</span> / 5.0</div>
+                        <input type="hidden" id="review-rating-input" value="0">
+                        <input type="hidden" id="review-event-id" value="">
+                        <textarea id="review-message-input" class="form-control form-control-sm bg-black text-white border-secondary mb-3" rows="3" placeholder="Écrivez votre avis ici (optionnel)..." style="resize: none;"></textarea>
+                        <button id="submitReviewBtn" class="btn btn-primary w-100 fw-bold">
+                            <span class="submit-text">Soumettre mon avis</span>
+                            <span class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div id="review-form-alert" class="alert d-none mt-3 p-2 small text-center mb-0"></div>
+                    </div>
+                    
+                    <div class="border-top border-secondary border-opacity-25 my-0"></div>
+                    
+                    <!-- Reviews List Section -->
+                    <div class="p-4 pt-3">
+                        <h6 class="mb-3">Avis de la communauté (<span id="modal-review-count">0</span>)</h6>
+                        <div id="reviews-feed" class="d-flex flex-column gap-3 pe-2" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                            <div class="text-center text-secondary small py-3" id="loading-reviews">Chargement des avis...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {# Edit Modals for My Events #}
     {% if app.user and myEvents is not empty %}
@@ -548,57 +664,6 @@
         </div>
     </div>
 
-    {# Add Place Modal (Leaflet Form) #}
-    <div class="modal fade" id="addPlaceModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content calendar-modal-content text-white" style="background: var(--tc-bg-card, #1a1a2e); color: var(--tc-text, #fff);">
-                <div class="modal-header border-bottom border-secondary border-opacity-25">
-                    <h5 class="modal-title fw-bold">📍 Ajouter un Lieu</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addPlaceForm">
-                        <div class="mb-3">
-                            <label class="form-label text-white">Nom du Lieu</label>
-                            <input type="text" id="place_nom" name="nomPlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
-                            <div class="text-danger small mt-1 place-error" id="error-nomPlace"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white">Type du Lieu</label>
-                            <input type="text" id="place_type" name="typePlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
-                            <div class="text-danger small mt-1 place-error" id="error-typePlace"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white">Capacité Maximum</label>
-                            <input type="number" id="place_capacite" name="capaciteMax" class="form-control bg-dark text-white border-secondary" required min="1" max="50000">
-                            <div class="text-danger small mt-1 place-error" id="error-capaciteMax"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white text-info"><i class="bi bi-hand-index"></i> Recherchez, cliquez sur la carte, ou utilisez votre position</label>
-                            <div class="mb-2">
-                                <button type="button" id="btnCurrentLocation" class="btn btn-sm btn-outline-info rounded-pill fw-bold">
-                                    <i class="bi bi-geo"></i> Utiliser ma position actuelle
-                                </button>
-                            </div>
-                            <!-- Note the z-index fix to prevent search dropdown from being hidden in modal -->
-                            <div id="placeMap" style="height: 300px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); z-index: 1;"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white">Adresse générée par la carte</label>
-                            <input type="text" id="place_adresse" name="adresse" class="form-control bg-dark text-white border-secondary" readonly placeholder="L'adresse apparaîtra ici...">
-                            <div class="text-danger small mt-1 place-error" id="error-adresse"></div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top border-secondary border-opacity-25 bg-black bg-opacity-25">
-                    <button type="button" class="btn btn-secondary border-0 px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-success px-4 fw-bold" id="btnSubmitPlace">
-                        <span id="placeSubmitText">Enregistrer le Lieu</span>
-                        <div class="spinner-border spinner-border-sm d-none" id="placeSubmitLoader" role="status"></div>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
     {% include 'frontoffice/partials/_footer.html.twig' %}
@@ -666,171 +731,457 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     });
 
-    // --- LEAFLET JS FOR "ADD PLACE" MODAL ---
-    let placeMap = null;
-    let placeMarker = null;
-    const addPlaceModalEl = document.getElementById('addPlaceModal');
-    const latInput = document.getElementById('place_lat');
-    const lngInput = document.getElementById('place_lng');
-    const addressInput = document.getElementById('place_adresse');
-    const saveBtn = document.getElementById('btnSubmitPlace');
+});
 
-    function updateLocation(lat, lng) {
-        if (placeMarker) {
-            placeMarker.setLatLng([lat, lng]);
-        } else {
-            placeMarker = L.marker([lat, lng]).addTo(placeMap);
-        }
-
-        addressInput.value = "Recherche d'adresse en cours...";
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-            headers: { 'Accept-Language': 'fr' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.display_name) {
-                addressInput.value = data.display_name;
-            } else {
-                addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+// --- LIVE SEARCH, FILTER & SORT LOGIC ---
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Helper for Sorting ---
+    function sortItemsLogic(items, direction) {
+        return items.sort((a, b) => {
+            const dataA = {
+                date: parseInt(a.getAttribute('data-date') || '0'),
+                id: parseInt(a.getAttribute('data-id') || '0'),
+                name: (a.getAttribute('data-name') || '').toLowerCase(),
+                status: (a.getAttribute('data-status') || '').toLowerCase(),
+                rating: parseFloat(a.getAttribute('data-rating') || '0.0'),
+            };
+            const dataB = {
+                date: parseInt(b.getAttribute('data-date') || '0'),
+                id: parseInt(b.getAttribute('data-id') || '0'),
+                name: (b.getAttribute('data-name') || '').toLowerCase(),
+                status: (b.getAttribute('data-status') || '').toLowerCase(),
+                rating: parseFloat(b.getAttribute('data-rating') || '0.0'),
+            };
+            
+            if (direction === 'name_asc' || direction === 'name_desc') {
+                const comparison = dataA.name.localeCompare(dataB.name);
+                return direction === 'name_asc' ? comparison : -comparison;
             }
-        })
-        .catch(err => {
-            console.error("Geocoding failed", err);
-            addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            if (direction === 'rating_asc') {
+                const cmp = dataA.rating - dataB.rating;
+                return cmp !== 0 ? cmp : (dataB.date - dataA.date); // fallback to date desc
+            }
+            if (direction === 'rating_desc') {
+                const cmp = dataB.rating - dataA.rating;
+                return cmp !== 0 ? cmp : (dataB.date - dataA.date); // fallback to date desc
+            }
+            if (direction === 'status_open' || direction === 'status_closed') {
+                const targetStatus = direction === 'status_open' ? 'open' : 'closed';
+                const aIsTarget = dataA.status === targetStatus ? 1 : 0;
+                const bIsTarget = dataB.status === targetStatus ? 1 : 0;
+                if (aIsTarget !== bIsTarget) {
+                    return bIsTarget - aIsTarget; // 1 comes before 0
+                }
+                // Fallback to date
+                return dataB.date - dataA.date;
+            }
+            if (direction === 'date_asc') {
+                return dataA.date - dataB.date;
+            }
+            // default date_desc
+            return dataB.date - dataA.date;
         });
     }
 
-    addPlaceModalEl.addEventListener('shown.bs.modal', function () {
-        // Initialize map only once
-        if (!placeMap) {
-            // Default center
-            placeMap = L.map('placeMap').setView([36.8065, 10.1815], 10);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(placeMap);
+    // --- My Events Logic ---
+    const myEventsContainer = document.getElementById('my-events-container');
+    const myEventsNoResults = document.getElementById('my-events-no-results');
+    const mySearchInput = document.getElementById('my-event-search');
+    const mySortOptions = document.querySelectorAll('.js-my-sort-option');
+    const myCurrentSortLabel = document.getElementById('myCurrentSortLabel');
+    
+    if (myEventsContainer) {
+        let myItems = Array.from(myEventsContainer.querySelectorAll('.my-event-item'));
+        let myCurrentFilter = '';
+        let myCurrentSortDir = 'date_desc';
 
-            // Add Search Control (Leaflet Geocoder plugin)
-            var geocoder = L.Control.geocoder({
-                defaultMarkGeocode: false,
-                placeholder: "Rechercher un lieu...",
-                errorMessage: "Adresse non trouvée."
-            })
-            .on('markgeocode', function(e) {
-                var latlng = e.geocode.center;
+        function applyMyFilters() {
+            let visibleCount = 0;
+            let visibleItems = [];
+
+            myItems.forEach(item => {
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                const matchesSearch = !myCurrentFilter || name.includes(myCurrentFilter);
                 
-                // Auto-center & Zoom on search result
-                placeMap.setView(latlng, 16); 
-                
-                if (placeMarker) {
-                    placeMarker.setLatLng(latlng);
+                if (matchesSearch) {
+                    item.style.display = 'block';
+                    visibleItems.push(item);
+                    visibleCount++;
                 } else {
-                    placeMarker = L.marker(latlng).addTo(placeMap);
+                    item.style.display = 'none';
                 }
-                
-                // For direct search result, use the Geocoder returned name
-                const resolvedAddress = e.geocode.name || Object.values(e.geocode.properties.address).join(', ');
-                addressInput.value = resolvedAddress;
-            })
-            .addTo(placeMap);
-
-            // Map click handler
-            placeMap.on('click', function(e) {
-                updateLocation(e.latlng.lat, e.latlng.lng);
             });
 
-            // Use My Location handler
-            document.getElementById('btnCurrentLocation').addEventListener('click', function() {
-                if ("geolocation" in navigator) {
-                    const btn = document.getElementById('btnCurrentLocation');
-                    const originalHTML = btn.innerHTML;
-                    
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Localisation...';
-                    btn.disabled = true;
+            if (visibleCount === 0) {
+                myEventsNoResults.classList.remove('d-none');
+            } else {
+                myEventsNoResults.classList.add('d-none');
+                
+                // Sort visible items
+                const sortedItems = sortItemsLogic(visibleItems, myCurrentSortDir);
+                sortedItems.forEach(item => myEventsContainer.appendChild(item));
+            }
+        }
 
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        
-                        // Auto-center & Zoom on Current Location
-                        placeMap.setView([lat, lng], 16); 
-                        updateLocation(lat, lng);
-
-                        btn.innerHTML = originalHTML;
-                        btn.disabled = false;
-                    }, function(error) {
-                        alert("Erreur de localisation. Veuillez autoriser l'accès à votre position.");
-                        btn.innerHTML = originalHTML;
-                        btn.disabled = false;
-                    }, {
-                        timeout: 10000,
-                        enableHighAccuracy: true
-                    });
-                } else {
-                    alert("La géolocalisation n'est pas supportée par votre navigateur.");
-                }
+        if (mySearchInput) {
+            mySearchInput.addEventListener('input', (e) => {
+                myCurrentFilter = e.target.value.toLowerCase().trim();
+                applyMyFilters();
             });
         }
-        
-        // Very important: Fix Leaflet gray boxes inside Bootstrap Modal
-        setTimeout(() => { placeMap.invalidateSize(); }, 200);
-    });
 
-    // AJAX Form Submission
-    saveBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Clear previous errors
-        document.querySelectorAll('.place-error').forEach(el => el.innerText = '');
-        
-        const payload = {
-            nomPlace: document.getElementById('place_nom').value,
-            typePlace: document.getElementById('place_type').value,
-            capaciteMax: document.getElementById('place_capacite').value,
-            adresse: addressInput.value
-        };
+        mySortOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                myCurrentSortDir = this.getAttribute('data-sort');
+                
+                mySortOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (myCurrentSortLabel) myCurrentSortLabel.textContent = this.textContent;
 
-        const btnText = document.getElementById('placeSubmitText');
-        const loader = document.getElementById('placeSubmitLoader');
-        
-        btnText.classList.add('d-none');
-        loader.classList.remove('d-none');
-        saveBtn.disabled = true;
-
-        fetch('/api/place/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Success: Hide modal & optionally reload to show new places in dropdown (if there's one)
-                const modal = bootstrap.Modal.getInstance(addPlaceModalEl);
-                modal.hide();
-                alert(data.message); // simple notification
-                window.location.reload(); // Quickest way to refresh states for now
-            } else {
-                // Display Validation Errors directly under inputs
-                for (const [field, msg] of Object.entries(data.errors)) {
-                    const errEl = document.getElementById('error-' + field);
-                    if (errEl) errEl.innerText = msg;
-                }
-            }
-        })
-        .catch(err => {
-            alert("Erreur système lors de l'ajout.");
-            console.error(err);
-        })
-        .finally(() => {
-            btnText.classList.remove('d-none');
-            loader.classList.add('d-none');
-            saveBtn.disabled = false;
+                applyMyFilters();
+            });
         });
-    });
+        
+        // Initial sort
+        applyMyFilters();
+    }
+
+    // --- All Events Logic ---
+    const allEventsContainer = document.getElementById('all-events-container');
+    const allEventsNoResults = document.getElementById('all-events-no-results');
+    const allSearchInput = document.getElementById('all-event-search');
+    
+    const allSortOptions = document.querySelectorAll('.js-all-sort-option');
+    const allCurrentSortLabel = document.getElementById('allCurrentSortLabel');
+    
+    const typeOptions = document.querySelectorAll('.js-type-option');
+    const currentTypeLabel = document.getElementById('currentTypeLabel');
+    
+    const statusOptions = document.querySelectorAll('.js-status-option');
+    const currentStatusLabel = document.getElementById('currentStatusLabel');
+
+    if (allEventsContainer) {
+        let allItems = Array.from(allEventsContainer.querySelectorAll('.all-event-item'));
+        let allCurrentFilter = '';
+        let allCurrentType = 'all';
+        let allCurrentStatus = 'all';
+        let allCurrentSortDir = 'date_desc';
+
+        function applyAllFilters() {
+            let visibleCount = 0;
+            let visibleItems = [];
+
+            allItems.forEach(item => {
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                const type = (item.getAttribute('data-type') || '').toLowerCase();
+                const status = (item.getAttribute('data-status') || '').toLowerCase();
+                
+                const matchesSearch = !allCurrentFilter || name.includes(allCurrentFilter);
+                const matchesType = allCurrentType === 'all' || type === allCurrentType;
+                const matchesStatus = allCurrentStatus === 'all' || status === allCurrentStatus;
+                
+                if (matchesSearch && matchesType && matchesStatus) {
+                    item.style.display = 'block';
+                    visibleItems.push(item);
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                allEventsNoResults.classList.remove('d-none');
+            } else {
+                allEventsNoResults.classList.add('d-none');
+                
+                // Sort visible items
+                const sortedItems = sortItemsLogic(visibleItems, allCurrentSortDir);
+                sortedItems.forEach(item => allEventsContainer.appendChild(item));
+            }
+        }
+
+        if (allSearchInput) {
+            allSearchInput.addEventListener('input', (e) => {
+                allCurrentFilter = e.target.value.toLowerCase().trim();
+                applyAllFilters();
+            });
+        }
+
+        allSortOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                allCurrentSortDir = this.getAttribute('data-sort');
+                
+                allSortOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (allCurrentSortLabel) allCurrentSortLabel.textContent = this.textContent;
+
+                applyAllFilters();
+            });
+        });
+
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                allCurrentType = this.getAttribute('data-type');
+                
+                typeOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (currentTypeLabel) currentTypeLabel.textContent = this.textContent;
+
+                applyAllFilters();
+            });
+        });
+
+        statusOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                allCurrentStatus = this.getAttribute('data-status');
+                
+                statusOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (currentStatusLabel) currentStatusLabel.textContent = this.textContent;
+
+                applyAllFilters();
+            });
+        });
+        
+        // Initial sort
+        applyAllFilters();
+    }
+
+    // --- Review Modal Logic ---
+    const reviewModalElement = document.getElementById('reviewModal');
+    if (reviewModalElement) {
+        const modalEventName = document.getElementById('reviewModalEventName');
+        const eventIdInput = document.getElementById('review-event-id');
+        const reviewsFeed = document.getElementById('reviews-feed');
+        const modalReviewCount = document.getElementById('modal-review-count');
+        
+        const rater = document.getElementById('star-rater');
+        const raterFill = document.getElementById('star-rater-fill');
+        const ratingDisplay = document.getElementById('review-rating-display');
+        const ratingInput = document.getElementById('review-rating-input');
+        const messageInput = document.getElementById('review-message-input');
+        const submitBtn = document.getElementById('submitReviewBtn');
+        const formAlert = document.getElementById('review-form-alert');
+        
+        let isRatingLocked = false;
+        let currentEventId = null;
+        
+        // Open Modal handler
+        document.querySelectorAll('.open-review-modal').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-event-id');
+                const name = btn.getAttribute('data-event-name');
+                currentEventId = id;
+                
+                modalEventName.textContent = name;
+                eventIdInput.value = id;
+                
+                // Reset form
+                isRatingLocked = false;
+                raterFill.style.width = '0%';
+                ratingDisplay.textContent = '0.0';
+                ratingInput.value = '0';
+                messageInput.value = '';
+                formAlert.classList.add('d-none');
+                submitBtn.disabled = false;
+                
+                // Load existing reviews
+                loadReviews(id);
+            });
+        });
+
+        // Interactive Stars
+        rater.addEventListener('mousemove', (e) => {
+            if (isRatingLocked) return;
+            const rect = rater.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100)); // 0 to 100
+            
+            // Map percentage to 5.0 with 0.2 precision
+            const rawScore = (percentage / 100) * 5;
+            let precisionScore = (Math.round(rawScore * 5) / 5);
+            if (precisionScore < 0.2) precisionScore = 0.2; // Min rating
+            if (precisionScore > 5.0) precisionScore = 5.0; // Max rating
+            
+            raterFill.style.width = `${(precisionScore / 5) * 100}%`;
+            ratingDisplay.textContent = precisionScore.toFixed(1);
+        });
+
+        rater.addEventListener('mouseleave', () => {
+            if (!isRatingLocked) {
+                raterFill.style.width = '0%';
+                ratingDisplay.textContent = '0.0';
+            }
+        });
+
+        rater.addEventListener('click', (e) => {
+            const rect = rater.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+            
+            const rawScore = (percentage / 100) * 5;
+            let precisionScore = (Math.round(rawScore * 5) / 5);
+            if (precisionScore < 0.2) precisionScore = 0.2;
+            if (precisionScore > 5.0) precisionScore = 5.0;
+            
+            ratingInput.value = precisionScore.toFixed(1);
+            raterFill.style.width = `${(precisionScore / 5) * 100}%`;
+            ratingDisplay.textContent = precisionScore.toFixed(1);
+            isRatingLocked = true;
+            
+            // Quick flash
+            rater.style.transform = 'scale(0.95)';
+            setTimeout(() => rater.style.transform = 'scale(1)', 100);
+            formAlert.classList.add('d-none');
+        });
+
+        // Fetch Reviews
+        function loadReviews(eventId) {
+            reviewsFeed.innerHTML = '<div class="text-center text-secondary small py-3"><div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>Chargement des avis...</div>';
+            
+            fetch(`/events/${eventId}/reviews`)
+                .then(res => res.json())
+                .then(data => {
+                    modalReviewCount.textContent = data.reviewCount;
+                    renderReviews(data.reviews);
+                })
+                .catch(err => {
+                    console.error(err);
+                    reviewsFeed.innerHTML = '<div class="text-center text-danger small py-3">Erreur lors du chargement des avis.</div>';
+                });
+        }
+        
+        function renderReviews(reviews) {
+            if (reviews.length === 0) {
+                reviewsFeed.innerHTML = '<div class="text-center text-secondary small py-4 bg-black bg-opacity-25 rounded border border-secondary border-opacity-10">Aucun avis pour le moment.<br>Soyez le premier à partager votre expérience !</div>';
+                return;
+            }
+            
+            let html = '';
+            reviews.forEach(r => {
+                const percentage = (r.rating / 5) * 100;
+                
+                const date = new Date(r.createdAt);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffStr = diffDays > 0 ? `Il y a ${diffDays} jour(s)` : "Aujourd'hui";
+                
+                const avatarStr = r.userAvatar 
+                    ? `<img src="/uploads/profiles/${r.userAvatar}" class="rounded-circle" width="32" height="32" style="object-fit: cover;">`
+                    : `<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 32px; height: 32px; font-weight: bold;">${r.username.charAt(0).toUpperCase()}</div>`;
+                
+                html += `
+                    <div class="p-3 rounded border border-secondary border-opacity-25" style="background-color: rgba(255,255,255,0.03);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                ${avatarStr}
+                                <div>
+                                    <div class="fw-bold fs-6 lh-1">${r.username}</div>
+                                    <div class="text-secondary" style="font-size: 0.75rem;">${diffStr}</div>
+                                </div>
+                            </div>
+                            <div class="position-relative" style="width: 80px; height: 16px;">
+                                <div class="position-absolute top-0 start-0 d-flex gap-1 text-secondary" style="font-size: 0.8rem;">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                </div>
+                                <div class="position-absolute top-0 start-0 h-100 overflow-hidden text-warning" style="font-size: 0.8rem; width: ${percentage}%;">
+                                    <div class="d-flex gap-1" style="width: 80px;">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        ${r.message ? `<p class="mb-0 text-white-50 fs-6" style="word-wrap: break-word;">${r.message}</p>` : ''}
+                    </div>
+                `;
+            });
+            reviewsFeed.innerHTML = html;
+        }
+
+        // Submit Review
+        submitBtn.addEventListener('click', () => {
+            const rating = parseFloat(ratingInput.value);
+            const message = messageInput.value.trim();
+            
+            if (rating < 0.2 || rating > 5.0) {
+                showAlert('danger', 'Veuillez sélectionner une note en cliquant sur les étoiles.');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.submit-text').classList.add('d-none');
+            submitBtn.querySelector('.spinner-border').classList.remove('d-none');
+            
+            fetch(`/events/${currentEventId}/review/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating, message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.submit-text').classList.remove('d-none');
+                submitBtn.querySelector('.spinner-border').classList.add('d-none');
+                
+                if (data.success) {
+                    showAlert('success', data.message);
+                    
+                    // Reload reviews instantly
+                    loadReviews(currentEventId);
+                    
+                    // Update main cards averages live
+                    updateEventCardAverages(currentEventId, data.averageRating, data.reviewCount);
+                    
+                    // Reset inputs
+                    isRatingLocked = false;
+                    raterFill.style.width = '0%';
+                    ratingDisplay.textContent = '0.0';
+                    ratingInput.value = '0';
+                    messageInput.value = '';
+                } else {
+                    showAlert('danger', data.error || 'Erreur lors de la soumission.');
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.submit-text').classList.remove('d-none');
+                submitBtn.querySelector('.spinner-border').classList.add('d-none');
+                showAlert('danger', 'Erreur réseau.');
+                console.error(err);
+            });
+        });
+
+        function showAlert(type, msg) {
+            formAlert.className = `alert alert-${type} mt-3 p-2 small text-center mb-0`;
+            formAlert.textContent = msg;
+            formAlert.classList.remove('d-none');
+        }
+        
+        function updateEventCardAverages(id, avg, count) {
+            const formattedAvg = parseFloat(avg).toFixed(1);
+            const htmlContent = count > 0 
+                ? `<span class="text-warning fw-bold" style="font-size: 0.95rem;">${formattedAvg}</span>
+                   <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));"></i>
+                   <span class="text-white-50 ms-1" style="font-size: 0.8rem;">(${count} avis)</span>`
+                : `<span class="text-white-50 fst-italic" style="font-size: 0.85rem;">Aucun avis</span>`;
+            
+            // Update data attributes so sorting still works dynamically
+            document.querySelectorAll(`.my-event-item[data-id="${id}"]`).forEach(el => el.setAttribute('data-rating', avg));
+            document.querySelectorAll(`.all-event-item[data-id="${id}"]`).forEach(el => el.setAttribute('data-rating', avg));
+            
+            const myCard = document.getElementById(`rating-display-my-${id}`);
+            if (myCard) myCard.innerHTML = htmlContent;
+            
+            const allCard = document.getElementById(`rating-display-all-${id}`);
+            if (allCard) allCard.innerHTML = htmlContent;
+        }
+    }
 });
 </script>
 {% endblock %}

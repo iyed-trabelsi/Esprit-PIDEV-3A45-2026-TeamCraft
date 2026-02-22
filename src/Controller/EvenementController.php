@@ -92,8 +92,8 @@ final class EvenementController extends AbstractController
                     $errors[] = $msg;
                     $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
                 }
-                if ($imageFile->getSize() > 2 * 1024 * 1024) {
-                    $msg = 'L\'image ne doit pas dépasser 2 Mo.';
+                if ($imageFile->getSize() > 3 * 1024 * 1024) {
+                    $msg = 'L\'image ne doit pas dépasser 3 Mo.';
                     $errors[] = $msg;
                     $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
                 }
@@ -171,8 +171,8 @@ final class EvenementController extends AbstractController
                     $errors[] = $msg;
                     $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
                 }
-                if ($imageFile->getSize() > 2 * 1024 * 1024) {
-                    $msg = 'L\'image ne doit pas dépasser 2 Mo.';
+                if ($imageFile->getSize() > 3 * 1024 * 1024) {
+                    $msg = 'L\'image ne doit pas dépasser 3 Mo.';
                     $errors[] = $msg;
                     $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
                 }

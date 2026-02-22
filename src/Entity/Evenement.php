@@ -63,9 +63,19 @@ class Evenement
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: Participation::class, orphanRemoval: true)]
     private Collection $participations;
 
+    #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: EventReview::class, orphanRemoval: true)]
+    private Collection $reviews;
+
+    #[ORM\Column(type: 'float', options: ['default' => 0])]
+    private ?float $averageRating = 0.0;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private ?int $reviewCount = 0;
+
     public function __construct()
     {
         $this->participations = new ArrayCollection();
+        $this->reviews = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -165,6 +175,58 @@ class Evenement
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EventReview>
+     */
+    public function getReviews(): Collection
+    {
+        return $this->reviews;
+    }
+
+    public function addReview(EventReview $review): static
+    {
+        if (!$this->reviews->contains($review)) {
+            $this->reviews->add($review);
+            $review->setEvenement($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReview(EventReview $review): static
+    {
+        if ($this->reviews->removeElement($review)) {
+            // set the owning side to null (unless already changed)
+            if ($review->getEvenement() === $this) {
+                $review->setEvenement(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAverageRating(): ?float
+    {
+        return $this->averageRating;
+    }
+
+    public function setAverageRating(float $averageRating): static
+    {
+        $this->averageRating = $averageRating;
+        return $this;
+    }
+
+    public function getReviewCount(): ?int
+    {
+        return $this->reviewCount;
+    }
+
+    public function setReviewCount(int $reviewCount): static
+    {
+        $this->reviewCount = $reviewCount;
         return $this;
     }
 

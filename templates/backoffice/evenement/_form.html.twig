@@ -1,6 +1,37 @@
 {{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false', enctype: 'multipart/form-data' } }) }}
     {{ form_errors(form) }}
     <div class="admin-form-widgets">
+        
+        <!-- AI Suggestion Area -->
+        <div class="mb-4">
+            <button type="button" id="ai-generate-btn-back" class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius: 8px; border-width: 2px;">
+                <i class="bi bi-magic me-2"></i>Suggérer le moment optimal avec l'IA
+            </button>
+            <!-- Hidden button for details, appears after generation -->
+            <button type="button" id="ai-details-btn-back" class="btn btn-sm text-info w-100 mt-2 d-none d-flex align-items-center justify-content-center gap-1" style="background: transparent; border: none; text-decoration: underline;" data-bs-toggle="modal" data-bs-target="#aiDetailsModalBack">
+                <i class="bi bi-info-circle"></i> Voir les détails de la génération
+            </button>
+        </div>
+
+        <!-- AI Details Modal -->
+        <div class="modal fade" id="aiDetailsModalBack" tabindex="-1" aria-labelledby="aiDetailsModalBackLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-light" style="border: 1px solid rgba(13, 202, 240, 0.3);">
+                    <div class="modal-header border-secondary border-opacity-25">
+                        <h5 class="modal-title" id="aiDetailsModalBackLabel"><i class="bi bi-robot text-info me-2"></i>Rapport d'Intelligence Artificielle</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info bg-transparent border-0 p-0 m-0" style="color: rgba(255,255,255,0.9);">
+                            <span id="ai-reasoning-text-back"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="mb-4">
             {{ form_label(form.nomEvenement, 'Nom de l\'événement', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
             <div class="input-group">
@@ -71,7 +102,7 @@
                 <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-image"></i></span>
                 {{ form_widget(form.imageFile, { 'attr': {'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'} }) }}
             </div>
-            <div class="form-text mt-1" style="color: rgba(255, 255, 255, 0.6) !important;">Formats acceptés : jpeg, png, webp — Taille max : 2 Mo.</div>
+            <div class="form-text mt-1" style="color: rgba(255, 255, 255, 0.6) !important;">Formats acceptés : jpeg, png, webp — Taille max : 3 Mo.</div>
             {{ form_errors(form.imageFile) }}
         </div>
     </div>
@@ -83,3 +114,53 @@
         </button>
     </div>
 {{ form_end(form) }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnBack = document.getElementById('ai-generate-btn-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', function(e) {
+            e.preventDefault();
+            const originalText = btnBack.innerHTML;
+            btnBack.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyse historique en cours...';
+            btnBack.disabled = true;
+
+            fetch('/api/events/ai-generate')
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success && response.data) {
+                        const data = response.data;
+                        const nomInput = document.querySelector('[id$="_nomEvenement"]');
+                        const typeInput = document.querySelector('[id$="_typeEvenement"]');
+                        const debutInput = document.querySelector('[id$="_dateDebut"]');
+                        const finInput = document.querySelector('[id$="_dateFin"]');
+                        
+                        if (data.nomEvenement && nomInput) nomInput.value = data.nomEvenement;
+                        if (data.typeEvenement && typeInput) typeInput.value = data.typeEvenement;
+                        if (data.dateDebut && debutInput) debutInput.value = data.dateDebut;
+                        if (data.dateFin && finInput) finInput.value = data.dateFin;
+                        
+                        const detailsBtn = document.getElementById('ai-details-btn-back');
+                        const reasoningText = document.getElementById('ai-reasoning-text-back');
+                        
+                        if (detailsBtn && reasoningText) {
+                            reasoningText.innerText = data.reasoning || "Optimisé par l'IA";
+                            detailsBtn.classList.remove('d-none');
+                            // Automatically open the modal for the user to see the details
+                            const modalElement = document.getElementById('aiDetailsModalBack');
+                            if (modalElement) {
+                                const aiModal = new bootstrap.Modal(modalElement);
+                                aiModal.show();
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error("AI Fetch Error: ", err))
+                .finally(() => {
+                    btnBack.innerHTML = originalText;
+                    btnBack.disabled = false;
+                });
+        });
+    }
+});
+</script>
