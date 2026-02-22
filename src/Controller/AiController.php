@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Post;
+use App\Repository\PostRepository;
 use App\Service\SmartWritingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,7 +14,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class AiController extends AbstractController
 {
     public function __construct(
-        private SmartWritingService $smartWritingService
+        private SmartWritingService $smartWritingService,
+        private PostRepository $postRepository
     ) {
     }
 
@@ -34,6 +37,41 @@ class AiController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'improvedText' => $improvedText,
+        ]);
+    }
+
+    #[Route('/best-comment/{postId}', name: 'app_ai_best_comment', methods: ['GET'])]
+    public function bestComment(int $postId): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        $post = $this->postRepository->find($postId);
+        if (!$post) {
+            return new JsonResponse(['success' => false, 'message' => 'Post not found'], 404);
+        }
+
+        // Count top-level comments with content
+        $validComments = array_filter(
+            $post->getComments()->toArray(),
+            fn($c) => $c->getParent() === null && !empty(trim((string) $c->getContenu()))
+        );
+
+        if (count($validComments) < 2) {
+            return new JsonResponse([
+                'success'         => true,
+                'best_comment_id' => null,
+                'confidence'      => 0.0,
+                'reason'          => 'Pas assez de commentaires pour analyser.',
+            ]);
+        }
+
+        $result = $this->smartWritingService->findBestComment($post);
+
+        return new JsonResponse([
+            'success'         => true,
+            'best_comment_id' => $result['best_comment_id'],
+            'confidence'      => $result['confidence'],
+            'reason'          => $result['reason'],
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Post;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Psr\Log\LoggerInterface;
@@ -173,5 +174,84 @@ class SmartWritingService
         }
 
         return "Tone/Goal: $toneInstruction\n\nText to rewrite:\n$text";
+    }
+
+    /**
+     * Ask the AI to identify the single best comment on a Post.
+     *
+     * Returns an array: ['best_comment_id' => int|null, 'confidence' => float, 'reason' => string]
+     */
+    public function findBestComment(Post $post): array
+    {
+        $fallback = ['best_comment_id' => null, 'confidence' => 0.0, 'reason' => 'Analyse impossible.'];
+
+        // Build comment list (top-level only, skip empty)
+        $commentLines = [];
+        foreach ($post->getComments() as $comment) {
+            if ($comment->getParent() !== null) {
+                continue; // skip replies
+            }
+            $text = strip_tags((string) $comment->getContenu());
+            if (empty(trim($text))) {
+                continue;
+            }
+            $commentLines[] = sprintf('[ID:%d] %s: %s', $comment->getId(), $comment->getAuteur()?->getPseudo() ?? 'Anonyme', $text);
+        }
+
+        if (count($commentLines) < 2) {
+            return $fallback;
+        }
+
+        $prompt = "You are a competitive gaming forum analyst.\n\n"
+            . "Post title: " . $post->getTitre() . "\n"
+            . "Post content: " . strip_tags((string) $post->getContenu()) . "\n\n"
+            . "Comments:\n" . implode("\n", $commentLines) . "\n\n"
+            . "Identify which comment provides the best and most complete, helpful, or insightful response to the post. "
+            . "Only choose one. If none provide real value, return null.\n\n"
+            . "Return ONLY valid JSON (no markdown, no explanation) in this exact format:\n"
+            . '{"best_comment_id": <integer or null>, "confidence": <0.0 to 1.0>, "reason": "<one concise sentence>"}';
+
+        try {
+            $response = $this->client->request('POST', self::API_URL, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type'  => 'application/json',
+                    'HTTP-Referer'  => 'https://teamcraft.com',
+                    'X-Title'       => 'TeamCraft Forum',
+                ],
+                'json' => [
+                    'model'    => 'openai/gpt-4o-mini',
+                    'messages' => [
+                        [
+                            'role'    => 'system',
+                            'content' => 'You are a helpful forum analyst. Always respond with only valid JSON, no markdown code blocks.',
+                        ],
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                    'max_tokens'      => 200,
+                    'response_format' => ['type' => 'json_object'],
+                ],
+            ]);
+
+            $rawContent = $response->toArray()['choices'][0]['message']['content'] ?? '{}';
+            // Strip possible markdown fences if model ignores instructions
+            $rawContent = preg_replace('/^```json\s*/i', '', trim($rawContent));
+            $rawContent = preg_replace('/```$/', '', $rawContent);
+            $decoded = json_decode(trim($rawContent), true);
+
+            if (!is_array($decoded) || !array_key_exists('best_comment_id', $decoded)) {
+                return $fallback;
+            }
+
+            return [
+                'best_comment_id' => $decoded['best_comment_id'],
+                'confidence'      => (float) ($decoded['confidence'] ?? 0.0),
+                'reason'          => (string) ($decoded['reason'] ?? ''),
+            ];
+
+        } catch (\Throwable $e) {
+            $this->logger?->error('SmartWritingService::findBestComment error: ' . $e->getMessage());
+            return $fallback;
+        }
     }
 }
