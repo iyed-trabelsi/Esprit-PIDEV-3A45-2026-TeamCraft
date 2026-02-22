@@ -1,0 +1,308 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Dashboard Admin{% endblock %}
+{% block admin_subheading %}Supervisez les joueurs, équipes, offres, événements et le forum.{% endblock %}
+
+{% block admin_content %}
+    {# 1. Section statistiques (KPIs) #}
+    <div class="row g-4 mb-5">
+        <div class="col">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--tc-cyan);">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3 class="h3 fw-bold mb-1">{{ players|length }}</h3>
+                <p class="text-white small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Joueurs actifs</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3 class="h3 fw-bold mb-1">{{ teams|length }}</h3>
+                <p class="text-white small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Équipes</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--tc-neon-green);">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <h3 class="h3 fw-bold mb-1">{{ offers|length }}</h3>
+                <p class="text-white small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Offres en ligne</p>
+            </div>
+        </div>
+         <div class="col">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(234, 179, 8, 0.1); color: #eab308;">
+                    <i class="bi bi-briefcase"></i>
+                </div>
+                <h3 class="h3 fw-bold mb-1">{{ offers|length }}</h3>
+                <p class="text-white small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Offres en cours</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(244, 63, 94, 0.1); color: #f43f5e;">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h3 class="h3 fw-bold mb-1">{{ events|length }}</h3>
+                <p class="text-white small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Événements</p>
+            </div>
+        </div>
+    </div>
+
+    {# 2. Forms Section #}
+    <div class="row g-4 mb-5">
+        {# Carte 1: Informations du joueur #}
+        <div class="col-lg-6">
+            <div class="card-tc p-4 h-100 d-flex flex-column">
+                <h2 class="h5 mb-4 font-display text-uppercase" style="font-size: 1rem; letter-spacing: 0.1em;">Informations du joueur</h2>
+                
+                <div class="row g-4 flex-grow-1">
+                    <div class="col-auto">
+                        <div class="d-flex flex-column align-items-center gap-3">
+                            <div style="width: 100px; height: 100px; border-radius: 12px; background: var(--tc-bg-input); border: 2px dashed var(--tc-border); display: flex; align-items: center; justify-content: center; color: var(--tc-text-muted);">
+                                <i class="bi bi-person-plus" style="font-size: 2rem;"></i>
+                            </div>
+                            <button class="btn btn-sm btn-outline-light w-100 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Téléverser</button>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="mb-3">
+                            <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Pseudo</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ex: ViperStrike">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Email</label>
+                            <input type="email" class="form-control form-control-sm" placeholder="Ex: email@teamcraft.tn">
+                        </div>
+                         <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Discord</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="User#1234">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Région</label>
+                                <select class="form-select form-select-sm">
+                                    <option>EUW</option>
+                                    <option>NA</option>
+                                    <option>KR</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-3 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                    <button class="btn btn-tc-primary w-100">
+                        <i class="bi bi-plus-lg me-2"></i>Créer le joueur
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# Carte 2: Paramètres compétitifs #}
+        <div class="col-lg-6">
+            <div class="card-tc p-4 h-100">
+                <h2 class="h5 mb-4 font-display text-uppercase" style="font-size: 1rem; letter-spacing: 0.1em;">Paramètres compétitifs</h2>
+                
+                <div class="row g-4 align-items-center h-75">
+                    <div class="col-12">
+                         <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Jeu Principal</label>
+                        <select class="form-select form-select-sm">
+                            <option selected>VALORANT</option>
+                            <option>CS2</option>
+                            <option>League of Legends</option>
+                            <option>Overwatch 2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                         <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Rang / Niveau</label>
+                        <select class="form-select form-select-sm">
+                            <option>Bronze</option>
+                            <option>Silver</option>
+                            <option>Gold</option>
+                            <option>Platinium</option>
+                            <option selected>Diamond</option>
+                            <option>Ascendant</option>
+                            <option>Immortal</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                         <label class="form-label small text-white text-uppercase mb-1" style="font-size: 0.7rem;">Rôle / Poste</label>
+                        <select class="form-select form-select-sm">
+                            <option selected>Duelliste</option>
+                            <option>Contrôleur</option>
+                            <option>Sentinelle</option>
+                            <option>Initiateur</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# 3. Table Offres en cours #}
+    <div class="card-tc p-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+             <h2 class="h5 mb-0 font-display" style="font-size: 1.1rem;">Offres en cours</h2>
+             <a href="{{ path('admin_offers') }}" class="text-link-green">VOIR TOUTES LES OFFRES</a>
+        </div>
+
+        <div class="table-responsive rounded-3 overflow-hidden border border-secondary border-opacity-25">
+            <table class="table table-hover align-middle text-white mb-0 bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                <tr>
+                    <th class="border-0 ps-4">Offre / Équipe</th>
+                    <th class="border-0">Jeu</th>
+                    <th class="border-0">Statut</th>
+                    <th class="border-0 text-end pe-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for offer in offers %}
+                    <tr>
+                        <td class="border-0 ps-4 py-3 bg-input-match">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center fw-bold text-dark" 
+                                     style="width: 40px; height: 40px; background: #fbbf24; font-size: 1.2rem;">
+                                     <i class="bi bi-controller"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white">{{ offer.title }}</div>
+                                    {% if offer.team %}
+                                        <div class="text-muted small" style="font-size: 0.75rem;">{{ offer.team }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="border-0 text-white bg-input-match">{{ offer.game }}</td>
+                        <td class="border-0 bg-input-match">
+                            {% set statusClass = offer.status == 'En ligne' ? 'badge-online' : 'bg-secondary text-white-50' %}
+                            <span class="badge-status {{ statusClass }}">
+                                {{ offer.status }}
+                            </span>
+                        </td>
+                        <td class="border-0 text-end pe-4 bg-input-match">
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <button class="action-btn edit" title="Modifier">
+                                    <img src="{{ asset('images/icons/crud-edit.png') }}" alt="Edit">
+                                </button>
+                                <button class="action-btn view" title="Voir">
+                                    <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                </button>
+                                <button class="action-btn delete" title="Supprimer">
+                                    <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted border-0">
+                            Aucune offre en cours
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4">
+            <a href="{{ path('admin_offers') }}" class="btn btn-tc-green">
+                Voir toutes les offres
+            </a>
+        </div>
+    </div>
+
+    {# 4. Rubriques (5 par page) #}
+    <div class="card-tc p-4 mt-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0 font-display">Rubriques</h2>
+            <a href="{{ path('admin_rubriques') }}" class="text-link-green">VOIR TOUTES</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle text-white mb-0" style="font-size: 0.85rem;">
+                <thead class="custom-table-header"><tr><th class="border-0 py-2">Nom</th><th class="border-0 py-2">Auteur</th><th class="border-0 py-2">État</th></tr></thead>
+                <tbody>
+                {% for rubrique in rubriques %}
+                    <tr><td class="py-2">{{ rubrique.nomRubrique }}</td><td class="py-2">{{ rubrique.auteur ? rubrique.auteur.pseudo : '—' }}</td><td class="py-2"><span class="badge-status {{ rubrique.etat == 'active' ? 'badge-online' : 'bg-secondary' }}">{{ rubrique.etat == 'active' ? 'Actif' : 'Archivé' }}</span></td></tr>
+                {% else %}
+                    <tr><td colspan="3" class="py-3 text-center text-muted">Aucune rubrique.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span class="small text-muted">{{ rubriques|length }} sur {{ rubriquesTotal }} rubriques</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ rubriquesCurrentPage == 1 ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage - 1, page_posts: postsCurrentPage, page_comments: commentsCurrentPage }) }}">Précédent</a></li>
+                    <li class="page-item {{ rubriquesCurrentPage == rubriquesMaxPages ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage + 1, page_posts: postsCurrentPage, page_comments: commentsCurrentPage }) }}">Suivant</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    {# 5. Posts (5 par page) #}
+    <div class="card-tc p-4 mt-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0 font-display">Posts</h2>
+            <a href="{{ path('admin_posts') }}" class="text-link-green">VOIR TOUS</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle text-white mb-0" style="font-size: 0.85rem;">
+                <thead class="custom-table-header"><tr><th class="border-0 py-2">Titre</th><th class="border-0 py-2">Rubrique</th><th class="border-0 py-2">Statut</th></tr></thead>
+                <tbody>
+                {% for post in posts %}
+                    <tr><td class="py-2">{{ post.titre }}</td><td class="py-2">{{ post.rubrique ? post.rubrique.nomRubrique : '—' }}</td><td class="py-2"><span class="badge-status {{ post.statut == 'published' ? 'badge-online' : 'bg-secondary' }}">{{ post.statut == 'published' ? 'Publié' : 'Archivé' }}</span></td></tr>
+                {% else %}
+                    <tr><td colspan="3" class="py-3 text-center text-muted">Aucun post.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span class="small text-muted">{{ posts|length }} sur {{ postsTotal }} posts</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ postsCurrentPage == 1 ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage - 1, page_comments: commentsCurrentPage }) }}">Précédent</a></li>
+                    <li class="page-item {{ postsCurrentPage == postsMaxPages ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage + 1, page_comments: commentsCurrentPage }) }}">Suivant</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    {# 6. Commentaires (5 par page) #}
+    <div class="card-tc p-4 mt-4" style="background: var(--tc-bg-input);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0 font-display">Commentaires</h2>
+            <a href="{{ path('admin_comments') }}" class="text-link-green">VOIR TOUS</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle text-white mb-0" style="font-size: 0.85rem;">
+                <thead class="custom-table-header"><tr><th class="border-0 py-2">Contenu</th><th class="border-0 py-2">Auteur</th><th class="border-0 py-2">Post</th></tr></thead>
+                <tbody>
+                {% for comment in comments %}
+                    <tr><td class="py-2">{% set txt = comment.contenu %}{{ txt|length > 40 ? txt|slice(0, 40) ~ '…' : txt }}</td><td class="py-2">{{ comment.auteur ? comment.auteur.pseudo : '—' }}</td><td class="py-2">{{ comment.post ? comment.post.titre : '—' }}</td></tr>
+                {% else %}
+                    <tr><td colspan="3" class="py-3 text-center text-muted">Aucun commentaire.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span class="small text-muted">{{ comments|length }} sur {{ commentsTotal }} commentaires</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ commentsCurrentPage == 1 ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage, page_comments: commentsCurrentPage - 1 }) }}">Précédent</a></li>
+                    <li class="page-item {{ commentsCurrentPage == commentsMaxPages ? 'disabled' : '' }}"><a class="page-link" href="{{ path('admin_dashboard', { page_rubriques: rubriquesCurrentPage, page_posts: postsCurrentPage, page_comments: commentsCurrentPage + 1 }) }}">Suivant</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endblock %}

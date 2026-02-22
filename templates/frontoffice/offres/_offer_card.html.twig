@@ -1,0 +1,23 @@
+<div class="col-12 col-sm-6 col-lg-4">
+    <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative">
+        <!-- Favorite Heart Icon -->
+        {% if app.user %}
+            {% set is_favorited = favoriteIds is defined and offre.id in favoriteIds %}
+            <button class="favorite-btn position-absolute top-0 end-0 m-3 btn btn-link p-0" 
+                    data-offer-id="{{ offre.id }}" 
+                    style="background: none; border: none; font-size: 1.5rem; color: #dc2626; cursor: pointer; z-index: 10;">
+                <i class="bi bi-heart{{ is_favorited ? '-fill' : '' }}"></i>
+            </button>
+        {% endif %}
+        
+        <div class="discovery-avatar mx-auto mb-3">{{ offre.team.name|first|upper }}</div>
+        <h3 class="discovery-card-title mb-1">{{ offre.title }}</h3>
+        <p class="discovery-card-subtitle mb-3 text-muted small text-uppercase fw-bold">{{ offre.team.name }}</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+            {% set gameClass = offre.game|lower == 'league of legends' ? 'lol' : offre.game|lower %}
+            <span class="badge-game {{ gameClass }}">{{ offre.game }}</span>
+            <span class="badge-rank purple">{{ offre.rank }}</span>
+        </div>
+        <a href="{{ path('app_offres_show', { id: offre.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Offer</a>
+    </div>
+</div>

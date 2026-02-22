@@ -1,0 +1,294 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ post.titre }} - Forum TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_forum') }}" class="text-secondary text-decoration-none">Forum</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_forum_rubrique_show', { id: post.rubrique.id }) }}" class="text-secondary text-decoration-none">{{ post.rubrique.nomRubrique }}</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ post.titre }}</li>
+            </ol>
+        </nav>
+
+        <div class="discovery-card p-4 p-md-5 mb-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge-game valorant">{{ post.typePost }}</span>
+                <span class="badge-rank green">{{ post.nbVues }} vues</span>
+                <span class="badge-rank purple">{{ post.nbLikes }} likes</span>
+            </div>
+            <h1 class="h2 fw-bold discovery-card-title mb-2">{{ post.titre }}</h1>
+            <p class="discovery-card-subtitle mb-3">Par {{ post.auteur.pseudo|default(post.auteur.username) }} · {{ post.dateCreation|date('d/m/Y à H:i') }}</p>
+            {% if post.image %}
+                <div class="mb-3">
+                    <img src="{{ asset('uploads/posts/' ~ post.image) }}" alt="" class="img-fluid rounded" style="max-height: 300px; object-fit: cover;">
+                </div>
+            {% endif %}
+            <div class="post-body" style="color: var(--tc-text); line-height: 1.6;">{{ post.contenu|nl2br }}</div>
+            {% if canEdit %}
+                <div class="mt-4 pt-3 border-top border-secondary d-flex gap-2">
+                    <a href="{{ path('app_forum_post_edit', { id: post.id }) }}" class="btn btn-success fw-bold" style="font-size: 0.9rem;">Edit Post</a>
+                    <form action="{{ path('app_forum_post_delete', { id: post.id }) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce post ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_post_' ~ post.id) }}">
+                        <button type="submit" class="btn btn-danger fw-bold" style="font-size: 0.9rem;">Delete Post</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+
+        <h2 class="h5 fw-bold mb-3" id="comments">Commentaires ({{ comments|length }})</h2>
+
+        {% if app.user %}
+            <div class="card bg-dark border-0 shadow mb-4" style="background-color: #16161a !important; border-radius: 0.75rem;">
+                <div class="card-body p-4">
+                    <h3 class="h6 fw-bold text-white mb-3">Ajouter un commentaire</h3>
+                    {{ form_start(commentForm, { 'action': path('app_forum_comment_new', { id: post.id }), 'method': 'POST' }) }}
+                    <div class="mb-3">
+                        {{ form_label(commentForm.contenu, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                        {{ form_widget(commentForm.contenu, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                        {{ form_errors(commentForm.contenu) }}
+                    </div>
+                    <button type="submit" class="btn btn-success px-4 fw-bold">Publish</button>
+                    {{ form_end(commentForm) }}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="d-flex flex-column gap-3">
+            {% for comment in comments %}
+                <div class="discovery-card p-4" id="comment-{{ comment.id }}">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold discovery-card-title">{{ comment.auteur.pseudo|default(comment.auteur.username) }}</span>
+                            <span class="discovery-card-subtitle small">{{ comment.dateCommentaire|date('d/m/Y H:i') }}</span>
+                        </div>
+                        {% if app.user and comment.auteur and comment.auteur.id == app.user.id %}
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('app_forum_comment_edit', { id: comment.id }) }}" class="btn btn-success btn-sm fw-bold" style="font-size: 0.85rem;">Edit</a>
+                                <form action="{{ path('app_forum_comment_delete', { id: comment.id }) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ comment.id) }}">
+                                    <button type="submit" class="btn btn-danger btn-sm fw-bold" style="font-size: 0.85rem;">Delete</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <p class="mb-0" style="color: var(--tc-text);">{{ comment.contenu|nl2br }}</p>
+
+                    {% if app.user %}
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-reply-toggle="reply-form-{{ comment.id }}" aria-expanded="false">
+                                Reply
+                            </button>
+                            <div id="reply-form-{{ comment.id }}" class="reply-form mt-3 p-3 rounded d-none" style="background: var(--tc-bg-input); border: 1px solid var(--tc-border);">
+                                <form class="reply-ajax-form" action="{{ path('app_forum_comment_new', { id: post.id }) }}" method="post" data-parent-id="{{ comment.id }}" data-parent-type="comment">
+                                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                    <input type="hidden" name="{{ commentForm._token.vars.full_name }}" value="{{ commentForm._token.vars.value }}">
+                                    <div class="mb-2">
+                                        <label class="form-label text-white-50 small">Votre réponse</label>
+                                        <textarea name="comment[contenu]" class="form-control form-control-sm bg-black text-white border-secondary" rows="2" placeholder="Écrivez votre réponse..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm fw-bold">Reply</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-reply-cancel="reply-form-{{ comment.id }}">Annuler</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="replies-list" data-parent-id="{{ comment.id }}">
+                    {% for reply in comment.replies %}
+                        <div class="ms-4 mt-3 p-3 rounded" style="background: var(--tc-bg-input); border-left: 3px solid var(--tc-cyan);">
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <span class="fw-bold small">{{ reply.auteur.pseudo|default(reply.auteur.username) }}</span>
+                                <span class="discovery-card-subtitle small">{{ reply.dateCommentaire|date('d/m/Y H:i') }}</span>
+                                {% if app.user and reply.auteur and reply.auteur.id == app.user.id %}
+                                    <div class="d-flex gap-2 ms-auto">
+                                        <a href="{{ path('app_forum_comment_edit', { id: reply.id }) }}" class="btn btn-success btn-sm fw-bold" style="font-size: 0.8rem;">Modifier</a>
+                                        <form action="{{ path('app_forum_comment_delete', { id: reply.id }) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ reply.id) }}">
+                                            <button type="submit" class="btn btn-danger btn-sm fw-bold" style="font-size: 0.8rem;">Supprimer</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <p class="mb-0 small" style="color: var(--tc-text);">{{ reply.contenu|nl2br }}</p>
+                            {% if app.user %}
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-reply-toggle="reply-form-reply-{{ reply.id }}" aria-expanded="false">
+                                        Répondre
+                                    </button>
+                                    <div id="reply-form-reply-{{ reply.id }}" class="reply-form mt-2 p-2 rounded d-none" style="background: rgba(0,0,0,0.3); border: 1px solid var(--tc-border);">
+                                        <form class="reply-ajax-form" action="{{ path('app_forum_comment_new', { id: post.id }) }}" method="post" data-parent-id="{{ reply.id }}" data-parent-type="reply">
+                                            <input type="hidden" name="parent_id" value="{{ reply.id }}">
+                                            <input type="hidden" name="{{ commentForm._token.vars.full_name }}" value="{{ commentForm._token.vars.value }}">
+                                            <div class="mb-2">
+                                                <textarea name="comment[contenu]" class="form-control form-control-sm bg-black text-white border-secondary" rows="2" placeholder="Répondre..."></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold">Répondre</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-reply-cancel="reply-form-reply-{{ reply.id }}">Annuler</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="subreplies-list" data-parent-id="{{ reply.id }}">
+                            {% for subReply in reply.replies %}
+                                <div class="ms-3 mt-2 p-2 rounded small" style="background: rgba(14, 165, 233, 0.1); border-left: 2px solid var(--tc-cyan);">
+                                    <span class="fw-bold">{{ subReply.auteur.pseudo|default(subReply.auteur.username) }}</span>
+                                    <span class="text-white-50">{{ subReply.dateCommentaire|date('d/m/Y H:i') }}</span>
+                                    {% if app.user and subReply.auteur and subReply.auteur.id == app.user.id %}
+                                        <a href="{{ path('app_forum_comment_edit', { id: subReply.id }) }}" class="btn btn-success btn-sm fw-bold ms-1" style="font-size: 0.75rem;">Modifier</a>
+                                        <form action="{{ path('app_forum_comment_delete', { id: subReply.id }) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ subReply.id) }}">
+                                            <button type="submit" class="btn btn-danger btn-sm fw-bold" style="font-size: 0.75rem;">Supprimer</button>
+                                        </form>
+                                    {% endif %}
+                                    <p class="mb-0 mt-1" style="color: var(--tc-text);">{{ subReply.contenu|nl2br }}</p>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="discovery-card p-4 text-center discovery-card-subtitle">
+                    Aucun commentaire. Soyez le premier à répondre !
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <a href="{{ path('app_forum_rubrique_show', { id: post.rubrique.id }) }}" class="discovery-view-all text-decoration-none">← Retour à {{ post.rubrique.nomRubrique }}</a>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    function nl2br(text) {
+        return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+    function buildReplyHtml(c, config) {
+        var contenu = nl2br(c.contenu);
+        var actions = '';
+        if (c.tokenDelete) {
+            actions = '<div class="d-flex gap-2 ms-auto"><a href="' + escapeHtml(c.editUrl) + '" class="btn btn-success btn-sm fw-bold" style="font-size:0.8rem">Modifier</a>' +
+                '<form action="' + escapeHtml(c.deleteUrl) + '" method="post" class="d-inline" onsubmit="return confirm(\'Supprimer ce commentaire ?\');">' +
+                '<input type="hidden" name="_token" value="' + escapeHtml(c.tokenDelete) + '">' +
+                '<button type="submit" class="btn btn-danger btn-sm fw-bold" style="font-size:0.8rem">Supprimer</button></form></div>';
+        }
+        if (c.isSubreply) {
+            return '<div class="ms-3 mt-2 p-2 rounded small" style="background:rgba(14,165,233,0.1);border-left:2px solid var(--tc-cyan)" id="comment-' + c.id + '">' +
+                '<span class="fw-bold">' + escapeHtml(c.auteur) + '</span> <span class="text-white-50">' + escapeHtml(c.dateCommentaire) + '</span> ' + actions +
+                '<p class="mb-0 mt-1" style="color:var(--tc-text)">' + contenu + '</p></div>';
+        }
+        var replyBtn = '';
+        if (config.canReply) {
+            var formId = 'reply-form-reply-' + c.id;
+            replyBtn = '<div class="mt-2"><button type="button" class="btn btn-outline-secondary btn-sm" data-reply-toggle="' + formId + '">Répondre</button>' +
+                '<div id="' + formId + '" class="reply-form mt-2 p-2 rounded d-none" style="background:rgba(0,0,0,0.3);border:1px solid var(--tc-border)">' +
+                '<form class="reply-ajax-form" action="' + escapeHtml(config.formAction) + '" method="post" data-parent-id="' + c.id + '" data-parent-type="reply">' +
+                '<input type="hidden" name="parent_id" value="' + c.id + '">' +
+                '<input type="hidden" name="' + escapeHtml(config.tokenName) + '" value="' + escapeHtml(config.tokenValue) + '">' +
+                '<div class="mb-2"><textarea name="comment[contenu]" class="form-control form-control-sm bg-black text-white border-secondary" rows="2" placeholder="Répondre..."></textarea></div>' +
+                '<button type="submit" class="btn btn-success btn-sm fw-bold">Répondre</button>' +
+                '<button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-reply-cancel="' + formId + '">Annuler</button></form></div></div>';
+        }
+        return '<div class="ms-4 mt-3 p-3 rounded" style="background:var(--tc-bg-input);border-left:3px solid var(--tc-cyan)" id="comment-' + c.id + '">' +
+            '<div class="d-flex align-items-center gap-2 mb-1 flex-wrap"><span class="fw-bold small">' + escapeHtml(c.auteur) + '</span>' +
+            '<span class="discovery-card-subtitle small">' + escapeHtml(c.dateCommentaire) + '</span>' + actions + '</div>' +
+            '<p class="mb-0 small" style="color:var(--tc-text)">' + contenu + '</p>' + replyBtn +
+            '<div class="subreplies-list" data-parent-id="' + c.id + '"></div></div>';
+    }
+    function initReplyForms() {
+        var config = {
+            formAction: '{{ path('app_forum_comment_new', { id: post.id }) }}',
+            tokenName: '{{ commentForm._token.vars.full_name }}',
+            tokenValue: '{{ commentForm._token.vars.value }}',
+            canReply: {{ app.user ? 'true' : 'false' }}
+        };
+        document.querySelectorAll('.reply-ajax-form').forEach(function(form) {
+            if (form.dataset.ajaxInit) return;
+            form.dataset.ajaxInit = '1';
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var btn = form.querySelector('button[type="submit"]');
+                var origText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = 'Envoi...';
+                var fd = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        var c = data.comment;
+                        var container = document.querySelector('.replies-list[data-parent-id="' + c.parentId + '"]');
+                        if (!container) container = document.querySelector('.subreplies-list[data-parent-id="' + c.parentId + '"]');
+                        if (container) {
+                            var div = document.createElement('div');
+                            div.innerHTML = buildReplyHtml(c, config);
+                            container.appendChild(div.firstChild);
+                            initReplyForms();
+                            initToggleButtons();
+                        }
+                        form.reset();
+                        var formWrap = form.closest('.reply-form');
+                        if (formWrap) { formWrap.classList.add('d-none'); }
+                        var toggle = document.querySelector('[data-reply-toggle="' + formWrap.id + '"]');
+                        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                    } else {
+                        alert(data.errors ? data.errors.join(' ') : 'Erreur');
+                    }
+                }).catch(function() { alert('Erreur réseau'); }).finally(function() {
+                    btn.disabled = false;
+                    btn.textContent = origText;
+                });
+            });
+        });
+    }
+    function initToggleButtons() {
+        document.querySelectorAll('[data-reply-toggle]').forEach(function(btn) {
+            if (btn.dataset.toggleInit) return;
+            btn.dataset.toggleInit = '1';
+            btn.addEventListener('click', function() {
+                var id = this.getAttribute('data-reply-toggle');
+                var formEl = document.getElementById(id);
+                if (formEl) {
+                    formEl.classList.toggle('d-none');
+                    this.setAttribute('aria-expanded', formEl.classList.contains('d-none') ? 'false' : 'true');
+                }
+            });
+        });
+        document.querySelectorAll('[data-reply-cancel]').forEach(function(btn) {
+            if (btn.dataset.cancelInit) return;
+            btn.dataset.cancelInit = '1';
+            btn.addEventListener('click', function() {
+                var id = this.getAttribute('data-reply-cancel');
+                var formEl = document.getElementById(id);
+                if (formEl) {
+                    formEl.classList.add('d-none');
+                    var toggleBtn = document.querySelector('[data-reply-toggle="' + id + '"]');
+                    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        initReplyForms();
+        initToggleButtons();
+    });
+})();
+</script>
+{% endblock %}

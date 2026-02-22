@@ -1,0 +1,96 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion du forum{% endblock %}
+{% block admin_subheading %}Modération des topics et contrôle des statuts.{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+        <div class="flex-grow-1" style="max-width: 420px;">
+            <div class="input-group admin-search-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="search" class="form-control" placeholder="Rechercher par titre ou jeu">
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-tc-outline">
+                <i class="bi bi-funnel me-1"></i> Filtrer
+            </button>
+            <button class="btn btn-sm btn-tc-primary">
+                <i class="bi bi-plus-lg me-1"></i> Nouveau topic
+            </button>
+        </div>
+    </div>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Titre</th>
+                        <th class="border-0 px-4 py-3">Jeu</th>
+                        <th class="border-0 px-4 py-3">Réponses</th>
+                        <th class="border-0 px-4 py-3">Statut</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for post in posts %}
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ post.title }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ post.game }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ post.replies }}</td>
+                            <td class="px-4 py-3 bg-input-match">
+                                {% if post.status == 'Ouvert' %}
+                                    <span class="badge-status badge-online">Ouvert</span>
+                                {% elseif post.status == 'Fermé' %}
+                                    <span class="badge-status bg-danger">Fermé</span>
+                                {% else %}
+                                    <span class="badge-status bg-secondary">{{ post.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-end bg-input-match">
+                                <button class="action-btn view" title="Voir">
+                                    <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                </button>
+                                <button class="action-btn edit" title="Modifier">
+                                    <img src="{{ asset('images/icons/crud-edit.png') }}" alt="Edit">
+                                </button>
+                                <button class="action-btn edit" title="Activer / désactiver" style="color: #eab308;">
+                                    <i class="bi bi-toggle-off"></i> {# Keeping toggle as icon or should replacing? User only gave 3 icons. Keeping toggle as is for now #}
+                                </button>
+                                <button class="action-btn delete" title="Supprimer">
+                                    <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">Affichage de {{ posts|length }} sur {{ totalPosts }} topics</span>
+        <nav aria-label="Pagination forum">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_forum', {page: currentPage - 1}) }}">Précédent</a>
+                </li>
+                
+                {% for i in 1..maxPages %}
+                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_forum', {page: i}) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                
+                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_forum', {page: currentPage + 1}) }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
+

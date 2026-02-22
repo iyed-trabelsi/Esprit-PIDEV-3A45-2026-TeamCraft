@@ -1,0 +1,17 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Créer un événement{% endblock %}
+{% block admin_subheading %}Ajouter un nouvel événement.{% endblock %}
+
+{% block admin_content %}
+    <div class="mb-3">
+        <a href="{{ path('admin_events') }}" class="btn btn-sm btn-tc-outline">
+            <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card-tc p-4" style="background: var(--tc-bg-input); max-width: 800px;">
+        {{ include('backoffice/evenement/_form.html.twig') }}
+    </div>
+{% endblock %}
+
