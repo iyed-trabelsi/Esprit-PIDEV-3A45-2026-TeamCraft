@@ -356,4 +356,58 @@ class FrontEventController extends AbstractController
             'is_team_manage' => true
         ]);
     }
+
+    #[Route('/api/my-events/calendar', name: 'app_api_my_events_calendar', methods: ['GET'])]
+    public function calendarData(EntityManagerInterface $entityManager, EvenementRepository $repo): Response
+    {
+        $user = $this->getUser();
+        
+        // Fetch ALL events instead of just participated ones
+        $events = $repo->findAll();
+        
+        $eventsData = [];
+        foreach ($events as $event) {
+            // Sync status using existing logic
+            $this->updateEventStatus($event, $entityManager);
+            
+            // Check if user is participating
+            $isParticipating = false;
+            if ($user) {
+                foreach ($event->getParticipations() as $p) {
+                    if ($p->getUser() === $user) {
+                        $isParticipating = true;
+                        break;
+                    }
+                }
+            }
+
+            // Status-based coloring
+            // Green (#10b981) for Open
+            // Red (#f43f5e) for Closed
+            // Grey (#6c757d) for Over
+            $color = '#10b981'; 
+            if ($event->getStatus() === 'over') {
+                $color = '#6c757d';
+            } elseif ($event->getStatus() === 'closed') {
+                $color = '#f43f5e';
+            }
+
+            $eventsData[] = [
+                'id' => $event->getId(),
+                'title' => ($isParticipating ? '★ ' : '') . $event->getNomEvenement(),
+                'start' => $event->getDateDebut()->format(\DateTime::ISO8601),
+                'end' => $event->getDateFin()->format(\DateTime::ISO8601),
+                'color' => $color,
+                'url' => $this->generateUrl('app_events'),
+                'extendedProps' => [
+                    'status' => $event->getStatus(),
+                    'type' => $event->getTypeEvenement(),
+                    'place' => $event->getPlace()->getNomPlace(),
+                    'isParticipating' => $isParticipating
+                ]
+            ];
+        }
+
+        return $this->json($eventsData);
+    }
 }

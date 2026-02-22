@@ -33,7 +33,199 @@
         font-weight: 700 !important;
         opacity: 1 !important;
     }
+    /* --- Premium Calendar UI --- */
+    .calendar-modal-content {
+        background: rgba(13, 13, 27, 0.96) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .fc { 
+        color: #e2e8f0 !important; 
+        font-family: inherit;
+    }
+    /* Hierarchy: Muted numbers */
+    .fc-daygrid-day-number {
+        color: #94a3b8 !important; /* Soft Slate Gray */
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        padding: 8px !important;
+        text-decoration: none !important;
+    }
+    /* Grid feel */
+    .fc-theme-standard td, .fc-theme-standard th {
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    }
+    .fc-scrollgrid { border: none !important; }
+
+    /* Day Card Feel */
+    .fc-daygrid-day {
+        background: rgba(255, 255, 255, 0.01);
+        transition: background 0.2s ease;
+    }
+    .fc-daygrid-day:hover {
+        background: rgba(6, 182, 212, 0.04) !important;
+    }
+    /* Weekend Shading */
+    .fc-day-sun, .fc-day-sat {
+        background: rgba(0, 0, 0, 0.15) !important;
+    }
+    /* Today Highlight */
+    .fc-day-today {
+        background: rgba(6, 182, 212, 0.06) !important;
+        outline: 1px solid rgba(6, 182, 212, 0.3) !important;
+        outline-offset: -1px;
+    }
+    .fc-day-today .fc-daygrid-day-number {
+        color: var(--tc-cyan) !important;
+        font-weight: 800 !important;
+    }
+
+    /* Header Design */
+    .fc-toolbar-title {
+        font-size: 1.6rem !important;
+        letter-spacing: 2px !important;
+        color: var(--tc-cyan) !important;
+        text-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        font-weight: 800 !important;
+        text-transform: uppercase;
+    }
+    .fc-button-primary {
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+    .fc-button-primary:hover {
+        background: var(--tc-cyan) !important;
+        color: #000 !important;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+    .fc-button-active {
+        background: var(--tc-cyan) !important;
+        color: #000 !important;
+    }
+
+    /* Event Tags (The Major Upgrade) */
+    .fc-event {
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        margin: 2px 4px !important;
+        border: none !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        animation: eventFadeIn 0.4s ease-out backwards;
+        cursor: pointer !important;
+        transition: transform 0.2s ease, filter 0.2s ease !important;
+    }
+    .fc-event:hover {
+        transform: translateY(-1px) scale(1.02);
+        background: rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.5);
+    }
+    /* List View Fixes (Prevent Whiteout) */
+    .fc-list-event:hover td {
+        background: rgba(6, 182, 212, 0.1) !important;
+    }
+    .fc-list-day-side-text, .fc-list-day-text {
+        color: var(--tc-cyan) !important;
+        font-weight: 800 !important;
+    }
+    .fc-list-day-cushion {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    .fc-list-event-title a {
+        color: #e2e8f0 !important;
+        text-decoration: none !important;
+    }
+    .fc-list-table {
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    .fc-list-event {
+        cursor: pointer !important;
+    }
+    @keyframes eventFadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Ultra-Intense Neon Glow Squares --- */
+    .fc-event-square {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        margin-right: 10px;
+        display: inline-block;
+        flex-shrink: 0;
+        position: relative;
+    }
+    .square-open { 
+        background: #00ff88; /* Even brighter green */
+        box-shadow: 0 0 10px #00ff88, 0 0 20px rgba(0, 255, 136, 0.6), 0 0 30px rgba(0, 255, 136, 0.3) !important; 
+        animation: pulse-green 1s infinite cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .square-closed { 
+        background: #ff0044; /* Even brighter red */
+        box-shadow: 0 0 10px #ff0044, 0 0 20px rgba(255, 0, 68, 0.6), 0 0 30px rgba(255, 0, 68, 0.3) !important; 
+        animation: pulse-red 1s infinite cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .square-over { 
+        background: #94a3b8; 
+        box-shadow: 0 0 6px #94a3b8, 0 0 12px rgba(148, 163, 184, 0.4) !important; 
+        animation: pulse-grey 2.5s infinite ease-in-out; 
+    }
+
+    @keyframes pulse-green {
+        0% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #00ff88, 0 0 15px rgba(0, 255, 136, 0.4); }
+        50% { transform: scale(1.6) rotate(15deg); box-shadow: 0 0 20px #00ff88, 0 0 40px rgba(0, 255, 136, 0.9), 0 0 60px rgba(0, 255, 136, 0.5); }
+        100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #00ff88, 0 0 15px rgba(0, 255, 136, 0.4); }
+    }
+    @keyframes pulse-red {
+        0% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #ff0044, 0 0 15px rgba(255, 0, 68, 0.4); }
+        50% { transform: scale(1.6) rotate(-15deg); box-shadow: 0 0 20px #ff0044, 0 0 40px rgba(255, 0, 68, 0.9), 0 0 60px rgba(255, 0, 68, 0.5); }
+        100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #ff0044, 0 0 15px rgba(255, 0, 68, 0.4); }
+    }
+    @keyframes pulse-grey {
+        0% { opacity: 0.6; transform: scale(1); box-shadow: 0 0 5px #94a3b8; }
+        50% { opacity: 1; transform: scale(1.3); box-shadow: 0 0 15px #94a3b8, 0 0 30px rgba(148, 163, 184, 0.5); }
+        100% { opacity: 0.6; transform: scale(1); box-shadow: 0 0 5px #94a3b8; }
+    }
+
+    /* Premium Tag (Subtle Glass) */
+    .fc-event-tag {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+        width: 100%;
+    }
+
+    /* Participation Life (Cyan Neon Glow) */
+    .event-participating {
+        border: 1px solid rgba(6, 182, 212, 0.5) !important;
+        background: rgba(6, 182, 212, 0.08) !important;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.2) !important;
+    }
+    .fc-event-runner {
+        font-size: 1.1rem;
+        margin-left: 8px;
+        display: inline-block;
+        animation: running-lean 0.8s infinite ease-in-out;
+    }
+    @keyframes running-lean {
+        0%, 100% { transform: translateX(0) rotate(5deg) scale(1); }
+        50% { transform: translateX(3px) rotate(15deg) scale(1.1); }
+    }
 </style>
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
 {% endblock %}
 
 {% block body %}
@@ -46,6 +238,9 @@
                     {% include 'frontoffice/partials/_icon_people.html.twig' %}
                     Mes Événements
                 </h1>
+                <button type="button" class="btn btn-outline-info fw-bold" data-bs-toggle="modal" data-bs-target="#calendarModal">
+                    <i class="bi bi-calendar3 me-2"></i>📅 Mon Calendrier
+                </button>
             </div>
 
             {# Search and Sort for My Events #}
@@ -290,5 +485,105 @@
         </script>
     {% endif %}
 
-    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+    {# Calendar Modal #}
+    <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content calendar-modal-content text-white">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">📅 Mon Calendrier d'Événements</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="calendar" style="min-height: 600px;"></div>
+                </div>
+                <div class="modal-footer border-top border-secondary border-opacity-25 bg-black bg-opacity-25">
+                    <div class="d-flex flex-wrap gap-4 small fw-bold">
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="background: linear-gradient(135deg, #10b981, #059669); width: 14px; height: 14px; border-radius: 4px;">&nbsp;</span> 
+                            <span class="text-white-50">OPEN</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="background: linear-gradient(135deg, #f43f5e, #be123c); width: 14px; height: 14px; border-radius: 4px;">&nbsp;</span> 
+                            <span class="text-white-50">CLOSED (FULL)</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="background: #475569; width: 14px; height: 14px; border-radius: 4px;">&nbsp;</span> 
+                            <span class="text-white-50">OVER</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="border: 1px solid #06b6d4; box-shadow: 0 0 8px rgba(6, 182, 212, 0.5); width: 14px; height: 14px; border-radius: 4px; background: rgba(6, 182, 212, 0.2);">&nbsp;</span>
+                            <span style="animation: running-lean 0.8s infinite ease-in-out; display: inline-block; font-size: 1.2rem;">🏃</span> 
+                            <span class="text-info ms-1">PARTICIPATING</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary border-0 ms-auto px-4 fw-bold" data-bs-dismiss="modal">Ferme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'frontoffice/partials/_footer.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        themeSystem: 'standard',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listMonth'
+        },
+        height: 'auto',
+        events: '/api/my-events/calendar',
+        eventClick: function(info) {
+            if (info.event.url) {
+                // Prevent default browser navigation if needed
+                // For now, let it follow the URL to /events
+            }
+        },
+        eventContent: function(arg) {
+            let runnerHtml = '';
+            if (arg.event.extendedProps.isParticipating) {
+                runnerHtml = '<span class="fc-event-runner">🏃</span>';
+            }
+            
+            // Re-introducing the "Living Square"
+            let status = arg.event.extendedProps.status;
+            let squareHtml = '<span class="fc-event-square square-' + status + '"></span>';
+            
+            let participatingClass = arg.event.extendedProps.isParticipating ? 'event-participating' : '';
+            
+            // Return pill-style content with square inside and runner on the right
+            return {
+                html: '<div class="fc-content d-flex align-items-center w-100 fc-event-tag ' + participatingClass + '">' + 
+                      squareHtml + 
+                      '<span class="fc-event-title text-truncate fw-bold flex-grow-1">' + arg.event.title.replace('★ ', '').replace('🚶 ', '').replace('🏃 ', '') + '</span>' + 
+                      runnerHtml + 
+                      '</div>'
+            };
+        },
+        eventDidMount: function(info) {
+            info.el.style.background = 'none';
+            info.el.style.border = 'none';
+            
+            // Reverted to simple tooltip
+            info.el.title = info.event.title.replace('★ ', '').replace('🏃 ', '').replace('🚶 ', '') + '\n' + 
+                           '📍 Lieu: ' + info.event.extendedProps.place + '\n' + 
+                           '🎮 Type: ' + info.event.extendedProps.type + '\n' +
+                           '📊 Statut: ' + info.event.extendedProps.status.toUpperCase();
+        }
+    });
+
+    // Re-render calendar when modal is shown to fix layout issues
+    var modalEl = document.getElementById('calendarModal');
+    modalEl.addEventListener('shown.bs.modal', function () {
+        calendar.render();
+    });
+});
+</script>
 {% endblock %}
