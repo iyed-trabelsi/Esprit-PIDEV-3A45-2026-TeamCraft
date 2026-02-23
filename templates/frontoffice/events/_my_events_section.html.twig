@@ -1,0 +1,141 @@
+{# Manage My Events Section #}
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom border-secondary border-opacity-25">
+             <div class="icon-box p-2 rounded text-info">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-calendar-event-fill" viewBox="0 0 16 16">
+                  <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4V.5zM16 14V5H0v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2zm-3.5-7h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+            </div>
+            <h2 class="h3 fw-bold text-white mb-0">Manage My Events</h2>
+        </div>
+    </div>
+    
+    {% for e in myEvents %}
+        <div class="col-12">
+             <div class="card h-100 border-secondary border-opacity-25" style="background-color: #16161a;">
+                <div class="row g-0 align-items-center">
+                    <div class="col-md-3">
+                        <div class="p-3 d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <div class="text-center">
+                                <div class="discovery-avatar mx-auto mb-2" style="width: 80px; height: 80px; font-size: 2rem;">{{ e.nomEvenement|slice(0, 2)|upper }}</div>
+                                <span class="badge-rank purple">{{ e.dateDebut|date('d M Y') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card-body d-flex flex-column h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h4 class="card-title text-white fw-bold mb-1">{{ e.nomEvenement }}</h4>
+                                    <h5 class="card-subtitle text-white-50 fw-bold mb-1" style="font-size: 1rem;">{{ e.typeEvenement }}</h5>
+                                    <p class="card-text text-white-50 small mb-0">
+                                        <span class="badge {{ e.status == 'open' ? 'bg-success' : (e.status == 'over' ? 'bg-secondary' : 'bg-danger') }}">{{ e.status|upper }}</span>
+                                        • {{ e.participations|length }} / {{ e.place.capaciteMax }} participants
+                                        • {{ e.place.nomPlace }}
+                                    </p>
+                                </div>
+                                <small class="text-muted">{{ e.dateDebut|date('d M Y') }} - {{ e.dateFin|date('d M Y') }}</small>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-25">
+                                <div class="text-muted small">
+                                    Place: {{ e.place.nomPlace }} ({{ e.place.adresse }})
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <form method="post" action="{{ path('app_front_event_delete', {'id': e.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="d-inline-block">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ e.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger px-3 fw-bold">
+                                            <i class="bi bi-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-primary px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#editEventModal{{ e.getId() }}">
+                                        <i class="bi bi-pencil me-1"></i> Modify
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+             <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                <p class="text-white-50 mb-0">No events created yet.</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# Edit Modals for My Events #}
+{% if myEvents is not empty %}
+    {% for e in myEvents %}
+        <div class="modal fade" id="editEventModal{{ e.getId() }}" tabindex="-1" aria-labelledby="editEventModalLabel{{ e.getId() }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="background: var(--tc-bg-card, #1a1a2e); color: var(--tc-text, #fff);">
+                    <div class="modal-header" style="border-color: rgba(255,255,255,0.1);">
+                        <h5 class="modal-title" id="editEventModalLabel{{ e.getId() }}">Modifier l'événement</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if eventForms[e.getId()] is defined %}
+                            {{ form_start(eventForms[e.getId()], { attr: { novalidate: 'novalidate' } }) }}
+                                <input type="hidden" name="redirect_route" value="{{ app.request.get('_route') }}">
+                                <input type="hidden" name="redirect_params" value="{{ app.request.get('_route_params')|json_encode }}">
+                                
+                                <div class="mb-3">
+                                    {{ form_label(eventForms[e.getId()].nomEvenement, null, {'label_attr': {'class': 'text-white'}}) }}
+                                    {{ form_widget(eventForms[e.getId()].nomEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                    <div class="text-danger small mt-1">{{ form_errors(eventForms[e.getId()].nomEvenement) }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form_label(eventForms[e.getId()].typeEvenement, null, {'label_attr': {'class': 'text-white'}}) }}
+                                    {{ form_widget(eventForms[e.getId()].typeEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                    <div class="text-danger small mt-1">{{ form_errors(eventForms[e.getId()].typeEvenement) }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form_label(eventForms[e.getId()].dateDebut, null, {'label_attr': {'class': 'text-white'}}) }}
+                                    {{ form_widget(eventForms[e.getId()].dateDebut, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                    <div class="text-danger small mt-1">{{ form_errors(eventForms[e.getId()].dateDebut) }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form_label(eventForms[e.getId()].dateFin, null, {'label_attr': {'class': 'text-white'}}) }}
+                                    {{ form_widget(eventForms[e.getId()].dateFin, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                    <div class="text-danger small mt-1">{{ form_errors(eventForms[e.getId()].dateFin) }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form_label(eventForms[e.getId()].status, null, {'label_attr': {'class': 'text-white'}}) }}
+                                    {{ form_widget(eventForms[e.getId()].status, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                    <div class="text-danger small mt-1">{{ form_errors(eventForms[e.getId()].status) }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form_label(eventForms[e.getId()].place, null, {'label_attr': {'class': 'text-white'}}) }}
+                                    {{ form_widget(eventForms[e.getId()].place, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                    <div class="text-danger small mt-1">{{ form_errors(eventForms[e.getId()].place) }}</div>
+                                </div>
+                                <div class="modal-footer" style="border-color: rgba(255,255,255,0.1);">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                </div>
+                            {{ form_end(eventForms[e.getId()]) }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {# Script to reopen event edit modal if there are validation errors #}
+    {% for e in myEvents %}
+        {% if app.session.get('reopen_edit_event_modal_' ~ e.getId()) %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var editModal = new bootstrap.Modal(document.getElementById('editEventModal{{ e.getId() }}'));
+                    editModal.show();
+                });
+            </script>
+            {% do app.session.remove('reopen_edit_event_modal_' ~ e.getId()) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}

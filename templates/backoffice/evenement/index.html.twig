@@ -1,0 +1,250 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des événements{% endblock %}
+{% block admin_subheading %}Liste des événements enregistrés.{% endblock %}
+
+{% block admin_content %}
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="events" aria-selected="true">Événements</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="places-tab" data-bs-toggle="tab" data-bs-target="#places" type="button" role="tab" aria-controls="places" aria-selected="false">Lieux</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="participations-tab" data-bs-toggle="tab" data-bs-target="#participations" type="button" role="tab" aria-controls="participations" aria-selected="false">Participations</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+        {# Events Tab #}
+        <div class="tab-pane fade show active" id="events" role="tabpanel" aria-labelledby="events-tab">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                <div class="flex-grow-1" style="max-width: 420px;">
+                    <div class="input-group admin-search-group">
+                        <form method="get" action="{{ path('admin_events') }}" class="d-flex w-100">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="hidden" name="tab" value="events">
+                            <input type="search" name="ev_q" class="form-control" placeholder="Rechercher par nom..." value="{{ ev_q }}">
+                        </form>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ path('admin_events', app.request.query.all|merge({'ev_sort': 'nomEvenement', 'ev_dir': 'ASC', 'tab': 'events'})) }}" class="btn btn-sm btn-outline-secondary {{ ev_sort == 'nomEvenement' and ev_dir == 'ASC' ? 'active' : '' }}" title="Trier par Nom (Croissant)">
+                            Nom ⬇️
+                        </a>
+                        <a href="{{ path('admin_events', app.request.query.all|merge({'ev_sort': 'nomEvenement', 'ev_dir': 'DESC', 'tab': 'events'})) }}" class="btn btn-sm btn-outline-secondary {{ ev_sort == 'nomEvenement' and ev_dir == 'DESC' ? 'active' : '' }}" title="Trier par Nom (Décroissant)">
+                            Nom ⬆️
+                        </a>
+                    </div>
+                    <a href="{{ path('app_evenement_new') }}" class="btn btn-sm btn-tc-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Nouvel événement
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                        <thead class="custom-table-header">
+                            <tr>
+                                <th class="border-0 px-4 py-3">Id</th>
+                                <th class="border-0 px-4 py-3">Nom</th>
+                                <th class="border-0 px-4 py-3">Type</th>
+                                <th class="border-0 px-4 py-3">Lieu</th>
+                                <th class="border-0 px-4 py-3">Début</th>
+                                <th class="border-0 px-4 py-3">Fin</th>
+                                <th class="border-0 px-4 py-3">Statut</th>
+                                <th class="border-0 px-4 py-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-input-match">
+                        {% for evenement in evenements %}
+                            <tr>
+                                <td class="px-4 py-3 bg-input-match">{{ evenement.id }}</td>
+                                <td class="px-4 py-3 fw-semibold bg-input-match">{{ evenement.nomEvenement }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ evenement.typeEvenement }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ evenement.place ? evenement.place.nomPlace : 'Non défini' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ evenement.dateDebut ? evenement.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ evenement.dateFin ? evenement.dateFin|date('Y-m-d H:i:s') : '' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ evenement.status }}</td>
+                                <td class="px-4 py-3 text-end bg-input-match">
+                                    <a href="{{ path('app_evenement_edit', {'id': evenement.id}) }}" class="btn btn-sm btn-outline-primary border-0" title="Modifier">
+                                        ✏️
+                                    </a>
+                                    <form method="post" action="{{ path('app_evenement_delete', {'id': evenement.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" class="d-inline-block">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger border-0" title="Supprimer">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="8" class="px-4 py-3 text-center bg-input-match">Aucun événement trouvé</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Places Tab #}
+        <div class="tab-pane fade" id="places" role="tabpanel" aria-labelledby="places-tab">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                <div class="flex-grow-1" style="max-width: 420px;">
+                    <div class="input-group admin-search-group">
+                        <form method="get" action="{{ path('admin_events') }}" class="d-flex w-100">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="hidden" name="tab" value="places">
+                            <input type="search" name="pl_q" class="form-control" placeholder="Rechercher par capacité..." value="{{ pl_q }}">
+                        </form>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ path('admin_events', app.request.query.all|merge({'pl_sort': 'capaciteMax', 'pl_dir': 'ASC', 'tab': 'places'})) }}" class="btn btn-sm btn-outline-secondary {{ pl_sort == 'capaciteMax' and pl_dir == 'ASC' ? 'active' : '' }}" title="Trier par Capacité (Croissant)">
+                            Capacité ⬇️
+                        </a>
+                        <a href="{{ path('admin_events', app.request.query.all|merge({'pl_sort': 'capaciteMax', 'pl_dir': 'DESC', 'tab': 'places'})) }}" class="btn btn-sm btn-outline-secondary {{ pl_sort == 'capaciteMax' and pl_dir == 'DESC' ? 'active' : '' }}" title="Trier par Capacité (Décroissant)">
+                            Capacité ⬆️
+                        </a>
+                    </div>
+                    <a href="{{ path('app_place_new') }}" class="btn btn-sm btn-tc-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Nouveau lieu
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                        <thead class="custom-table-header">
+                            <tr>
+                                <th class="border-0 px-4 py-3">Id</th>
+                                <th class="border-0 px-4 py-3">Nom</th>
+                                <th class="border-0 px-4 py-3">Type</th>
+                                <th class="border-0 px-4 py-3">Adresse</th>
+                                <th class="border-0 px-4 py-3">Capacité</th>
+                                <th class="border-0 px-4 py-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-input-match">
+                        {% for place in places %}
+                            <tr>
+                                <td class="px-4 py-3 bg-input-match">{{ place.id }}</td>
+                                <td class="px-4 py-3 fw-semibold bg-input-match">{{ place.nomPlace }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ place.typePlace }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ place.adresse }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ place.capaciteMax }}</td>
+                                <td class="px-4 py-3 text-end bg-input-match">
+                                    <a href="{{ path('app_place_edit', {'id': place.id}) }}" class="btn btn-sm btn-outline-primary border-0" title="Modifier">
+                                        ✏️
+                                    </a>
+                                    <form method="post" action="{{ path('app_place_delete', {'id': place.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?');" class="d-inline-block">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ place.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger border-0" title="Supprimer">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="px-4 py-3 text-center bg-input-match">Aucun lieu trouvé</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Participations Tab #}
+        <div class="tab-pane fade" id="participations" role="tabpanel" aria-labelledby="participations-tab">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                <div class="flex-grow-1" style="max-width: 420px;">
+                    <div class="input-group admin-search-group">
+                        <form method="get" action="{{ path('admin_events') }}" class="d-flex w-100">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="hidden" name="tab" value="participations">
+                            <input type="search" name="pa_q" class="form-control" placeholder="Rechercher par utilisateur..." value="{{ pa_q }}">
+                        </form>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ path('admin_events', app.request.query.all|merge({'pa_sort': 'dateInscription', 'pa_dir': 'ASC', 'tab': 'participations'})) }}" class="btn btn-sm btn-outline-secondary {{ pa_sort == 'dateInscription' and pa_dir == 'ASC' ? 'active' : '' }}" title="Trier par Date (Croissant)">
+                            Date ⬇️
+                        </a>
+                        <a href="{{ path('admin_events', app.request.query.all|merge({'pa_sort': 'dateInscription', 'pa_dir': 'DESC', 'tab': 'participations'})) }}" class="btn btn-sm btn-outline-secondary {{ pa_sort == 'dateInscription' and pa_dir == 'DESC' ? 'active' : '' }}" title="Trier par Date (Décroissant)">
+                            Date ⬆️
+                        </a>
+                    </div>
+                    <a href="{{ path('app_participation_new') }}" class="btn btn-sm btn-tc-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Nouvelle participation
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                        <thead class="custom-table-header">
+                            <tr>
+                                <th class="border-0 px-4 py-3">Id</th>
+                                <th class="border-0 px-4 py-3">Nom événement</th>
+                                <th class="border-0 px-4 py-3">Utilisateur</th>
+                                <th class="border-0 px-4 py-3">Date d'inscription</th>
+                                <th class="border-0 px-4 py-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-input-match">
+                        {% for participation in participations %}
+                            <tr>
+                                <td class="px-4 py-3 bg-input-match">{{ participation.id }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ participation.evenement ? participation.evenement.nomEvenement : 'Non défini' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ participation.user ? participation.user.username : '—' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ participation.dateInscription ? participation.dateInscription|date('Y-m-d H:i:s') : '' }}</td>
+                                <td class="px-4 py-3 text-end bg-input-match">
+                                    <a href="{{ path('app_participation_edit', {'id': participation.id}) }}" class="btn btn-sm btn-outline-primary border-0" title="Modifier">
+                                        ✏️
+                                    </a>
+                                    <form method="post" action="{{ path('app_participation_delete', {'id': participation.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette participation ?');" class="d-inline-block">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ participation.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger border-0" title="Supprimer">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="5" class="px-4 py-3 text-center bg-input-match">Aucune participation trouvée</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab');
+            if (activeTab) {
+                const tabButton = document.querySelector(`#${activeTab}-tab`);
+                const tabContent = document.querySelector(`#${activeTab}`);
+                if (tabButton && tabContent) {
+                    // Deactivate all active tabs
+                    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('show', 'active'));
+                    
+                    // Activate requested tab
+                    tabButton.classList.add('active');
+                    tabContent.classList.add('show', 'active');
+                }
+            }
+        });
+    </script>
+{% endblock %}
+

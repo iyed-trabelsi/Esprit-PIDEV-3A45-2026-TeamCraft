@@ -1,0 +1,96 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Gestion des Candidatures - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2 fw-bold text-white mb-0">Gestion des Candidatures</h1>
+            <a href="{{ path('team_manage', {id: team.id}) }}" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left me-2"></i>Retour à l'équipe
+            </a>
+        </div>
+
+        <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                    <thead class="custom-table-header">
+                        <tr>
+                            <th class="border-0 px-4 py-3">Candidat</th>
+                            <th class="border-0 px-4 py-3">Offre</th>
+                            <th class="border-0 px-4 py-3">Message</th>
+                            <th class="border-0 px-4 py-3">Date</th>
+                            <th class="border-0 px-4 py-3">Statut</th>
+                            <th class="border-0 px-4 py-3 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-input-match">
+                        {% for app in applications %}
+                            <tr>
+                                <td class="px-4 py-3 fw-semibold bg-input-match">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            {{ app.user.pseudo|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="text-white">{{ app.user.pseudo }}</div>
+                                            <div class="text-muted small">{{ app.user.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 bg-input-match">
+                                    <span class="badge-game {{ app.offer.game|lower == 'league of legends' ? 'lol' : app.offer.game|lower }} mb-1">{{ app.offer.game }}</span>
+                                    <div class="small text-white">{{ app.offer.title }}</div>
+                                </td>
+                                <td class="px-4 py-3 bg-input-match text-muted small" style="max-width: 250px;">
+                                    {% set msg = app.message|default('Pas de message') %}
+                                    <div title="{{ msg }}">{{ msg|slice(0, 50) }}{{ msg|length > 50 ? '...' : '' }}</div>
+                                </td>
+                                <td class="px-4 py-3 bg-input-match">{{ app.createdAt|date('d/m/Y') }}</td>
+                                <td class="px-4 py-3 bg-input-match">
+                                    {% if app.status == 'accepted' %}
+                                        <span class="badge bg-success">Acceptée</span>
+                                    {% elseif app.status == 'refused' %}
+                                        <span class="badge bg-danger">Refusée</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">En attente</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-end bg-input-match">
+                                    {% if app.status == 'pending' %}
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <form method="post" action="{{ path('app_application_accept', {id: app.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('accept' ~ app.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Accepter ce joueur dans l\'équipe ?')">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{{ path('app_application_refuse', {id: app.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('refuse' ~ app.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Refuser cette candidature ?')">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted small">Traitée</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-5 text-center text-muted bg-input-match">
+                                    Aucune candidature reçue pour le moment.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

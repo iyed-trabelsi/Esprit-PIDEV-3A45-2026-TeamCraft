@@ -1,0 +1,38 @@
+{{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
+    {{ form_errors(form) }}
+    <div class="admin-form-widgets">
+        <div class="mb-3">
+            {{ form_label(form.nomEvenement) }}
+            {{ form_widget(form.nomEvenement) }}
+            {{ form_errors(form.nomEvenement) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.typeEvenement) }}
+            {{ form_widget(form.typeEvenement) }}
+            {{ form_errors(form.typeEvenement) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.dateDebut) }}
+            {{ form_widget(form.dateDebut) }}
+            {{ form_errors(form.dateDebut) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.dateFin) }}
+            {{ form_widget(form.dateFin) }}
+            {{ form_errors(form.dateFin) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.status) }}
+            {{ form_widget(form.status) }}
+            {{ form_errors(form.status) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.place) }}
+            {{ form_widget(form.place) }}
+            {{ form_errors(form.place) }}
+        </div>
+    </div>
+    <div class="mt-4">
+        <button type="submit" class="btn btn-tc-primary w-100">{{ button_label|default('Enregistrer') }}</button>
+    </div>
+{{ form_end(form) }}
