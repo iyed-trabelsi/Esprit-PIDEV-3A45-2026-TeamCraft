@@ -1,0 +1,12 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h2>Connexion inhabituelle détectée</h2>
+    <p>Un code a été généré (Vérifie ta base de données pour la démo).</p>
+    <form method="post">
+        <input type="text" name="code" class="form-control" placeholder="Entrez le code à 6 chiffres" required>
+        <button type="submit" class="btn btn-primary mt-3">Vérifier</button>
+    </form>
+</div>
+{% endblock %}

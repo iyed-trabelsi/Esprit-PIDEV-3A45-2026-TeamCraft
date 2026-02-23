@@ -82,9 +82,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Team::class)]
     private Collection $teams;
 
+    /**
+     * @var Collection<int, LoginHistory>
+     */
+    #[ORM\OneToMany(targetEntity: LoginHistory::class, mappedBy: 'user')]
+    private Collection $loginHistories;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $securityCode = null;
+
     public function __construct()
     {
         $this->teams = new ArrayCollection();
+        $this->loginHistories = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -339,6 +349,48 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setProfilePicture(?string $profilePicture): static
     {
         $this->profilePicture = $profilePicture;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, LoginHistory>
+     */
+    public function getLoginHistories(): Collection
+    {
+        return $this->loginHistories;
+    }
+
+    public function addLoginHistory(LoginHistory $loginHistory): static
+    {
+        if (!$this->loginHistories->contains($loginHistory)) {
+            $this->loginHistories->add($loginHistory);
+            $loginHistory->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLoginHistory(LoginHistory $loginHistory): static
+    {
+        if ($this->loginHistories->removeElement($loginHistory)) {
+            // set the owning side to null (unless already changed)
+            if ($loginHistory->getUser() === $this) {
+                $loginHistory->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getSecurityCode(): ?string
+    {
+        return $this->securityCode;
+    }
+
+    public function setSecurityCode(?string $securityCode): static
+    {
+        $this->securityCode = $securityCode;
+
         return $this;
     }
 }
