@@ -2,6 +2,21 @@
 
 {% block title %}Manage Team - {{ team.name }}{% endblock %}
 
+{% block stylesheets %}
+<style>
+    /* Add Place SUB-MODAL Styling */
+    .calendar-modal-content {
+        background: rgba(13, 13, 27, 0.96) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+{% endblock %}
+
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
@@ -377,58 +392,228 @@
                     {% for message in app.flashes('error') %}
                         <div class="alert alert-danger">{{ message }}</div>
                     {% endfor %}
-                    <form method="POST" action="{{ path('app_front_event_create') }}">
+                    {{ form_start(eventForm, { action: path('app_front_event_create'), attr: { novalidate: 'novalidate', enctype: 'multipart/form-data' } }) }}
                         <input type="hidden" name="redirect_route" value="team_manage">
                         <input type="hidden" name="redirect_params" value="{{ {'id': team.id}|json_encode }}">
                         
+                        <!-- AI Suggestion Area -->
+                        <div class="mb-4">
+                            <button type="button" id="ai-generate-btn-front" class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius: 8px; border-width: 2px;">
+                                <i class="bi bi-magic me-2"></i>Suggérer le moment optimal avec l'IA
+                            </button>
+                            <!-- Hidden button for details, appears after generation -->
+                            <button type="button" id="ai-details-btn-front" class="btn btn-sm text-info w-100 mt-2 d-none d-flex align-items-center justify-content-center gap-1" style="background: transparent; border: none; text-decoration: underline;" data-bs-toggle="modal" data-bs-target="#aiDetailsModalFront">
+                                <i class="bi bi-info-circle"></i> Voir les détails de la génération
+                            </button>
+                        </div>
+
+                        <!-- AI Details Modal (Rich Report) - placed at end of body for proper z-index -->
+                        <div class="modal fade" id="aiDetailsModalFront" tabindex="-1" aria-labelledby="aiDetailsModalFrontLabel" aria-hidden="true" style="z-index: 1070;">
+                            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                                <div class="modal-content border-0" style="background: #0d1117; border-radius: 16px; overflow: hidden;">
+
+                                    <!-- Header with gradient -->
+                                    <div class="modal-header border-0 p-0">
+                                        <div class="w-100 p-4" style="background: linear-gradient(135deg, #0d2137 0%, #0a3d62 50%, #1a1a2e 100%); border-bottom: 1px solid rgba(0, 212, 255, 0.2);">
+                                            <div class="d-flex align-items-center gap-3 mb-2">
+                                                <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,212,255,0.15);display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,212,255,0.3);">
+                                                    <i class="bi bi-robot text-info fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="modal-title mb-0 text-white fw-bold" id="aiDetailsModalFrontLabel">Rapport d'Analyse IA</h5>
+                                                    <small class="text-info opacity-75">Gemini 2.5 Flash · Analyse stratégique</small>
+                                                </div>
+                                                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <!-- Executive Summary -->
+                                            <div class="mt-3 p-3 rounded-3" style="background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.15);">
+                                                <p id="ai-summary-text-front" class="mb-0 text-white-75 fst-italic" style="font-size: 0.95rem; line-height: 1.6;"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-body p-4" style="background: #0d1117;">
+
+                                        <!-- Stat Cards Row -->
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-4">
+                                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2);">
+                                                    <div class="fw-bold text-info fs-4 mb-1" id="ai-confidence-front">—</div>
+                                                    <small class="text-white-50">Confiance IA</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(40,167,69,0.07); border: 1px solid rgba(40,167,69,0.2);">
+                                                    <div class="fw-bold text-success fs-5 mb-1" id="ai-event-type-badge-front">—</div>
+                                                    <small class="text-white-50">Type suggéré</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(255,193,7,0.07); border: 1px solid rgba(255,193,7,0.2);">
+                                                    <div class="fw-bold text-warning fs-5 mb-1" id="ai-event-name-badge-front" style="font-size: 0.8rem !important;"></div>
+                                                    <small class="text-white-50">Nom proposé</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section: Data Insights -->
+                                        <div class="mb-4">
+                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#00d4ff,#0077ff);"></div>
+                                                <h6 class="mb-0 text-white fw-semibold">📊 Analyse des données historiques</h6>
+                                            </div>
+                                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                                <p id="ai-insights-text-front" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section: Time Rationale -->
+                                        <div class="mb-4">
+                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#00ff87,#00d4ff);"></div>
+                                                <h6 class="mb-0 text-white fw-semibold">🕐 Justification du créneau horaire</h6>
+                                            </div>
+                                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                                <p id="ai-time-text-front" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section: Type Rationale -->
+                                        <div class="mb-3">
+                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#ffd700,#ff8c00);"></div>
+                                                <h6 class="mb-0 text-white fw-semibold">🏆 Justification du type d'événement</h6>
+                                            </div>
+                                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                                <p id="ai-type-text-front" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer border-0" style="background: #0d1117; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 1rem 1.5rem;">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label for="nomEvenement" class="form-label text-white-50">Event Name</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" id="nomEvenement" name="evenement[nomEvenement]" placeholder="Tournament Name">
+                            {{ form_label(eventForm.nomEvenement, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(eventForm.nomEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25', 'placeholder': 'Tournament Name'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(eventForm.nomEvenement) }}</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="typeEvenement" class="form-label text-white-50">Event Type</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" id="typeEvenement" name="evenement[typeEvenement]" placeholder="e.g., Tournament, Scrim, Practice">
+                            {{ form_label(eventForm.typeEvenement, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(eventForm.typeEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25', 'placeholder': 'e.g., Tournament, Scrim, Practice'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(eventForm.typeEvenement) }}</div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="dateDebut" class="form-label text-white-50">Start Date</label>
-                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-25" id="dateDebut" name="evenement[dateDebut]">
+                                {{ form_label(eventForm.dateDebut, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(eventForm.dateDebut, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.dateDebut) }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="dateFin" class="form-label text-white-50">End Date</label>
-                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-25" id="dateFin" name="evenement[dateFin]">
+                                {{ form_label(eventForm.dateFin, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(eventForm.dateFin, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.dateFin) }}</div>
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="status" class="form-label text-white-50">Status</label>
-                                <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="status" name="evenement[status]">
-                                    <option value="" selected disabled>Select Status</option>
-                                    <option value="open">Open</option>
-                                    <option value="closed">Closed</option>
-                                </select>
+                                {{ form_label(eventForm.status, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(eventForm.status, {'attr': {'class': 'form-select bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.status) }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="place" class="form-label text-white-50">Place</label>
-                                <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="place" name="evenement[place]">
-                                    <option value="" selected disabled>Select Place</option>
-                                    {% if places is defined %}
-                                        {% for p in places %}
-                                            <option value="{{ p.id }}">{{ p.nomPlace }} ({{ p.capaciteMax }} capacity)</option>
-                                        {% endfor %}
-                                    {% endif %}
-                                </select>
+                                {{ form_label(eventForm.place, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                <div class="d-flex gap-2 align-items-center">
+                                    {{ form_widget(eventForm.place, {'attr': {'class': 'form-select bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                    <button type="button" class="btn btn-outline-success btn-sm" style="white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#addPlaceModal">
+                                        <i class="bi bi-plus-lg"></i> Add Place
+                                    </button>
+                                </div>
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.place) }}</div>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(eventForm.imageFile, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(eventForm.imageFile, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(eventForm.imageFile) }}</div>
                         </div>
                         
                         <div class="text-end mt-4">
                             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary fw-bold px-4">Create Event</button>
                         </div>
-                    </form>
+                    {{ form_end(eventForm) }}
+
+                    <script>
+                    // Prevent z-index issues caused by nested modals by moving to body
+                    (function() {
+                        const modal = document.getElementById('aiDetailsModalFront');
+                        if (modal) document.body.appendChild(modal);
+                    })();
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const btnFront = document.getElementById('ai-generate-btn-front');
+                        if (btnFront) {
+                            btnFront.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const originalText = btnFront.innerHTML;
+                                btnFront.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyse historique en cours...';
+                                btnFront.disabled = true;
+
+                                fetch('/api/events/ai-generate')
+                                    .then(res => res.json())
+                                    .then(response => {
+                                        if (response.success && response.data) {
+                                            const data = response.data;
+
+                                            // Fill the form fields
+                                            const nomInput   = document.querySelector('#createEventModal [id$="_nomEvenement"]');
+                                            const typeInput  = document.querySelector('#createEventModal [id$="_typeEvenement"]');
+                                            const debutInput = document.querySelector('#createEventModal [id$="_dateDebut"]');
+                                            const finInput   = document.querySelector('#createEventModal [id$="_dateFin"]');
+                                            if (data.nomEvenement  && nomInput)   nomInput.value   = data.nomEvenement;
+                                            if (data.typeEvenement && typeInput)  typeInput.value  = data.typeEvenement;
+                                            if (data.dateDebut     && debutInput) debutInput.value = data.dateDebut;
+                                            if (data.dateFin       && finInput)   finInput.value   = data.dateFin;
+
+                                            // Populate rich modal fields
+                                            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+                                            set('ai-summary-text-front',      data.reasoning      || "Analyse complète disponible ci-dessous.");
+                                            set('ai-confidence-front',        data.confidence_score ? data.confidence_score + '%' : '—');
+                                            set('ai-event-type-badge-front',  data.typeEvenement  || '—');
+                                            set('ai-event-name-badge-front',  data.nomEvenement   || '—');
+                                            set('ai-insights-text-front',     data.data_insights  || data.reasoning || '');
+                                            set('ai-time-text-front',         data.time_rationale || '');
+                                            set('ai-type-text-front',         data.type_rationale || '');
+
+                                            // Show "Voir détails" link and open modal
+                                            const detailsBtn = document.getElementById('ai-details-btn-front');
+                                            if (detailsBtn) detailsBtn.classList.remove('d-none');
+
+                                            const modalElement = document.getElementById('aiDetailsModalFront');
+                                            if (modalElement) {
+                                                const aiModal = new bootstrap.Modal(modalElement);
+                                                aiModal.show();
+                                            }
+                                        }
+                                    })
+                                    .catch(err => console.error("AI Fetch Error: ", err))
+                                    .finally(() => {
+                                        btnFront.innerHTML = originalText;
+                                        btnFront.disabled = false;
+                                    });
+                            });
+                        }
+                    });
+                    </script>
                 </div>
             </div>
         </div>
@@ -525,9 +710,64 @@
             </div>
         </div>
     </div>
+
+    {# Add Place Modal (Sub-modal) #}
+    <div class="modal fade" id="addPlaceModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content calendar-modal-content text-white" style="background: var(--tc-bg-card, #1a1a2e); color: var(--tc-text, #fff);">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">📍 Ajouter un Lieu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPlaceForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">Nom du Lieu</label>
+                            <input type="text" id="place_nom" name="nomPlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
+                            <div class="text-danger small mt-1 place-error" id="error-nomPlace"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Type du Lieu</label>
+                            <input type="text" id="place_type" name="typePlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
+                            <div class="text-danger small mt-1 place-error" id="error-typePlace"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Capacité Maximum</label>
+                            <input type="number" id="place_capacite" name="capaciteMax" class="form-control bg-dark text-white border-secondary" required min="1" max="50000">
+                            <div class="text-danger small mt-1 place-error" id="error-capaciteMax"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white text-info"><i class="bi bi-hand-index"></i> Recherchez, cliquez sur la carte, ou utilisez votre position</label>
+                            <div class="mb-2">
+                                <button type="button" id="btnCurrentLocation" class="btn btn-sm btn-outline-info rounded-pill fw-bold">
+                                    <i class="bi bi-geo"></i> Utiliser ma position actuelle
+                                </button>
+                            </div>
+                            <!-- Note the z-index fix to prevent search dropdown from being hidden in modal -->
+                            <div id="placeMap" style="height: 300px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); z-index: 1;"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Adresse générée par la carte</label>
+                            <input type="text" id="place_adresse" name="adresse" class="form-control bg-dark text-white border-secondary" readonly placeholder="L'adresse apparaîtra ici...">
+                            <div class="text-danger small mt-1 place-error" id="error-adresse"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary border-opacity-25 bg-black bg-opacity-25">
+                    <button type="button" class="btn btn-secondary border-0 px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-success px-4 fw-bold" id="btnSubmitPlace">
+                        <span id="placeSubmitText">Enregistrer le Lieu</span>
+                        <div class="spinner-border spinner-border-sm d-none" id="placeSubmitLoader" role="status"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const gameSelect = document.getElementById('gameSelect');
@@ -594,6 +834,182 @@
         if (gameSelect.value) {
             handleGameChange(gameSelect.value);
         }
+
+        // --- LEAFLET JS FOR "ADD PLACE" SUB-MODAL ---
+        let placeMap = null;
+        let placeMarker = null;
+        const addPlaceModalEl = document.getElementById('addPlaceModal');
+        const addressInput = document.getElementById('place_adresse');
+        const saveBtn = document.getElementById('btnSubmitPlace');
+
+        function updateLocation(lat, lng) {
+            if (placeMarker) {
+                placeMarker.setLatLng([lat, lng]);
+            } else {
+                placeMarker = L.marker([lat, lng]).addTo(placeMap);
+            }
+
+            addressInput.value = "Recherche d'adresse en cours...";
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+                headers: { 'Accept-Language': 'fr' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    addressInput.value = data.display_name;
+                } else {
+                    addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                }
+            })
+            .catch(err => {
+                console.error("Geocoding failed", err);
+                addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            });
+        }
+
+        addPlaceModalEl.addEventListener('hidden.bs.modal', function () {
+            const createEventModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('createEventModal'));
+            createEventModal.show();
+        });
+
+        addPlaceModalEl.addEventListener('shown.bs.modal', function () {
+            // Initialize map only once
+            if (!placeMap) {
+                // Default center
+                placeMap = L.map('placeMap').setView([36.8065, 10.1815], 10);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(placeMap);
+
+                // Add Search Control (Leaflet Geocoder plugin)
+                var geocoder = L.Control.geocoder({
+                    defaultMarkGeocode: false,
+                    placeholder: "Rechercher un lieu...",
+                    errorMessage: "Adresse non trouvée."
+                })
+                .on('markgeocode', function(e) {
+                    var latlng = e.geocode.center;
+                    
+                    // Auto-center & Zoom on search result
+                    placeMap.setView(latlng, 16); 
+                    
+                    if (placeMarker) {
+                        placeMarker.setLatLng(latlng);
+                    } else {
+                        placeMarker = L.marker(latlng).addTo(placeMap);
+                    }
+                    
+                    // For direct search result, use the Geocoder returned name
+                    const resolvedAddress = e.geocode.name || Object.values(e.geocode.properties.address || {}).join(', ');
+                    addressInput.value = resolvedAddress;
+                })
+                .addTo(placeMap);
+
+                // Map click handler
+                placeMap.on('click', function(e) {
+                    updateLocation(e.latlng.lat, e.latlng.lng);
+                });
+
+                // Use My Location handler
+                document.getElementById('btnCurrentLocation').addEventListener('click', function() {
+                    if ("geolocation" in navigator) {
+                        const btn = document.getElementById('btnCurrentLocation');
+                        const originalHTML = btn.innerHTML;
+                        
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Localisation...';
+                        btn.disabled = true;
+
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            
+                            // Auto-center & Zoom on Current Location
+                            placeMap.setView([lat, lng], 16); 
+                            updateLocation(lat, lng);
+
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                        }, function(error) {
+                            alert("Erreur de localisation. Veuillez autoriser l'accès à votre position.");
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                        }, {
+                            timeout: 10000,
+                            enableHighAccuracy: true
+                        });
+                    } else {
+                        alert("La géolocalisation n'est pas supportée par votre navigateur.");
+                    }
+                });
+            }
+            
+            // Very important: Fix Leaflet gray boxes inside Bootstrap Modal
+            setTimeout(() => { placeMap.invalidateSize(); }, 200);
+        });
+
+        // AJAX Form Submission
+        saveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            document.querySelectorAll('.place-error').forEach(el => el.innerText = '');
+            
+            const payload = {
+                nomPlace: document.getElementById('place_nom').value,
+                typePlace: document.getElementById('place_type').value,
+                capaciteMax: document.getElementById('place_capacite').value,
+                adresse: addressInput.value
+            };
+
+            const btnText = document.getElementById('placeSubmitText');
+            const loader = document.getElementById('placeSubmitLoader');
+            
+            btnText.classList.add('d-none');
+            loader.classList.remove('d-none');
+            saveBtn.disabled = true;
+
+            fetch('/api/place/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success: Hide sub-modal
+                    const modal = bootstrap.Modal.getInstance(addPlaceModalEl);
+                    modal.hide();
+                    
+                    // Update the Place dropdown in Create Event Modal
+                    const placeSelect = document.querySelector('select[name*="[place]"]');
+                    if (placeSelect) {
+                        const newOption = new Option(data.place.nomPlace, data.place.id, true, true);
+                        placeSelect.add(newOption);
+                    }
+                    
+                    alert(data.message);
+                } else {
+                    // Display Validation Errors directly under inputs
+                    for (const [field, msg] of Object.entries(data.errors)) {
+                        const errEl = document.getElementById('error-' + field);
+                        if (errEl) errEl.innerText = msg;
+                    }
+                }
+            })
+            .catch(err => {
+                alert("Erreur système lors de l'ajout.");
+                console.error(err);
+            })
+            .finally(() => {
+                btnText.classList.remove('d-none');
+                loader.classList.add('d-none');
+                saveBtn.disabled = false;
+            });
+        });
     });
 </script>
 {% endblock %}

@@ -22,6 +22,9 @@ parameters:
     # Hugging Face API Key for Image Generation
     huggingface_api_key: '%env(default::HUGGINGFACE_API_KEY)%'
     uploads_rubrique_dir: '%kernel.project_dir%/public/uploads/rubriques'
+    
+    # Google Gemini API Key for AI Scheduling
+    gemini_api_key: '%env(default::GEMINI_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -64,3 +67,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # AI Smart Scheduling (Google Gemini)
+    App\Service\AiSchedulingService:
+        arguments:
+            $apiKey: '%gemini_api_key%'

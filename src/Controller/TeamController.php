@@ -250,13 +250,18 @@ class TeamController extends AbstractController
         // Get all places for event creation modal
         $places = $em->getRepository(\App\Entity\Place::class)->findAll();
 
+        // Initialize new Event for modal
+        $evenement = new \App\Entity\Evenement();
+        $eventForm = $this->createForm(\App\Form\EvenementType::class, $evenement);
+
         return $this->render('frontoffice/teams/manage.html.twig', [
             'team' => $team,
             'roster' => $roster,
             'offers' => $team->getOffers(),
             'teamGames' => $teamGames,
             'places' => $places,
-            'offerForm' => $offerForm->createView()
+            'offerForm' => $offerForm->createView(),
+            'eventForm' => $eventForm->createView(),
         ]);
     }
 
