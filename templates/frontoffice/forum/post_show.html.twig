@@ -19,6 +19,45 @@
             transform: scale(1.2) rotate(15deg);
             filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.9));
         }
+
+        /* ── Best Comment Highlight ── */
+        @keyframes trophy-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5); }
+            70%  { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+        }
+        .best-comment-highlight {
+            border: 2px solid #fbbf24 !important;
+            background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(30,27,27,1) 60%) !important;
+            animation: trophy-pulse 1.5s ease-out 2;
+            transition: border 0.4s ease, background 0.4s ease;
+        }
+        .best-comment-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 6px 14px;
+            background: linear-gradient(90deg, rgba(251,191,36,0.18), rgba(251,191,36,0.06));
+            border-left: 3px solid #fbbf24;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.82rem;
+            color: #fde68a;
+            font-weight: 600;
+        }
+        #btn-best-comment {
+            transition: all 0.2s ease;
+        }
+        #btn-best-comment:hover {
+            background: rgba(251,191,36,0.15) !important;
+            border-color: #fbbf24 !important;
+            color: #fbbf24 !important;
+        }
+        #btn-best-comment.active-best {
+            background: rgba(251,191,36,0.2) !important;
+            border-color: #fbbf24 !important;
+            color: #fbbf24 !important;
+        }
     </style>
 {% endblock %}
 
@@ -104,7 +143,19 @@
             {% endif %}
         </div>
 
-        <h2 class="h5 fw-bold mb-3" id="comments">Commentaires ({{ comments|length }})</h2>
+        <div class="d-flex align-items-center justify-content-between mb-3" id="comments">
+            <h2 class="h5 fw-bold mb-0">Commentaires ({{ comments|length }})</h2>
+            {% if comments|length >= 2 %}
+                <button id="btn-best-comment" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-2"
+                        style="font-size: 0.82rem; border-radius: 20px; padding: 4px 14px;"
+                        title="Laisser l'IA choisir le meilleur commentaire"
+                        data-url="{{ path('app_ai_best_comment', { postId: post.id }) }}"
+                        data-active="0">
+                    <i class="bi bi-trophy-fill" style="color: #fbbf24;"></i>
+                    <span class="btn-best-label">Meilleur commentaire</span>
+                </button>
+            {% endif %}
+        </div>
 
         {% if app.user %}
             <div class="card bg-dark border-0 shadow mb-4" style="background-color: #16161a !important; border-radius: 0.75rem;">
@@ -414,6 +465,9 @@
         <div class="d-flex flex-column gap-3">
             {% for comment in comments %}
                 <div class="discovery-card p-4" id="comment-{{ comment.id }}">
+                    <div class="best-comment-badge d-none" id="best-badge-{{ comment.id }}">
+                        🏆 <span class="best-reason-text"></span>
+                    </div>
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                         <div class="d-flex align-items-center gap-2">
                             <span class="fw-bold discovery-card-title">{{ comment.auteur.pseudo|default(comment.auteur.username) }}</span>
@@ -1505,5 +1559,91 @@
             container.innerHTML = decodeURIComponent(encodedOrig);
         }
     }
+
+    // ── Best Comment AI ──────────────────────────────────────────
+    (function () {
+        const btn = document.getElementById('btn-best-comment');
+        if (!btn) return;
+
+        let currentBestId = null;
+
+        function clearHighlight() {
+            if (!currentBestId) return;
+            const card  = document.getElementById('comment-' + currentBestId);
+            const badge = document.getElementById('best-badge-' + currentBestId);
+            if (card)  card.classList.remove('best-comment-highlight');
+            if (badge) badge.classList.add('d-none');
+            currentBestId = null;
+        }
+
+        btn.addEventListener('click', function () {
+            // Toggle off if already active
+            if (btn.dataset.active === '1') {
+                clearHighlight();
+                btn.dataset.active = '0';
+                btn.classList.remove('active-best');
+                btn.querySelector('.btn-best-label').textContent = 'Meilleur commentaire';
+                return;
+            }
+
+            // Show spinner
+            const label = btn.querySelector('.btn-best-label');
+            const icon  = btn.querySelector('i');
+            const origIconClass = icon.className;
+            icon.className = 'spinner-border spinner-border-sm text-warning';
+            label.textContent = 'Analyse en cours…';
+            btn.disabled = true;
+
+            fetch(btn.dataset.url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    alert(data.message || 'Erreur lors de l\'analyse.');
+                    return;
+                }
+                if (!data.best_comment_id) {
+                    alert(data.reason || 'Pas assez de commentaires pour analyser.');
+                    return;
+                }
+
+                const bestId = data.best_comment_id;
+                const card   = document.getElementById('comment-' + bestId);
+                const badge  = document.getElementById('best-badge-' + bestId);
+
+                if (!card) {
+                    alert('Commentaire introuvable sur cette page.');
+                    return;
+                }
+
+                clearHighlight();
+                currentBestId = bestId;
+
+                // Apply highlight
+                card.classList.add('best-comment-highlight');
+                if (badge) {
+                    badge.querySelector('.best-reason-text').textContent = data.reason;
+                    badge.classList.remove('d-none');
+                }
+
+                // Scroll smoothly to it
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                btn.dataset.active = '1';
+                btn.classList.add('active-best');
+                label.textContent = 'Masquer la sélection';
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Erreur de connexion à l\'IA.');
+            })
+            .finally(() => {
+                icon.className = origIconClass;
+                btn.disabled = false;
+            });
+        });
+    })();
 </script>
 {% endblock %}
+
