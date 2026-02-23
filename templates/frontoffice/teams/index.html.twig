@@ -69,7 +69,7 @@
                                         {% if team.owner == app.user %}
                                             <a href="{{ path('team_manage', {'id': team.id}) }}" class="btn btn-sm btn-outline-light w-100">Manage</a>
                                         {% else %}
-                                              <button class="btn btn-sm btn-outline-secondary w-100" disabled>Joined</button>
+                                            <a href="{{ path('team_manage', {'id': team.id}) }}" class="btn btn-sm btn-outline-secondary w-100">Accéder à l'équipe</a>
                                         {% endif %}
                                     </div>
                                 </div>

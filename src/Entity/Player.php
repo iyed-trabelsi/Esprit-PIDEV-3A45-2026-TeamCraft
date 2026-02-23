@@ -37,6 +37,9 @@ class Player
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $selectedGames = [];
 
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $availability = null;
+
     #[ORM\OneToMany(targetEntity: CompetitiveRank::class, mappedBy: 'player', orphanRemoval: true)]
     private Collection $competitiveRanks;
 
@@ -161,6 +164,17 @@ class Player
                 $competitiveRank->setPlayer(null);
             }
         }
+
+        return $this;
+    }
+    public function getAvailability(): ?string
+    {
+        return $this->availability;
+    }
+
+    public function setAvailability(?string $availability): static
+    {
+        $this->availability = $availability;
 
         return $this;
     }

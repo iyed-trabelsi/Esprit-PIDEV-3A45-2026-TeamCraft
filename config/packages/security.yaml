@@ -19,10 +19,6 @@ security:
             provider: app_user_provider
             user_checker: App\Security\UserChecker
             entry_point: App\Security\AppCustomAuthenticator
-            form_login:
-                login_path: app_login
-                check_path: app_login
-                enable_csrf: true
             logout:
                 path: /logout
                 target: app_home

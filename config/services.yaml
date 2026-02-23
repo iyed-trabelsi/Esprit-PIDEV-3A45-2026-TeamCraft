@@ -25,6 +25,7 @@ parameters:
     
     # Google Gemini API Key for AI Scheduling
     gemini_api_key: '%env(default::GEMINI_API_KEY)%'
+    openai_api_key: '%env(default::OPENAI_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -72,3 +73,21 @@ services:
     App\Service\AiSchedulingService:
         arguments:
             $apiKey: '%gemini_api_key%'
+
+    # Injection de la clé Steam API pour SteamService
+    App\Service\SteamService:
+        arguments:
+            $steamApiKey: '%env(STEAM_API_KEY)%'
+
+    App\Service\RiotApiService:
+        arguments:
+            $httpClient: '@riot.client'
+            $riotApiKey: '%env(RIOT_API_KEY)%'
+            $riotApiRateLimit: '%env(int:RIOT_API_RATE_LIMIT)%'
+
+    App\Service\PdfCvService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

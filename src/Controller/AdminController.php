@@ -465,7 +465,6 @@ class AdminController extends AbstractController
         return $this->redirectToRoute('admin_posts');
     }
 
-
     #[Route('/admin/posts/{id}/statut', name: 'admin_post_statut', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function postStatut(int $id, Request $request, PostRepository $postRepository, EntityManagerInterface $em): Response
     {

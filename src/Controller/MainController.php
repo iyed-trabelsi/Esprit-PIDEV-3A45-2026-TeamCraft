@@ -35,7 +35,7 @@ class MainController extends AbstractController
 
 
     #[Route('/players', name: 'app_players', methods: ['GET'])]
-    public function players(Request $request, \App\Repository\PlayerRepository $playerRepository): Response
+    public function players(Request $request, \App\Repository\PlayerRepository $playerRepository, \App\Repository\FriendRequestRepository $friendRequestRepository): Response
     {
         $search = $request->query->get('search');
         $gameFilter = $request->query->get('game');
@@ -61,13 +61,14 @@ class MainController extends AbstractController
         }
 
         if ($user = $this->getUser()) {
+            /** @var \App\Entity\User $user */
             $qb->andWhere('u.id != :currentUserId')
                 ->setParameter('currentUserId', $user->getId());
         }
 
         // Exclude Admins from the discovery list
         $qb->andWhere('u.roles NOT LIKE :roleAdmin')
-           ->setParameter('roleAdmin', '%ROLE_ADMIN%');
+            ->setParameter('roleAdmin', '%ROLE_ADMIN%');
 
         // Sorting logic
         switch ($sort) {
@@ -136,7 +137,7 @@ class MainController extends AbstractController
             }
 
             $players[] = [
-                'id' => $p->getId(),
+                'id' => $user ? $user->getId() : $p->getId(),
                 'name' => $name,
                 'role' => $role,
                 'game' => $game,
@@ -147,14 +148,42 @@ class MainController extends AbstractController
             ];
         }
 
+        // Inject Friend Status
+        $friendStatuses = [];
+        if ($user = $this->getUser()) {
+            /** @var \App\Entity\User $user */
+            $friendRequests = $friendRequestRepository->createQueryBuilder('fr')
+                ->where('fr.sender = :user OR fr.receiver = :user')
+                ->setParameter('user', $user)
+                ->getQuery()
+                ->getResult();
+
+            foreach ($friendRequests as $fr) {
+                if ($fr->getStatus() === 'accepted') {
+                    $otherUser = ($fr->getSender() === $user) ? $fr->getReceiver() : $fr->getSender();
+                    $friendStatuses[$otherUser->getId()] = ['status' => 'friends', 'requestId' => $fr->getId()];
+                } elseif ($fr->getStatus() === 'pending') {
+                    if ($fr->getSender() === $user) {
+                        $friendStatuses[$fr->getReceiver()->getId()] = ['status' => 'pending_sent', 'requestId' => $fr->getId()];
+                    } else {
+                        $friendStatuses[$fr->getSender()->getId()] = ['status' => 'pending_received', 'requestId' => $fr->getId()];
+                    }
+                }
+            }
+        }
+
         // Handle AJAX request for dynamic search
         if ($request->isXmlHttpRequest()) {
             return $this->render('frontoffice/players/_player_cards.html.twig', [
-                'players' => $players
+                'players' => $players,
+                'friendStatuses' => $friendStatuses
             ]);
         }
 
-        return $this->render('frontoffice/players/index.html.twig', ['players' => $players]);
+        return $this->render('frontoffice/players/index.html.twig', [
+            'players' => $players,
+            'friendStatuses' => $friendStatuses
+        ]);
     }
 
     #[Route('/teams', name: 'app_teams', methods: ['GET'])]

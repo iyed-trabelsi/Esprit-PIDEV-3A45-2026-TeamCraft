@@ -758,37 +758,142 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-/* Logo Animation */
-@keyframes logoFloat {
+/* ========================================
+   USER DROPDOWN MENU (Brave Browser Style)
+   ======================================== */
 
-    0%,
-    100% {
-        transform: translateY(0px);
+/* Dropdown trigger button */
+.user-menu-trigger {
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 0.25rem 0.5rem !important;
+}
+
+.user-menu-trigger:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.user-menu-trigger:focus {
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* Dropdown menu container */
+.user-dropdown-menu {
+    min-width: 320px !important;
+    background-color: #1a1a1f !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+    padding: 0.5rem 0 !important;
+    margin-top: 0.5rem !important;
+    animation: dropdownSlideIn 0.2s ease-out;
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 
-    50% {
-        transform: translateY(-8px);
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-@keyframes logoGlow {
-
-    0%,
-    100% {
-        filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.3));
-    }
-
-    50% {
-        filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.6));
-    }
+/* Dropdown header */
+.user-dropdown-header {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.logo-animated {
-    transition: all 0.3s ease;
-    animation: logoFloat 3s ease-in-out infinite;
+.user-dropdown-header .text-white {
+    font-size: 0.95rem;
 }
 
-.logo-animated:hover {
-    animation: logoFloat 1s ease-in-out infinite, logoGlow 1.5s ease-in-out infinite;
-    transform: scale(1.1) rotate(-5deg);
+.user-dropdown-header .text-muted {
+    font-size: 0.8rem;
+    color: #94a3b8 !important;
+}
+
+/* Dropdown divider */
+.user-dropdown-menu .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    margin: 0.5rem 0 !important;
+}
+
+/* Dropdown items */
+.user-dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    color: #f1f5f9 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.15s ease !important;
+    position: relative !important;
+}
+
+.user-dropdown-item:hover {
+    background-color: #2c3038 !important;
+    color: #ffffff !important;
+}
+
+.user-dropdown-item:active {
+    background-color: #353a42 !important;
+}
+
+/* Icons in dropdown items */
+.user-dropdown-item i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    color: #94a3b8;
+    transition: color 0.15s ease;
+}
+
+.user-dropdown-item:hover i {
+    color: #0ea5e9;
+}
+
+/* Text label in dropdown items */
+.user-dropdown-item span {
+    flex: 1;
+}
+
+
+
+/* Logout item special styling */
+.user-dropdown-item.text-danger {
+    color: #ef4444 !important;
+}
+
+.user-dropdown-item.text-danger:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #ff5555 !important;
+}
+
+.user-dropdown-item.text-danger i {
+    color: #ef4444 !important;
+}
+
+.user-dropdown-item.text-danger:hover i {
+    color: #ff5555 !important;
+}
+
+/* Notification badges */
+.user-dropdown-item .badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .user-dropdown-menu {
+        min-width: 280px !important;
+        margin-right: -1rem;
+    }
+
+
 }

@@ -30,14 +30,22 @@
                       <path d="M13.43 12.18c-.027-.378-.073-.75-.138-1.113l-.007-.038a4.507 4.507 0 0 0-.276-1.026l.006-.033a3.507 3.507 0 0 0-.308-.72l.006-.035a2.508 2.508 0 0 0-.29-.53l.004-.025a1.505 1.505 0 0 0-.374-.75h.001l-.002-.002a2.495 2.495 0 0 0-.002 4.28 2.477 2.477 0 0 0 1.396-.008Z"/>
                     </svg>
                 </div>
-                <h1 class="h3 fw-bold text-white mb-0">Manage My Team</h1>
+                <h1 class="h3 fw-bold text-white mb-0">{{ isOwner ? 'Manage My Team' : (canManage ? 'Manage Team' : 'View Team') }}</h1>
              </div>
-             <a href="{{ path('app_teams') }}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                </svg>
-                Return
-             </a>
+             <div class="d-flex gap-2">
+                 <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3" data-bs-toggle="modal" data-bs-target="#teamChatModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-dots-fill" viewBox="0 0 16 16">
+                      <path d="M16 8c0 3.866-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.584.296-1.925.864-4.181 1.234-.2.032-.352-.176-.273-.362.354-.836.674-1.95.77-2.966C.744 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7zM5 8a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                    Team Chat
+                 </button>
+                 <a href="{{ path('app_teams') }}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                    </svg>
+                    Return
+                 </a>
+             </div>
         </div>
 
         <div class="row g-4">
@@ -68,6 +76,7 @@
                             </div>
                         </div>
                         
+                        {% if isOwner %}
                         <div class="d-flex gap-2">
                             <a href="{{ path('team_edit', {'id': team.id}) }}" class="btn btn-success flex-grow-1 fw-bold" style="font-size: 0.9rem;">Edit Team</a>
                             
@@ -76,10 +85,12 @@
                                 <button type="submit" class="btn btn-danger w-100 fw-bold" style="font-size: 0.9rem;">Delete Team</button>
                             </form>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Recruitment Dashboard -->
+                {% if canManage %}
                 <div class="card bg-dark border-0 shadow mb-3" style="background-color: #16161a !important;">
                      <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
                         <div class="d-flex align-items-center gap-2">
@@ -93,17 +104,20 @@
                               <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4 1 1 1H1zm11-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
                               <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
                             </svg>
-                            View All Applications
+                            Manage Recruitments
                         </a>
                     </div>
                 </div>
+                {% endif %}
 
-                <!-- Team Events -->
+
+                 <!-- Team Events & offers -->
+                {% if canManage %}
                 <div class="card bg-dark border-0 shadow mb-3" style="background-color: #16161a !important;">
                      <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
                         <div class="d-flex align-items-center gap-2">
                              <span class="d-inline-block bg-primary rounded-1" style="width: 8px; height: 8px;"></span>
-                             <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Team Events</h5>
+                             <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Team Events & offers</h5>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -123,6 +137,7 @@
                         </a>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Team Offers -->
                 <div class="card bg-dark border-0 shadow" style="background-color: #16161a !important;">
@@ -156,7 +171,6 @@
                     <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
                          <div class="d-flex align-items-center gap-2">
                              <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Team Roster</h5>
-                             <span class="text-secondary small ms-1">| 5 / 7 Members</span>
                          </div>
                     </div>
                     <div class="card-body p-0">
@@ -166,7 +180,7 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="position-relative">
                                             {% if member.profilePicture %}
-                                                <img src="{{ asset('uploads/avatars/' ~ member.profilePicture) }}" class="rounded-circle" width="45" height="45" alt="{{ member.pseudo }}">
+                                                <img src="{{ asset(member.profilePicture) }}" class="rounded-circle" width="45" height="45" alt="{{ member.pseudo }}" style="object-fit: cover;">
                                             {% else %}
                                                 <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 45px; height: 45px;">
                                                     {{ member.pseudo|first|upper }}
@@ -178,6 +192,8 @@
                                             <div class="text-white fw-bold">{{ member.pseudo }} 
                                                 {% if member == team.owner %}
                                                     <span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">OWNER</span>
+                                                {% elseif team.isCoOwner(member) %}
+                                                    <span class="badge bg-info text-dark ms-1" style="font-size: 0.6rem;">CO-OWNER</span>
                                                 {% endif %}
                                             </div>
                                             <div class="text-secondary small">{{ member.playerProfile.role|default('Member') }}</div>
@@ -189,13 +205,40 @@
                                             {{ member.playerProfile.status|default('Offline') }}
                                         </span>
                                         
-                                        {% if app.user == team.owner and member != team.owner %}
-                                            <form method="post" action="{{ path('team_remove_member', {id: team.id, userId: member.id}) }}" onsubmit="return confirm('Remove this member?');">
+                                        {% if isOwner and member != team.owner %}
+                                            {% if team.isCoOwner(member) %}
+                                                <form method="post" action="{{ path('team_demote_co_owner', {id: team.id, userId: member.id}) }}" class="d-inline" onsubmit="return confirm('Demote this member?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('demote_co_owner_' ~ member.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-link text-warning p-0 ms-2" title="Demote to Member">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-circle" viewBox="0 0 16 16">
+                                                          <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v5.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V4.5z"/>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <form method="post" action="{{ path('team_promote_co_owner', {id: team.id, userId: member.id}) }}" class="d-inline" onsubmit="return confirm('Promote to Co-Owner?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('promote_co_owner_' ~ member.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-link text-success p-0 ms-2" title="Promote to Co-Owner">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-circle" viewBox="0 0 16 16">
+                                                          <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11.5z"/>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {% if canManage and member != team.owner %}
+                                            {% if not team.isCoOwner(member) or isOwner %}
+                                            <form method="post" action="{{ path('team_remove_member', {id: team.id, userId: member.id}) }}" class="d-inline" onsubmit="return confirm('Remove this member?');">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('remove_member_' ~ member.id) }}">
                                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0 ms-2" title="Remove Member">
-                                                    <i class="bi bi-x-circle"></i>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                      <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                                    </svg>
                                                 </button>
                                             </form>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                 </div>
@@ -205,47 +248,15 @@
                                 </div>
                             {% endfor %}
                         </div>
+                        {% if canManage %}
                         <div class="p-3 text-center">
                             <a href="#" class="text-decoration-none text-primary fw-bold" style="font-size: 0.9rem;">View All Members</a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
 
-                <!-- Online Players Stats -->
-                <div class="card bg-dark border-0 shadow" style="background-color: #16161a !important; min-height: 250px;">
-                     <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
-                         <div class="d-flex align-items-center gap-2">
-                             <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Online Players</h5>
-                             <span class="text-secondary small ms-1">| 3 / 5 Online</span>
-                         </div>
-                    </div>
-                    <div class="card-body p-4 position-relative overflow-hidden">
-                        <!-- Background Graph Visual -->
-                        <div class="position-absolute bottom-0 end-0 w-100" style="height: 120px; background: linear-gradient(to top, rgba(34, 197, 94, 0.1), transparent); clip-path: polygon(0% 100%, 15% 90%, 30% 95%, 45% 85%, 60% 92%, 75% 80%, 90% 88%, 100% 70%, 100% 100%);"></div>
-                        <div class="position-absolute bottom-0 end-0 w-100" style="height: 120px; border-top: 2px solid #22c55e; clip-path: polygon(0% 100%, 15% 90%, 30% 95%, 45% 85%, 60% 92%, 75% 80%, 90% 88%, 100% 70%, 100% 71%, 100% 100%); opacity: 0.6;"></div>
 
-                        <div class="d-flex flex-column gap-3 position-relative" style="z-index: 1;">
-                            {% for member in roster|slice(0, 3) %}
-                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="position-relative">
-                                        {% if member.profilePicture %}
-                                            <img src="{{ asset('uploads/avatars/' ~ member.profilePicture) }}" class="rounded-circle" width="35" height="35" alt="{{ member.pseudo }}">
-                                        {% else %}
-                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 35px; height: 35px; font-size: 0.8rem;">
-                                                {{ member.pseudo|first|upper }}
-                                            </div>
-                                        {% endif %}
-                                         <span class="position-absolute top-0 start-0 translate-middle p-1 rounded-circle bg-danger border border-dark" style="width: 8px; height: 8px; display: {{ loop.first ? 'block' : 'none' }};"></span>
-                                    </div>
-                                    <div class="lh-1">
-                                        <div class="text-white fw-bold small mb-1">{{ member.pseudo }}</div>
-                                        <div class="text-secondary" style="font-size: 0.75rem;">{{ member.playerProfile.status|default('In-Game') }}</div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -259,105 +270,70 @@
                           <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a.5.5 0 0 1-.258 0L0 6.85v5.65z"/>
                         </svg>
                     </div>
-                    <h2 class="h3 fw-bold text-white mb-0">Manage My Offers</h2>
+                    <h2 class="h3 fw-bold text-white mb-0">{{ isOwner ? 'Manage My Offers' : 'Team Offers' }}</h2>
                 </div>
             </div>
             
             {% for o in offers %}
                 <div class="col-12">
-                     <div class="card h-100 border-secondary border-opacity-25" style="background-color: #16161a;">
-                        <div class="row g-0 align-items-center">
-                            <div class="col-md-3">
-                                <div class="p-3" style="height: 200px;">
+                     <div class="card h-100 border-secondary border-opacity-25 position-relative" style="background-color: #16161a;">
+                        <div class="row g-0 align-items-stretch">
+                            <div class="col-md-5">
+                                <div class="p-3 h-100" style="min-height: 300px;">
                                     {% if o.poster %}
                                         <img src="{{ asset('uploads/offers/' ~ o.poster) }}" alt="{{ o.role }}" class="img-fluid w-100 h-100 object-fit-cover rounded" style="object-position: center;">
                                     {% else %}
-                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark rounded border border-secondary border-opacity-25 text-white-50">
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark rounded border border-secondary border-opacity-25 text-white-50 fs-5">
                                             No Poster
                                         </div>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-9">
-                                <div class="card-body d-flex flex-column h-100 p-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h4 class="card-title text-white fw-bold mb-1">{{ o.title }}</h4>
-                                            <h5 class="card-subtitle text-white-50 fw-bold mb-1" style="font-size: 1rem;">{{ o.team.name }}</h5>
-                                            <p class="card-text text-white-50 small mb-0">{{ o.game }} • <span class="text-info">{{ o.role }}</span> • <span class="badge {{ o.game|lower == 'cs2' ? 'bg-success' : 'bg-primary' }}">{{ o.rank }}</span></p>
-                                        </div>
-                                        <small class="text-muted">{{ o.dateCreation|date('d M Y') }}</small>
+                            <div class="col-md-7">
+                                <div class="card-body d-flex flex-column h-100 p-4 position-relative">
+                                    <!-- Kebab Menu -->
+                                    {% if canManage %}
+                                    <div class="dropdown position-absolute top-0 end-0 m-3">
+                                        <button class="btn btn-link text-white p-0" type="button" id="offerMenu{{ o.id }}" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 1.5rem; line-height: 1;">
+                                            ⋮
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary" aria-labelledby="offerMenu{{ o.id }}">
+                                            <li>
+                                                <a class="dropdown-item text-white d-flex align-items-center gap-2" href="{{ path('offer_edit', {'id': o.id}) }}">
+                                                    <i class="bi bi-pencil"></i> Modifier
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider border-secondary"></li>
+                                            <li>
+                                                <form method="post" action="{{ path('offer_delete', {'id': o.id}) }}" onsubmit="return confirm('Are you sure you want to delete this offer?');" class="d-inline-block w-100">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_offer_' ~ o.id) }}">
+                                                    <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2 w-100 border-0 bg-transparent">
+                                                        <i class="bi bi-trash"></i> Supprimer
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="mb-3">
+                                        <h4 class="card-title text-white fw-bold mb-2">{{ o.title }}</h4>
+                                        <h5 class="card-subtitle text-white-50 fw-bold mb-2" style="font-size: 1rem;">{{ o.team.name }}</h5>
+                                        <p class="card-text text-white-50 small mb-0">{{ o.game }} • <span class="text-info">{{ o.role }}</span> • <span class="badge {{ o.game|lower == 'cs2' ? 'bg-success' : 'bg-primary' }}">{{ o.rank }}</span></p>
                                     </div>
                                     
-                                    <p class="card-text text-light flex-grow-1">{{ o.description }}</p>
+                                    <p class="card-text text-light flex-grow-1 mb-3">{{ o.description }}</p>
                                     
-                                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-25">
-                                        <div class="text-muted small">
-                                            Expires: {{ o.dateExpiration|date('d M Y') }}
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <form method="post" action="{{ path('offer_delete', {'id': o.id}) }}" onsubmit="return confirm('Are you sure you want to delete this offer?');" class="d-inline-block">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_offer_' ~ o.id) }}">
-                                                <button type="submit" class="btn btn-sm btn-danger px-3 fw-bold">
-                                                    <i class="bi bi-trash me-1"></i> Delete
-                                                </button>
-                                            </form>
-                                            <a href="{{ path('offer_edit', {'id': o.id}) }}" class="btn btn-sm btn-primary px-3 fw-bold">
-                                                <i class="bi bi-pencil me-1"></i> Modify
-                                            </a>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Applications Section -->
-                                    <div class="mt-4">
-                                        <h6 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
-                                            <i class="bi bi-people-fill text-info"></i>
-                                            Applications ({{ o.postulations|length }})
-                                        </h6>
-                                        <div class="application-list d-flex flex-column gap-2">
-                                            {% for app in o.postulations %}
-                                                <div class="application-item p-3 rounded bg-dark border border-secondary border-opacity-10 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                                    <div class="d-flex align-items-center gap-3">
-                                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
-                                                            {{ app.user.pseudo|first|upper }}
-                                                        </div>
-                                                        <div>
-                                                            <div class="text-white fw-bold">{{ app.user.pseudo }}</div>
-                                                            <div class="text-muted small">Applied on {{ app.createdAt|date('d M Y') }}</div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="badge-status-container">
-                                                        {% if app.status == 'accepted' %}
-                                                            <span class="badge bg-success text-white">Accepted</span>
-                                                        {% elseif app.status == 'refused' %}
-                                                            <span class="badge bg-danger text-white">Refused</span>
-                                                        {% else %}
-                                                            <span class="badge bg-warning text-dark">Pending</span>
-                                                        {% endif %}
-                                                    </div>
-
-                                                    {% if app.status == 'pending' %}
-                                                    <div class="d-flex gap-2 ms-auto">
-                                                        <form method="post" action="{{ path('app_application_accept', {id: app.id}) }}">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('accept' ~ app.id) }}">
-                                                            <button type="submit" class="btn btn-sm btn-outline-success">Accept</button>
-                                                        </form>
-                                                        <form method="post" action="{{ path('app_application_refuse', {id: app.id}) }}">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('refuse' ~ app.id) }}">
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Refuse</button>
-                                                        </form>
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                                {% if app.message %}
-                                                    <div class="ms-4 ps-4 border-start border-secondary border-opacity-25 pb-3">
-                                                        <div class="text-white-50 small italic">"{{ app.message }}"</div>
-                                                    </div>
-                                                {% endif %}
-                                            {% else %}
-                                                <p class="text-muted small">No applications yet.</p>
-                                            {% endfor %}
+                                    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="text-white small">
+                                                <i class="bi bi-calendar-event me-1"></i>
+                                                Expires: {{ o.dateExpiration|date('d M Y') }}
+                                            </div>
+                                            <div class="text-white small">
+                                                <i class="bi bi-clock me-1"></i>
+                                                Posted: {{ o.dateCreation|date('d M Y') }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1012,4 +988,324 @@
         });
     });
 </script>
+   
+
+<!-- Team Chat Modal -->
+<style>
+    .chat-modal-content {
+        background-color: #0A0C10; /* Fond principal profond */
+        border: 1px solid rgba(74, 158, 255, 0.2); /* Bordure subtile glow */
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .chat-header {
+        background: linear-gradient(90deg, #1A1D23 0%, #0A0C10 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px 20px;
+    }
+    .chat-body {
+        background-color: #16181C; /* Fond zone messages */
+        background-image: radial-gradient(#1A1D23 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+    .chat-footer {
+        background-color: #0A0C10;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px;
+    }
+    
+    /* Messages */
+    .msg-bubble {
+        border-radius: 18px;
+        padding: 12px 18px;
+        position: relative;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        transition: all 0.2s ease;
+        animation: msgPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes msgPop { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    
+    .msg-bubble.no-animation {
+        animation: none;
+    }
+
+    .msg-owner {
+        background: linear-gradient(135deg, rgba(42, 128, 241, 0.15), rgba(42, 128, 241, 0.05));
+        border: 1px solid rgba(42, 128, 241, 0.5);
+        color: #F0F4FA;
+        box-shadow: 0 4px 15px rgba(42, 128, 241, 0.1);
+        border-bottom-right-radius: 4px;
+    }
+    .msg-co-owner {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(46, 204, 113, 0.05));
+        border: 1px solid rgba(46, 204, 113, 0.5);
+        color: #F0F4FA;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.1);
+        border-bottom-right-radius: 4px;
+    }
+    .msg-member {
+        background-color: #2D313A;
+        border: 1px solid #3A3F4B;
+        color: #E2E8F0;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .avatar-ring {
+        transition: transform 0.2s;
+    }
+    .avatar-ring:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Scrollbar */
+    #chatMessages::-webkit-scrollbar { width: 6px; }
+    #chatMessages::-webkit-scrollbar-track { background: #0A0C10; }
+    #chatMessages::-webkit-scrollbar-thumb { background: #3A3F4B; border-radius: 10px; }
+    #chatMessages::-webkit-scrollbar-thumb:hover { background: #4A9EFF; }
+
+    /* Input */
+    .chat-input {
+        background-color: #1A1D23;
+        border: 1px solid #3A3F4B;
+        color: white;
+        border-radius: 20px;
+        padding-left: 15px;
+    }
+    .chat-input:focus {
+        background-color: #1A1D23;
+        color: white;
+        border-color: #4A9EFF;
+        box-shadow: 0 0 0 0.2rem rgba(74, 158, 255, 0.25);
+    }
+</style>
+
+<div class="modal fade" id="teamChatModal" tabindex="-1" aria-labelledby="teamChatModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content chat-modal-content">
+      <!-- Header -->
+      <div class="chat-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+             <div class="bg-dark bg-opacity-50 p-2 rounded-circle border border-secondary border-opacity-25">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#4A9EFF" class="bi bi-controller" viewBox="0 0 16 16">
+                  <path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0zm2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0zm-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1v-1z"/>
+                  <path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.39c.655-.079 1.35-.117 2.043-.117.72 0 1.443.041 2.12.126a.5.5 0 0 1 .622-.399l1.932.518a.5.5 0 0 1 .306.729c.14.09.266.19.373.297.408.408.78 1.05 1.095 1.772.32.733.599 1.591.805 2.466.156.655.24 1.378.167 2.013a.75.75 0 0 1-.743.653c-.315 0-.624-.056-.908-.135a.5.5 0 0 0-.634.295c-.268.627-.72 1.165-1.275 1.488-.098.058-.201.111-.309.158a.5.5 0 0 1-.504-.926c.047-.02.09-.043.132-.068.397-.23.719-.575.922-1.026a.5.5 0 0 0-.25-.632c-.584-.23-1.127-.518-1.595-.918a.5.5 0 0 0-.638.014c-.958.747-2.063 1.159-3.254 1.159-1.192 0-2.296-.412-3.255-1.159a.5.5 0 0 0-.638-.014c-.468.4-1.01.688-1.595.918a.5.5 0 0 0-.25.632c.203.45.525.795.922 1.026.042.025.085.048.132.068a.5.5 0 0 1-.504.926c-.108-.047-.21-.1-.309-.158-.555-.323-1.007-.86-1.275-1.488a.5.5 0 0 0-.634-.294c-.284.079-.593.135-.908.135a.75.75 0 0 1-.743-.653c-.073-.635.011-1.358.167-2.013.206-.875.486-1.733.805-2.466.315-.722.687-1.364 1.095-1.772a2.34 2.34 0 0 1 .373-.297a.5.5 0 0 1 .306-.729zM4.567 2.924a.428.428 0 0 0-.395.293L2.23 3.737a.356.356 0 0 0-.236.425c.015.064.04.137.079.215.114.228.283.527.508.868.441.67.939 1.135 1.258 1.282A.5.5 0 0 1 4 6.726v-.004a.5.5 0 0 1 .28-.466c.211-.1.442-.066.621.057a.5.5 0 0 0 .583-.09c.353-.353.793-.45 1.11-.27a.5.5 0 0 0 .692-.162c.114-.191.246-.37.391-.532A.5.5 0 0 0 7.394 4.5a3.89 3.89 0 0 1-1.286-.465.5.5 0 0 0-.266-.113 2.504 2.504 0 0 0-1.275.002zm9.203 0a2.504 2.504 0 0 0-1.275-.002.5.5 0 0 0-.266.113 3.894 3.894 0 0 1-1.286.465.5.5 0 0 0-.293.593c.145.162.277.341.391.532a.5.5 0 0 0 .692.162c.317-.18.757-.083 1.11.27a.5.5 0 0 0 .583.09c.179-.123.41-.157.621-.057a.5.5 0 0 1 .281.466v.004a.5.5 0 0 1 .169.217c.319-.147.817-.612 1.258-1.282.225-.34.394-.64.508-.868.039-.078.064-.151.079-.215a.356.356 0 0 0-.236-.425l-1.942-.52a.428.428 0 0 0-.395-.293z"/>
+                </svg>
+             </div>
+             <div>
+                <h5 class="modal-title fw-bold text-white mb-0" id="teamChatModalLabel" style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">TEAM CHAT</h5>
+                <div class="d-flex align-items-center gap-1 mt-1">
+                    <span class="d-inline-block rounded-circle bg-success" style="width: 6px; height: 6px;"></span>
+                    <span class="text-muted small" style="font-size: 0.7rem;">LIVE</span>
+                </div>
+             </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white opacity-50 hover-opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body chat-body p-0">
+        <div id="chatMessages" class="p-4 d-flex flex-column gap-3" style="height: 450px; overflow-y: auto;">
+             <!-- Messages will be loaded here via AJAX -->
+             <div class="text-center text-muted mt-5 d-flex flex-column align-items-center">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <span>Accessing secure channel...</span>
+             </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer chat-footer justify-content-start">
+        <form id="chatForm" class="d-flex gap-2 w-100 align-items-center">
+            <!-- File Upload Trigger -->
+            <input type="file" id="chatImageInput" accept="image/*" class="d-none">
+            <button type="button" class="btn btn-link text-secondary p-0 me-1 hover-text-white" id="chatUploadBtn" title="Upload Image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-paperclip" viewBox="0 0 16 16">
+                  <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5aa.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/>
+                </svg>
+            </button>
+            
+            <div class="flex-grow-1 position-relative">
+                <input type="text" id="chatInput" class="form-control chat-input" placeholder="Type your message..." autocomplete="off">
+                <!-- Emoji Icon (Visual) -->
+                <button type="button" class="btn btn-link text-secondary p-0 position-absolute end-0 top-50 translate-middle-y me-2 hover-text-white" style="text-decoration: none;">
+                    😊
+                </button>
+            </div>
+            <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center" style="width: 45px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2A80F1, #9147FF); border: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="white" class="bi bi-send-fill" viewBox="0 0 16 16">
+                  <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                </svg>
+            </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessagesContainer = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatImageInput = document.getElementById('chatImageInput');
+        const chatUploadBtn = document.getElementById('chatUploadBtn');
+        const teamChatModal = document.getElementById('teamChatModal');
+        let chatPollInterval;
+
+        // Trigger file input
+        chatUploadBtn.addEventListener('click', () => chatImageInput.click());
+        
+        // Change icon style when file selected
+        chatImageInput.addEventListener('change', () => {
+            if (chatImageInput.files.length > 0) {
+                chatUploadBtn.classList.remove('text-secondary');
+                chatUploadBtn.classList.add('text-primary');
+            } else {
+                chatUploadBtn.classList.add('text-secondary');
+                chatUploadBtn.classList.remove('text-primary');
+            }
+        });
+
+        let existingMessageIds = new Set();
+
+        function loadMessages() {
+            fetch("{{ path('team_chat_list', {id: team.id}) }}")
+                .then(response => response.json())
+                .then(data => {
+                    const newMessageIds = new Set();
+                    
+                    if (data.length === 0) {
+                        chatMessagesContainer.innerHTML = `
+                            <div class="text-center text-muted mt-5 opacity-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-chat-square-dots mb-3" viewBox="0 0 16 16">
+                                  <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2.5a2 2 0 0 0-1.6.8L8 14.333 6.1 11.8a2 2 0 0 0-1.6-.8H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.5l3.5 4.667L11.5 12H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                                  <path d="M5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                </svg>
+                                <p>No messages yet.<br>Start the conversation!</p>
+                            </div>`;
+                        existingMessageIds.clear();
+                        return;
+                    }
+
+                    // Only clear and rebuild if message count changed
+                    const shouldRebuild = chatMessagesContainer.children.length !== data.length;
+                    
+                    if (shouldRebuild) {
+                        chatMessagesContainer.innerHTML = '';
+                    }
+
+                    let lastSenderId = null;
+
+                    data.forEach((msg, index) => {
+                        const messageId = msg.id || `${msg.senderId}-${msg.createdAt}`;
+                        newMessageIds.add(messageId);
+                        const isNewMessage = !existingMessageIds.has(messageId);
+                        
+                        if (!shouldRebuild && !isNewMessage) {
+                            return; // Skip existing messages if not rebuilding
+                        }
+
+                        const isMe = msg.isMe;
+                        let bubbleClass = 'msg-member';
+                        let textColor = 'text-white';
+                        let borderColor = '#9CA3AF'; // Default gray
+                        
+                        if (msg.role === 'owner') {
+                            bubbleClass = 'msg-owner';
+                            borderColor = '#FFD700'; // Gold
+                        } else if (msg.role === 'co_owner') {
+                            bubbleClass = 'msg-co-owner';
+                            borderColor = '#2ECC71'; // Green
+                        }
+
+                        // Alignment based on isMe only
+                        const alignClass = isMe ? 'align-self-end text-end' : 'align-self-start text-start';
+                        const flexDir = isMe ? 'flex-row-reverse' : 'flex-row';
+                        
+                        // Avatar generation (initials or generic)
+                        const initial = msg.sender.charAt(0).toUpperCase();
+                        // You could pass avatar URL in the controller if available, for now using placeholder
+                        
+                        const showHeader = lastSenderId !== msg.senderId;
+                        
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `d-flex w-100 mb-1 ${flexDir}`;
+                        msgDiv.dataset.messageId = messageId;
+                        
+                        let contentHtml = `
+                            <div style="max-width: 80%;">
+                                ${showHeader ? `
+                                    <div class="mb-1 small d-flex align-items-center gap-2 ${isMe ? 'justify-content-end' : 'justify-content-start'}">
+                                        ${msg.role === 'owner' ? '<span class="badge rounded-pill bg-warning text-dark fw-bold d-flex align-items-center gap-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">👑 OWNER</span>' : ''}
+                                        ${msg.role === 'co_owner' ? '<span class="badge rounded-pill bg-info text-dark fw-bold d-flex align-items-center gap-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">⚡ CO-OWNER</span>' : ''}
+                                        <span class="fw-bold fs-7 text-white opacity-75">${msg.sender}</span>
+                                        <span class="text-muted" style="font-size: 0.65rem;">${msg.createdAt}</span>
+                                    </div>
+                                ` : ''}
+                                <div class="msg-bubble ${bubbleClass} text-start ${isNewMessage ? '' : 'no-animation'}">
+                                    ${msg.image ? `<div class="mb-2"><img src="${msg.image}" class="img-fluid rounded" style="max-height: 200px; object-fit: cover;"></div>` : ''}
+                                    ${msg.content}
+                                </div>
+                            </div>
+                        `;
+
+                        msgDiv.innerHTML = contentHtml;
+                        chatMessagesContainer.appendChild(msgDiv);
+                        
+                        lastSenderId = msg.senderId;
+                    });
+                    
+                    existingMessageIds = newMessageIds;
+                    
+                    // Auto scroll to bottom
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                })
+                .catch(err => console.error('Error fetching chat messages:', err));
+        }
+
+        teamChatModal.addEventListener('shown.bs.modal', () => {
+            loadMessages();
+            chatPollInterval = setInterval(loadMessages, 3000); // Poll every 3 seconds
+        });
+
+        teamChatModal.addEventListener('hidden.bs.modal', () => {
+            clearInterval(chatPollInterval);
+        });
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const content = chatInput.value.trim();
+            const imageFile = chatImageInput.files[0];
+
+            if (!content && !imageFile) return;
+
+            const formData = new FormData();
+            formData.append('content', content);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            // Send message
+            fetch("{{ path('team_chat_send', {id: team.id}) }}", {
+                method: 'POST',
+                // No headers for FormData, browser sets multipart/form-data boundary
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    chatInput.value = '';
+                    chatImageInput.value = ''; // Reset file input
+                    chatUploadBtn.classList.add('text-secondary');
+                    chatUploadBtn.classList.remove('text-primary');
+                    loadMessages(); // Refresh immediately
+                }
+            })
+            .catch(err => console.error('Error sending message:', err));
+        });
+    });
+</script>
+
 {% endblock %}

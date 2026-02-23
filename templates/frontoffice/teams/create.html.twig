@@ -16,6 +16,13 @@
                         </div>
 
                         {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                            {% if form.vars.submitted and not form.vars.valid %}
+                                <div class="alert alert-danger mb-4" role="alert">
+                                    <strong>Veuillez corriger les erreurs ci-dessous.</strong>
+                                    {{ form_errors(form) }}
+                                </div>
+                            {% endif %}
                             
                             <!-- Team Logo -->
                             <div class="mb-4 text-center">
@@ -35,14 +42,14 @@
                                     </button>
                                 </div>
                                 {{ form_widget(form.logo, {'attr': {'class': 'd-none', 'id': 'team_logo'}}) }}
-                                {{ form_errors(form.logo) }}
+                                <div class="text-danger mt-1">{{ form_errors(form.logo) }}</div>
                             </div>
 
                             <!-- Team Name -->
                             <div class="mb-4">
                                 {{ form_label(form.name, null, {'label_attr': {'class': 'form-label text-white'}}) }}
-                                {{ form_widget(form.name, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'required': false}}) }}
-                                {{ form_errors(form.name) }}
+                                {{ form_widget(form.name, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'required': true, 'placeholder': "Entrez le nom de l'équipe"}}) }}
+                                <div class="text-danger mt-1">{{ form_errors(form.name) }}</div>
                             </div>
 
                             <!-- Games Played -->
@@ -63,7 +70,7 @@
                                         </div>
                                     {% endfor %}
                                 </div>
-                                {{ form_errors(form.games) }}
+                                <div class="text-danger mt-1">{{ form_errors(form.games) }}</div>
                             </div>
 
                             <!-- Buttons -->
@@ -92,6 +99,15 @@
         }
         .form-check .btn-check:checked + .btn-outline-secondary .check-icon {
             opacity: 1 !important;
+        }
+        .text-danger ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+            display: block;
+        }
+        .text-danger li {
+            font-size: 0.875rem;
         }
     </style>
 

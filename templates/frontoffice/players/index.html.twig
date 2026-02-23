@@ -9,52 +9,80 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <h1 class="h2 fw-bold mb-0 discovery-section-title">
                 {% include 'frontoffice/partials/_icon_people.html.twig' %}
-                Player Discovery
+                Players Discovery
             </h1>
-            <a href="#" class="discovery-view-all">VIEW ALL PLAYERS →</a>
         </div>
 
-        <!-- Filter Bar -->
-        <div class="discovery-filter-container mb-5">
-            <form action="{{ path('app_players') }}" method="get" class="row g-3 align-items-center">
-                <div class="col-12 col-md-4">
-                    <div class="discovery-search-wrapper">
-                        <i class="fas fa-search discovery-search-icon"></i>
-                        <input type="text" name="search" class="form-control discovery-search-input" placeholder="Pseudo..." value="{{ app.request.query.get('search') }}">
-                    </div>
+        <!-- Filter Bar styled like Teams Discovery -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <!-- Sort Dropdown (pseudo/date) -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="playerSortDropdownBtn">
+                        <i class="bi bi-sort-down"></i>
+                        <span id="currentPlayerSortLabel">Newest First</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-player-sort-option" href="#" data-sort="newest">Newest First</a></li>
+                        <li><a class="dropdown-item js-player-sort-option" href="#" data-sort="pseudo_asc">Name A-Z</a></li>
+                        <li><a class="dropdown-item js-player-sort-option" href="#" data-sort="pseudo_desc">Name Z-A</a></li>
+                    </ul>
                 </div>
-                <div class="col-6 col-md-2">
-                    <select name="game" class="form-select discovery-filter-select">
-                        <option value="">Tous les types</option>
-                        <option value="valorant" {{ app.request.query.get('game') == 'valorant' ? 'selected' : '' }}>VALORANT</option>
-                        <option value="lol" {{ app.request.query.get('game') == 'lol' ? 'selected' : '' }}>LEAGUE OF LEGENDS</option>
-                        <option value="cs2" {{ app.request.query.get('game') == 'cs2' ? 'selected' : '' }}>CS2</option>
-                        <option value="overwatch" {{ app.request.query.get('game') == 'overwatch' ? 'selected' : '' }}>OVERWATCH</option>
-                    </select>
+
+                <!-- Filter by Game -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="playerGameFilterDropdownBtn">
+                        <i class="bi bi-funnel"></i>
+                        <span id="currentPlayerGameLabel">All Games</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-player-game-option" href="#" data-game="all">All Games</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-player-game-option" href="#" data-game="valorant">Valorant</a></li>
+                        <li><a class="dropdown-item js-player-game-option" href="#" data-game="lol">League of Legends</a></li>
+                        <li><a class="dropdown-item js-player-game-option" href="#" data-game="cs2">CS2</a></li>
+                        <li><a class="dropdown-item js-player-game-option" href="#" data-game="overwatch">Overwatch</a></li>
+                    </ul>
                 </div>
-                <div class="col-6 col-md-2">
-                    <select name="status" class="form-select discovery-filter-select">
-                        <option value="">Tous statuts</option>
-                        <option value="online" {{ app.request.query.get('status') == 'online' ? 'selected' : '' }}>ONLINE</option>
-                        <option value="ingame" {{ app.request.query.get('status') == 'ingame' ? 'selected' : '' }}>IN GAME</option>
-                        <option value="offline" {{ app.request.query.get('status') == 'offline' ? 'selected' : '' }}>OFFLINE</option>
-                    </select>
+
+                <!-- Filter by Rank (depends on game) -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="playerRankFilterDropdownBtn">
+                        <i class="bi bi-trophy"></i>
+                        <span id="currentPlayerRankLabel">All Ranks</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark" id="playerRankMenu">
+                        <li><a class="dropdown-item active js-player-rank-option" href="#" data-rank="all">All Ranks</a></li>
+                    </ul>
                 </div>
-                <div class="col-8 col-md-2">
-                    <select name="sort" class="form-select discovery-filter-select">
-                        <option value="">Trier par...</option>
-                        <option value="pseudo_asc" {{ app.request.query.get('sort') == 'pseudo_asc' ? 'selected' : '' }}>Pseudo (A-Z)</option>
-                        <option value="pseudo_desc" {{ app.request.query.get('sort') == 'pseudo_desc' ? 'selected' : '' }}>Pseudo (Z-A)</option>
-                        <option value="newest" {{ app.request.query.get('sort') == 'newest' ? 'selected' : '' }}>Plus récents</option>
-                    </select>
-                </div>
-                <div class="col-4 col-md-2">
-                    <button type="submit" class="btn btn-discovery-ok w-100">OK</button>
-                </div>
-            </form>
+            </div>
+
+            <!-- Search Input -->
+            <div class="position-relative">
+                <input type="text" id="player-search" class="form-control form-control-sm text-white ps-5" placeholder="Search players..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+            </div>
         </div>
+
+        <style>
+            #player-search::placeholder {
+                color: white !important;
+                opacity: 0.7;
+            }
+        </style>
+
         <div class="row g-4" id="player-list">
             {% include 'frontoffice/players/_player_cards.html.twig' %}
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <button class="btn btn-sm btn-tc-outline px-3 js-prev-players" disabled>
+                &lt;
+            </button>
+            <button class="btn btn-sm btn-tc-outline px-3 js-next-players">
+                &gt;
+            </button>
         </div>
     </section>
 
@@ -65,54 +93,269 @@
 {{ parent() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.querySelector('.discovery-filter-container form');
+    const searchInput = document.getElementById('player-search');
     const playerList = document.getElementById('player-list');
-    const searchInput = filterForm.querySelector('input[name="search"]');
-    const selects = filterForm.querySelectorAll('select');
-    
-    let debounceTimer;
+    const allPlayerCards = Array.from(document.querySelectorAll('#player-list .player-card'));
+    const sortOptions = document.querySelectorAll('.js-player-sort-option');
+    const gameOptions = document.querySelectorAll('.js-player-game-option');
+    const rankMenu = document.getElementById('playerRankMenu');
+    let rankOptions = document.querySelectorAll('.js-player-rank-option');
+    const currentSortLabel = document.getElementById('currentPlayerSortLabel');
+    const currentGameLabel = document.getElementById('currentPlayerGameLabel');
+    const currentRankLabel = document.getElementById('currentPlayerRankLabel');
 
-    const updateFilters = () => {
-        const formData = new FormData(filterForm);
-        const params = new URLSearchParams(formData);
-        
-        // Show loading state (optional, for UX)
-        playerList.style.opacity = '0.5';
-        
-        fetch(`${window.location.pathname}?${params.toString()}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            playerList.innerHTML = html;
-            playerList.style.opacity = '1';
-            
-            // Update URL without refreshing for shareability
-            window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-        })
-        .catch(error => {
-            console.error('Error fetching players:', error);
-            playerList.style.opacity = '1';
-        });
+    const prevBtns = document.querySelectorAll('.js-prev-players');
+    const nextBtns = document.querySelectorAll('.js-next-players');
+
+    let currentSearch = '';
+    let currentGame = 'all';
+    let currentSort = 'newest';
+    let currentRank = 'all';
+    const itemsPerPage = 6;
+    let currentPage = 0;
+    let visibleCards = allPlayerCards.slice();
+
+    const rankConfig = {
+        valorant: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant'],
+        lol: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Master', 'Grandmaster', 'Challenger'],
+        cs2: ['Silver', 'Gold Nova', 'Master Guardian', 'Legendary Eagle', 'Elite']
     };
 
-    // Listen for text input (with debounce)
-    searchInput.addEventListener('input', () => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(updateFilters, 300);
+    const cs2RankGroups = {
+        silver: ['silver', 'silver elite', 'silver elite master'],
+        'gold nova': ['gold nova', 'gold nova master'],
+        'master guardian': ['master guardian', 'master guardian elite', 'distinguished master guardian'],
+        'legendary eagle': ['legendary eagle', 'legendary eagle master'],
+        elite: ['supreme master first class', 'global elite']
+    };
+
+    function rebuildMenu(container, items, dataAttr, baseClass) {
+        container.innerHTML = '';
+        const allItem = document.createElement('li');
+        allItem.innerHTML = '<a class="dropdown-item active ' + baseClass + '" href="#" ' + dataAttr + '="all">All Ranks</a>';
+        container.appendChild(allItem);
+        if (items && items.length) {
+            const divider = document.createElement('li');
+            divider.innerHTML = '<hr class="dropdown-divider">';
+            container.appendChild(divider);
+            items.forEach(label => {
+                const li = document.createElement('li');
+                li.innerHTML = '<a class="dropdown-item ' + baseClass + '" href="#" ' + dataAttr + '="' + label.toLowerCase() + '">' + label + '</a>';
+                container.appendChild(li);
+            });
+        }
+    }
+
+    function applyFilters() {
+        visibleCards = allPlayerCards.filter(card => {
+            const name = (card.getAttribute('data-name') || '').toLowerCase();
+            const games = (card.getAttribute('data-games') || '').toLowerCase();
+            const rank = (card.getAttribute('data-rank') || '').toLowerCase();
+
+            const gameMatch = currentGame === 'all' || games.includes(currentGame);
+            const searchMatch = !currentSearch || name.includes(currentSearch);
+
+            let rankMatch = true;
+            if (currentRank !== 'all') {
+                if (currentGame === 'cs2') {
+                    const group = cs2RankGroups[currentRank] || [];
+                    rankMatch = group.some(r => rank.includes(r));
+                } else {
+                    rankMatch = rank.includes(currentRank);
+                }
+            }
+
+            return gameMatch && searchMatch && rankMatch;
+        });
+
+        visibleCards.sort((a, b) => {
+            const nameA = (a.getAttribute('data-name') || '').toLowerCase();
+            const nameB = (b.getAttribute('data-name') || '').toLowerCase();
+            const dateA = parseInt(a.getAttribute('data-date') || '0');
+            const dateB = parseInt(b.getAttribute('data-date') || '0');
+
+            if (currentSort === 'pseudo_asc') {
+                return nameA.localeCompare(nameB);
+            }
+            if (currentSort === 'pseudo_desc') {
+                return nameB.localeCompare(nameA);
+            }
+            // newest
+            return dateB - dateA;
+        });
+
+        currentPage = 0;
+        renderPage();
+    }
+
+    function renderPage() {
+        const totalPages = Math.ceil(visibleCards.length / itemsPerPage) || 1;
+        if (currentPage >= totalPages) currentPage = totalPages - 1;
+
+        const start = currentPage * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageItems = visibleCards.slice(start, end);
+
+        allPlayerCards.forEach(card => {
+            card.style.display = 'none';
+            card.remove();
+        });
+
+        pageItems.forEach(card => {
+            card.style.display = 'block';
+            playerList.appendChild(card);
+        });
+
+        prevBtns.forEach(btn => btn.disabled = currentPage === 0);
+        nextBtns.forEach(btn => btn.disabled = currentPage >= totalPages - 1);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            currentSearch = this.value.toLowerCase().trim();
+            applyFilters();
+        });
+    }
+
+    sortOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentSort = this.getAttribute('data-sort');
+            sortOptions.forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            if (currentSortLabel) currentSortLabel.textContent = this.textContent;
+            applyFilters();
+        });
     });
 
-    // Listen for select changes (instant)
-    selects.forEach(select => {
-        select.addEventListener('change', updateFilters);
+    function attachRankHandlers() {
+        rankOptions = document.querySelectorAll('.js-player-rank-option');
+        rankOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentRank = this.getAttribute('data-rank');
+                rankOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (currentRankLabel) currentRankLabel.textContent = this.textContent;
+                applyFilters();
+            });
+        });
+    }
+
+    gameOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentGame = this.getAttribute('data-game');
+            gameOptions.forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            if (currentGameLabel) currentGameLabel.textContent = this.textContent;
+
+            // Reset rank when game changes
+            currentRank = 'all';
+            if (currentRankLabel) currentRankLabel.textContent = 'All Ranks';
+
+            // Rebuild rank menu based on selected game
+            const ranksForGame = rankConfig[currentGame] || [];
+            if (rankMenu) {
+                rebuildMenu(rankMenu, ranksForGame, 'data-rank', 'js-player-rank-option');
+                attachRankHandlers();
+            }
+
+            applyFilters();
+        });
     });
 
-    // Prevent form submission (it's all AJAX now)
-    filterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        updateFilters();
+    // Initial handlers for default menus
+    if (rankMenu) attachRankHandlers();
+
+    // Pagination buttons
+    prevBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (currentPage > 0) {
+                currentPage--;
+                renderPage();
+            }
+        });
+    });
+
+    nextBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const totalPages = Math.ceil(visibleCards.length / itemsPerPage) || 1;
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                renderPage();
+            }
+        });
+    });
+
+    // Initial render
+    renderPage();
+
+    // Friend Toggle Handler
+    document.body.addEventListener('click', function(e) {
+        const btn = e.target.closest('.js-friend-toggle');
+        if (btn) {
+            e.preventDefault();
+            const url = btn.getAttribute('data-url');
+            const action = btn.getAttribute('data-action');
+            
+            // Visual feedback - Spinner
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner-border text-primary" role="status" style="width: 24px; height: 24px;"><span class="visually-hidden">Loading...</span></div>';
+            btn.style.pointerEvents = 'none';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error || 'Network response was not ok'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success' || data.status === 'removed') {
+                    // Toggle State
+                    if (action === 'send') {
+                        // Switch to Cancel state
+                        btn.setAttribute('data-action', 'cancel');
+                        btn.setAttribute('title', 'Cancel Request');
+                        // Use the returned ID to construct cancel URL
+                        const newRequestId = data.id;
+                        btn.setAttribute('data-send-url', url); // Save send URL
+                        btn.setAttribute('data-url', `/friend/action/${newRequestId}/cancel`); // Construct cancel URL
+                        
+                        btn.classList.remove('text-primary'); // Remove previous color if any
+                        btn.classList.add('text-danger');
+                        btn.innerHTML = '<i class="bi bi-x-circle-fill fs-2"></i>';
+                    } else if (action === 'cancel') {
+                        // Switch to Send state
+                        btn.setAttribute('data-action', 'send');
+                        btn.setAttribute('title', 'Add Friend');
+                        // Restore send URL
+                        const sendUrl = btn.getAttribute('data-send-url');
+                        btn.setAttribute('data-url', sendUrl);
+                        
+                        btn.classList.remove('text-danger');
+                        btn.innerHTML = '<i class="bi bi-person-plus-fill fs-2 text-white"></i>';
+                    }
+                } else {
+                    alert(data.error || 'Error processing request');
+                    btn.innerHTML = originalContent;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert(err.message || 'An error occurred. Please try again.');
+                btn.innerHTML = originalContent;
+            })
+            .finally(() => {
+                btn.style.pointerEvents = 'auto';
+            });
+        }
     });
 });
 </script>

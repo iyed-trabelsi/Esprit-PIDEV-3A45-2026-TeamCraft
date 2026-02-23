@@ -138,11 +138,57 @@
             .badge-rank.orange { background: #f97316; }
             .btn-recruit { background: var(--tc-neon-green); border: none; color: #fff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 1rem; border-radius: 0.5rem; width: 100%; }
             .btn-recruit:hover { background: #16a34a; color: #fff; }
+
+            /* Player card action buttons */
+            .player-actions .btn {
+                flex: 1 1 0;
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            /* Background toggle play/pause icon */
+            .bg-toggle-btn {
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin: 0;
+                line-height: 0;
+            }
+            .bg-toggle-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background-color: #27272f;
+                position: relative;
+            }
+            .bg-toggle-icon::before {
+                content: '';
+                position: absolute;
+                display: block;
+            }
+            /* Play icon (triangle) */
+            .bg-toggle-icon.icon-play::before {
+                border-style: solid;
+                border-width: 8px 0 8px 14px;
+                border-color: transparent transparent transparent #ffffff;
+                left: 12px;
+            }
+            /* Pause icon (two bars) */
+            .bg-toggle-icon.icon-pause::before {
+                width: 14px;
+                height: 14px;
+                border-left: 4px solid #ffffff;
+                border-right: 4px solid #ffffff;
+            }
         </style>
         {% block stylesheets %}{% endblock %}
         {% block javascripts %}
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
+        <link rel="stylesheet" href="{{ asset('assets/css/music-player.css') }}">
     </head>
     <body class="d-flex flex-column min-vh-100 {% block body_class %}{% endblock %}">
         <video autoplay muted loop playsinline class="video-background">
@@ -189,18 +235,33 @@
                         const isStatic = localStorage.getItem('bgStatic') === 'true';
                         if (isStatic) {
                             document.body.classList.add('static-bg');
-                            bgToggleIcon.textContent = 'STATIC';
+                            bgToggleIcon.classList.remove('icon-pause');
+                            bgToggleIcon.classList.add('icon-play');
+                        } else if (bgToggleIcon) {
+                            bgToggleIcon.classList.remove('icon-play');
+                            bgToggleIcon.classList.add('icon-pause');
                         }
 
                         // Toggle background on button click
                         bgToggle.addEventListener('click', function() {
                             const isCurrentlyStatic = document.body.classList.toggle('static-bg');
                             localStorage.setItem('bgStatic', isCurrentlyStatic);
-                            bgToggleIcon.textContent = isCurrentlyStatic ? 'STATIC' : 'VIDEO';
+                            if (isCurrentlyStatic) {
+                                bgToggleIcon.classList.remove('icon-pause');
+                                bgToggleIcon.classList.add('icon-play');
+                            } else {
+                                bgToggleIcon.classList.remove('icon-play');
+                                bgToggleIcon.classList.add('icon-pause');
+                            }
                         });
                     }
                 });
             </script>
         {% endblock %}
+
+        <!-- Global Music Player -->
+        {% include 'frontoffice/partials/_music_player.html.twig' %}
+        <script src="https://www.youtube.com/iframe_api"></script>
+        <script src="{{ asset('assets/js/music-player.js') }}"></script>
     </body>
 </html>
