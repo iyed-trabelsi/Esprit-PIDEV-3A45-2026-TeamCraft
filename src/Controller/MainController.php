@@ -11,9 +11,16 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 class MainController extends AbstractController
 {
     #[Route('/', name: 'app_home', methods: ['GET'])]
-    public function index(): Response
+    public function index(\App\Repository\OfferRepository $offerRepository): Response
     {
-        return $this->render('frontoffice/home/index.html.twig');
+        $sponsoredOffers = $offerRepository->findAllSorted(['offerType' => \App\Entity\Offer::TYPE_SPONSORED]);
+        
+        // Take top 3 for homepage
+        $sponsoredOffers = array_slice($sponsoredOffers, 0, 3);
+
+        return $this->render('frontoffice/home/index.html.twig', [
+            'sponsoredOffers' => $sponsoredOffers
+        ]);
     }
 
     #[Route('/login', name: 'app_login', methods: ['GET'])]
@@ -136,7 +143,7 @@ class MainController extends AbstractController
             }
 
             $players[] = [
-                'id' => $p->getId(),
+                'id' => $user ? $user->getId() : $p->getId(),
                 'name' => $name,
                 'role' => $role,
                 'game' => $game,
@@ -183,50 +190,45 @@ class MainController extends AbstractController
     }
 
     #[Route('/offres', name: 'app_offres', methods: ['GET'])]
-    public function offres(Request $request, \App\Repository\OfferRepository $offerRepository, \Doctrine\ORM\EntityManagerInterface $em): Response
+    public function offres(Request $request, \App\Repository\OfferRepository $offerRepository, \Doctrine\ORM\EntityManagerInterface $em, \App\Service\SmartMatchingService $smartMatchingService): Response
     {
         $search = $request->query->get('search');
         $game = $request->query->get('game');
         $rank = $request->query->get('rank');
 
-        $qb = $offerRepository->createQueryBuilder('o')
-            ->leftJoin('o.team', 't');
-
-        if ($search) {
-            $qb->andWhere('o.title LIKE :search OR o.description LIKE :search OR t.name LIKE :search')
-                ->setParameter('search', '%' . $search . '%');
-        }
-
+        $criteria = [];
         if ($game) {
-            $qb->andWhere('o.game = :game')
-                ->setParameter('game', $game);
+            $criteria['game'] = $game;
         }
 
-        if ($rank) {
-            $qb->andWhere('o.rank LIKE :rank')
-                ->setParameter('rank', '%' . $rank . '%');
-        }
-
-        $qb->orderBy('o.dateCreation', 'DESC');
-
-        $offres = $qb->getQuery()->getResult();
+        $offres = $offerRepository->findAllSorted($criteria, $search, $rank);
 
         $favoriteIds = [];
-        if ($this->getUser()) {
-            $favorites = $em->getRepository(\App\Entity\FavoriteOffer::class)->findBy(['user' => $this->getUser()]);
+        $matchScores = [];
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        if ($user) {
+            $favorites = $em->getRepository(\App\Entity\FavoriteOffer::class)->findBy(['user' => $user]);
             $favoriteIds = array_map(fn($f) => $f->getOffer()->getId(), $favorites);
+
+            if ($user->getPlayerProfile()) {
+                $matchScores = $smartMatchingService->predictMatchesBatch($user->getPlayerProfile(), $offres);
+            }
         }
 
         if ($request->isXmlHttpRequest()) {
             return $this->render('frontoffice/offres/_offer_cards.html.twig', [
                 'offres' => $offres,
-                'favoriteIds' => $favoriteIds
+                'favoriteIds' => $favoriteIds,
+                'matchScores' => $matchScores
             ]);
         }
 
         return $this->render('frontoffice/offres/index.html.twig', [
             'offres' => $offres,
-            'favoriteIds' => $favoriteIds
+            'favoriteIds' => $favoriteIds,
+            'matchScores' => $matchScores
         ]);
     }
 
@@ -309,7 +311,8 @@ class MainController extends AbstractController
                 'rank' => $p->getGameRank() ?? 'N/A',
                 'rankColor' => $rankColor,
                 'initial' => mb_substr($name, 0, 1),
-                'score' => $score
+                'score' => $score,
+                'compatibilityLevel' => $rec['compatibility_level'] ?? 'Low'
             ];
         }
 
@@ -369,6 +372,12 @@ class MainController extends AbstractController
             $postulation->setUser($this->getUser());
             $postulation->setOffer($offre);
             $postulation->setStatus('pending');
+
+            // Calculate and store match score at time of application
+            if ($this->getUser() && $this->getUser()->getPlayerProfile()) {
+                $prediction = $smartMatchingService->predictMatch($this->getUser()->getPlayerProfile(), $offre);
+                $postulation->setMatchScore((float) $prediction['match_score']);
+            }
 
             $entityManager->persist($postulation);
             $entityManager->flush();

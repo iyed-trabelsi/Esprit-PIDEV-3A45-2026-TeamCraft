@@ -1,5 +1,5 @@
 {% for o in offres %}
-    {% include 'frontoffice/offres/_offer_card.html.twig' with {'offre': o, 'favoriteIds': favoriteIds} %}
+    {% include 'frontoffice/offres/_offer_card.html.twig' with {'offre': o, 'favoriteIds': favoriteIds, 'matchScores': matchScores} %}
 {% else %}
     <div class="col-12 text-center py-5">
         <p class="text-muted">Aucune offre ne correspond à vos critères.</p>

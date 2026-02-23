@@ -43,6 +43,9 @@ class Player
     #[ORM\Column(nullable: true)]
     private ?float $winrate = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $kd = null;
+
     #[ORM\OneToMany(targetEntity: CompetitiveRank::class, mappedBy: 'player', orphanRemoval: true)]
     private Collection $competitiveRanks;
 
@@ -161,6 +164,18 @@ class Player
     public function setWinrate(?float $winrate): static
     {
         $this->winrate = $winrate;
+
+        return $this;
+    }
+
+    public function getKd(): ?float
+    {
+        return $this->kd;
+    }
+
+    public function setKd(?float $kd): static
+    {
+        $this->kd = $kd;
 
         return $this;
     }

@@ -4,6 +4,11 @@
 
 {% block body_class %}d-flex flex-column{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/premium.css') }}">
+{% endblock %}
+
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
@@ -89,6 +94,26 @@
             </div>
         </div>
     </section>
+
+    {% if sponsoredOffers|length > 0 %}
+        <!-- Sponsored Section -->
+        <section class="sponsored-offers py-5" style="background: linear-gradient(180deg, transparent, rgba(13, 202, 240, 0.05), transparent);">
+            <div class="container py-4">
+                <div class="d-flex align-items-center gap-3 mb-5 pb-2 border-bottom border-light-subtle">
+                    <div class="icon-box p-2 rounded text-info" style="background: rgba(13, 202, 240, 0.1);">
+                        <i class="bi bi-star-fill shadow-glow" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <h2 class="h3 font-display fw-bold text-white mb-0 text-uppercase">Sponsored Recruits</h2>
+                </div>
+                
+                <div class="row g-4">
+                    {% for offre in sponsoredOffers %}
+                        {% include 'frontoffice/offres/_offer_card.html.twig' %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
 
     <!-- What We Offer Section -->
     <section class="what-we-offer py-5" style="background: rgba(0, 2, 8, 0.4);">

@@ -21,9 +21,13 @@ class Offer
     #[ORM\OneToMany(mappedBy: 'offer', targetEntity: Postulation::class, orphanRemoval: true)]
     private Collection $postulations;
 
+    #[ORM\OneToMany(mappedBy: 'offer', targetEntity: Application::class, orphanRemoval: true)]
+    private Collection $applications;
+
     public function __construct()
     {
         $this->postulations = new ArrayCollection();
+        $this->applications = new ArrayCollection();
     }
 
     #[ORM\Column(length: 255)]
@@ -68,8 +72,31 @@ class Offer
     #[ORM\Column(options: ['default' => 0])]
     private int $views = 0;
 
-    #[ORM\Column(length: 20, options: ['default' => 'active'])]
-    private string $status = 'active';
+    public const STATUS_DRAFT = 'DRAFT';
+    public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_PAUSED = 'PAUSED';
+    public const STATUS_CLOSED = 'CLOSED';
+    public const STATUS_EXPIRED = 'EXPIRED';
+    public const STATUS_ARCHIVED = 'ARCHIVED';
+
+    #[ORM\Column(length: 20, options: ['default' => self::STATUS_DRAFT])]
+    private string $status = self::STATUS_DRAFT;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $activatedAt = null;
+
+    public const TYPE_FREE = 'FREE';
+    public const TYPE_FEATURED = 'FEATURED';
+    public const TYPE_SPONSORED = 'SPONSORED';
+
+    #[ORM\Column(length: 20, options: ['default' => self::TYPE_FREE])]
+    private string $offerType = self::TYPE_FREE;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private int $visibilityScore = 0;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $premiumExpiresAt = null;
 
     public function getId(): ?int
     {
@@ -262,14 +289,91 @@ class Offer
         return $this;
     }
 
+    public function getActivatedAt(): ?\DateTimeInterface
+    {
+        return $this->activatedAt;
+    }
+
+    public function setActivatedAt(?\DateTimeInterface $activatedAt): static
+    {
+        $this->activatedAt = $activatedAt;
+
+        return $this;
+    }
+
+    public function getOfferType(): string
+    {
+        return $this->offerType;
+    }
+
+    public function setOfferType(string $offerType): static
+    {
+        $this->offerType = $offerType;
+
+        return $this;
+    }
+
+    public function getVisibilityScore(): int
+    {
+        return $this->visibilityScore;
+    }
+
+    public function setVisibilityScore(int $visibilityScore): static
+    {
+        $this->visibilityScore = $visibilityScore;
+
+        return $this;
+    }
+
+    public function getPremiumExpiresAt(): ?\DateTimeInterface
+    {
+        return $this->premiumExpiresAt;
+    }
+
+    public function setPremiumExpiresAt(?\DateTimeInterface $premiumExpiresAt): static
+    {
+        $this->premiumExpiresAt = $premiumExpiresAt;
+
+        return $this;
+    }
+
+    public function isPremium(): bool
+    {
+        return $this->offerType !== self::TYPE_FREE;
+    }
+
+    public function isFeatured(): bool
+    {
+        return $this->offerType === self::TYPE_FEATURED;
+    }
+
+    public function isSponsored(): bool
+    {
+        return $this->offerType === self::TYPE_SPONSORED;
+    }
+
+    public function getRemainingPremiumDays(): int
+    {
+        if (!$this->premiumExpiresAt) {
+            return 0;
+        }
+
+        $now = new \DateTime();
+        if ($this->premiumExpiresAt < $now) {
+            return 0;
+        }
+
+        return $now->diff($this->premiumExpiresAt)->days;
+    }
+
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === self::STATUS_ACTIVE;
     }
 
     public function isExpired(): bool
     {
-        return $this->status === 'expired';
+        return $this->status === self::STATUS_EXPIRED;
     }
 
     #[Assert\Callback]

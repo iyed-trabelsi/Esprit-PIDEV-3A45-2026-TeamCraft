@@ -2,6 +2,11 @@
 
 {% block title %}Manage Team - {{ team.name }}{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/premium.css') }}">
+{% endblock %}
+
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
@@ -271,7 +276,28 @@
                                             <h5 class="card-subtitle text-white-50 fw-bold mb-1" style="font-size: 1rem;">{{ o.team.name }}</h5>
                                             <p class="card-text text-white-50 small mb-0">{{ o.game }} • <span class="text-info">{{ o.role }}</span> • <span class="badge {{ o.game|lower == 'cs2' ? 'bg-success' : 'bg-primary' }}">{{ o.rank }}</span></p>
                                         </div>
-                                        <small class="text-muted">{{ o.dateCreation|date('d M Y') }}</small>
+                                        <div>
+                                            {% set statusMap = {
+                                                'ACTIVE': {'color': 'success', 'label': 'Active'},
+                                                'PAUSED': {'color': 'warning', 'label': 'Paused'},
+                                                'EXPIRED': {'color': 'danger', 'label': 'Expired'},
+                                                'CLOSED': {'color': 'secondary', 'label': 'Closed'},
+                                                'DRAFT': {'color': 'info', 'label': 'Draft'},
+                                                'ARCHIVED': {'color': 'dark', 'label': 'Archived'}
+                                            } %}
+                                            {% set statusInfo = statusMap[o.status|upper]|default({'color': 'secondary', 'label': o.status}) %}
+                                            <span class="badge bg-{{ statusInfo.color }} text-uppercase mb-2" style="font-size: 0.7rem;">{{ statusInfo.label }}</span>
+                                            
+                                            {% if o.isPremium %}
+                                                <br>
+                                                <span class="badge {{ o.isFeatured ? 'bg-warning text-dark' : 'bg-info text-white' }} p-1 px-2 border-0 mb-1" style="font-size: 0.6rem;">
+                                                    {{ o.isFeatured ? '🔥 FEATURED' : '⭐ SPONSORED' }} 
+                                                    ({{ o.remainingPremiumDays }}d left)
+                                                </span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ o.dateCreation|date('d M Y') }}</small>
+                                        </div>
                                     </div>
                                     
                                     <p class="card-text text-light flex-grow-1">{{ o.description }}</p>
@@ -290,6 +316,32 @@
                                             <a href="{{ path('offer_edit', {'id': o.id}) }}" class="btn btn-sm btn-primary px-3 fw-bold">
                                                 <i class="bi bi-pencil me-1"></i> Modify
                                             </a>
+
+                                            {% if o.offerType == 'FREE' %}
+                                                <div class="dropdown d-inline-block">
+                                                    <button class="btn btn-sm btn-warning px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="bi bi-lightning-fill me-1"></i> Upgrade
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-dark bg-dark-deep border-light-subtle shadow-lg">
+                                                        <li>
+                                                            <form action="{{ path('offer_upgrade', {'id': o.id, 'type': 'FEATURED'}) }}" method="POST">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('upgrade_offer_' ~ o.id) }}">
+                                                                <button type="submit" class="dropdown-item py-2">
+                                                                    <span class="text-warning"><i class="bi bi-fire me-2"></i>Featured (7 days)</span>
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ path('offer_upgrade', {'id': o.id, 'type': 'SPONSORED'}) }}" method="POST">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('upgrade_offer_' ~ o.id) }}">
+                                                                <button type="submit" class="dropdown-item py-2">
+                                                                    <span class="text-info"><i class="bi bi-star-fill me-2"></i>Sponsored (30 days)</span>
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                     

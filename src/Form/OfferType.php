@@ -47,6 +47,13 @@ class OfferType extends AbstractType
                 'data' => 15, // Default to 15 days
                 'attr' => ['class' => 'form-select bg-dark text-white border-secondary border-opacity-25']
             ])
+            ->add('status', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
+                'choices' => [
+                    'Draft' => Offer::STATUS_DRAFT,
+                    'Published (Active)' => Offer::STATUS_ACTIVE,
+                ],
+                'attr' => ['class' => 'form-select bg-dark text-white border-secondary border-opacity-25']
+            ])
             ->add('description', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, [
                 'required' => false,
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25', 'rows' => 4]

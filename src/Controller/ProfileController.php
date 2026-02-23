@@ -145,13 +145,8 @@ class ProfileController extends AbstractController
     }
 
     #[Route('/profile/{id}', name: 'app_profile_show', methods: ['GET'])]
-    public function show(\App\Entity\Player $player): Response
+    public function show(\App\Entity\User $user): Response
     {
-        $user = $player->getUser();
-        if (!$user) {
-            throw $this->createNotFoundException('User not found for this player.');
-        }
-
         return $this->render('frontoffice/profile/index.html.twig', $this->prepareProfileData($user));
     }
 

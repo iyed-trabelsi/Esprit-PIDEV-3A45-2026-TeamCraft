@@ -196,7 +196,7 @@ class CompatibilityScorer
         return $a === $b || str_contains($a, $b) || str_contains($b, $a);
     }
 
-    private function resolveRankLevel(?string $rank): ?int
+    public function resolveRankLevel(?string $rank): ?int
     {
         if ($rank === null || $rank === '') {
             return null;

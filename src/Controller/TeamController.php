@@ -13,9 +13,24 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\NotificationService;
 
 class TeamController extends AbstractController
 {
+    private NotificationService $notificationService;
+    private \App\Service\PremiumService $premiumService;
+    private \App\Service\OfferLifecycleService $offerLifecycleService;
+
+    public function __construct(
+        NotificationService $notificationService,
+        \App\Service\PremiumService $premiumService,
+        \App\Service\OfferLifecycleService $offerLifecycleService
+    ) {
+        $this->notificationService = $notificationService;
+        $this->premiumService = $premiumService;
+        $this->offerLifecycleService = $offerLifecycleService;
+    }
+
     #[Route('/teams', name: 'app_teams')]
     public function index(Request $request, \App\Repository\TeamRepository $teamRepository, \Twig\Environment $twig): Response
     {
@@ -165,7 +180,10 @@ class TeamController extends AbstractController
             $offer->setTeam($team);
             $offer->setDateCreation($creationDate);
             $offer->setDateExpiration($expirationDate);
-            $offer->setStatus('active');
+            
+            if ($offer->getStatus() === Offer::STATUS_ACTIVE) {
+                $this->offerLifecycleService->changeStatus($offer, Offer::STATUS_ACTIVE);
+            }
 
             // Handle Poster Upload
             $posterFile = $offerForm->get('poster')->getData();
@@ -485,6 +503,16 @@ class TeamController extends AbstractController
                 }
             }
 
+            // Handle activation if status changed to ACTIVE
+            if ($offer->getStatus() === Offer::STATUS_ACTIVE && !$offer->getActivatedAt()) {
+                $offer->setActivatedAt(new \DateTime());
+                $this->notificationService->createNotification(
+                    $user,
+                    'OFFER_PUBLISHED',
+                    sprintf('Your offer "%s" is now active and visible to players.', $offer->getTitle())
+                );
+            }
+
             $em->flush();
             $this->addFlash('success', 'Offer updated successfully.');
 
@@ -495,5 +523,44 @@ class TeamController extends AbstractController
             'offer' => $offer,
             'form' => $form->createView(),
         ]);
+    }
+
+    #[Route('/offers/{id}/upgrade/{type}', name: 'offer_upgrade', methods: ['POST'])]
+    public function upgradeOffer(int $id, string $type, EntityManagerInterface $em, Request $request): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $offer = $em->getRepository(Offer::class)->find($id);
+
+        if (!$offer) {
+            throw $this->createNotFoundException('Offer not found');
+        }
+
+        if ($offer->getTeam()->getOwner() !== $user) {
+            throw $this->createAccessDeniedException('You are not authorized to upgrade this offer.');
+        }
+
+        if (!$this->isCsrfTokenValid('upgrade_offer_' . $offer->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('team_manage', ['id' => $offer->getTeam()->getId()]);
+        }
+
+        switch (strtoupper($type)) {
+            case 'FEATURED':
+                $this->premiumService->upgradeToFeatured($offer);
+                $this->addFlash('success', 'Offer boosted to FEATURED!');
+                break;
+            case 'SPONSORED':
+                $this->premiumService->upgradeToSponsored($offer);
+                $this->addFlash('success', 'Offer boosted to SPONSORED!');
+                break;
+            default:
+                $this->addFlash('error', 'Invalid upgrade type.');
+        }
+
+        return $this->redirectToRoute('team_manage', ['id' => $offer->getTeam()->getId()]);
     }
 }

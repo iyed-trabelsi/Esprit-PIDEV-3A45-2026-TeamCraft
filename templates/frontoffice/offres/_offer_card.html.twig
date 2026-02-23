@@ -1,5 +1,13 @@
+{% set premiumClass = offre.offerType == 'FEATURED' ? 'featured-border' : (offre.offerType == 'SPONSORED' ? 'sponsored-highlight' : '') %}
+
 <div class="col-12 col-sm-6 col-lg-4">
-    <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative">
+    <div class="discovery-card h-100 d-flex flex-column p-4 text-center position-relative {{ premiumClass }}">
+        {% if offre.offerType == 'FEATURED' %}
+            <span class="badge bg-warning text-dark text-uppercase position-absolute" style="top: 10px; left: 10px; font-size: 0.6rem; z-index: 5;">🔥 Featured</span>
+        {% elseif offre.offerType == 'SPONSORED' %}
+            <span class="badge bg-info text-white text-uppercase position-absolute" style="top: 10px; left: 10px; font-size: 0.6rem; z-index: 5;">⭐ Sponsored</span>
+        {% endif %}
+
         <!-- Favorite Heart Icon -->
         {% if app.user %}
             {% set is_favorited = favoriteIds is defined and offre.id in favoriteIds %}
@@ -17,6 +25,25 @@
             {% set gameClass = offre.game|lower == 'league of legends' ? 'lol' : offre.game|lower %}
             <span class="badge-game {{ gameClass }}">{{ offre.game }}</span>
             <span class="badge-rank purple">{{ offre.rank }}</span>
+            
+            {% set statusMap = {
+                'ACTIVE': {'color': 'success', 'label': 'Active'},
+                'PAUSED': {'color': 'warning', 'label': 'Paused'},
+                'EXPIRED': {'color': 'danger', 'label': 'Expired'},
+                'CLOSED': {'color': 'secondary', 'label': 'Closed'},
+                'DRAFT': {'color': 'info', 'label': 'Draft'},
+                'ARCHIVED': {'color': 'dark', 'label': 'Archived'}
+            } %}
+            {% set statusInfo = statusMap[offre.status|upper]|default({'color': 'secondary', 'label': offre.status}) %}
+            <span class="badge bg-{{ statusInfo.color }} text-uppercase" style="font-size: 0.65rem; padding: 0.4em 0.8em; border-radius: 4px;">{{ statusInfo.label }}</span>
+            
+            {% if matchScores is defined and matchScores[offre.id] is defined %}
+                {% set ms = matchScores[offre.id] %}
+                {% set badgeColor = ms.match_score >= 80 ? 'bg-success' : (ms.match_score >= 50 ? 'bg-warning' : 'bg-danger') %}
+                <span class="badge {{ badgeColor }} text-white text-uppercase" style="font-size: 0.65rem; padding: 0.4em 0.8em; border-radius: 4px;">
+                    <i class="bi bi-cpu-fill me-1"></i> Match {{ ms.match_score }}%
+                </span>
+            {% endif %}
         </div>
         <a href="{{ path('app_offres_show', { id: offre.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Offer</a>
     </div>
