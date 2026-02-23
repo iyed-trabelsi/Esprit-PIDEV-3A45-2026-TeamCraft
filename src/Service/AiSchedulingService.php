@@ -31,12 +31,20 @@ class AiSchedulingService
         $events = $this->evenementRepo->findAll();
         $stats = $this->analyzeHistory($events);
 
+        $currentDateTimeStr = (new \DateTime())->format('Y-m-d H:i');
+
         $prompt = "You are a senior event analytics consultant advising a competitive gaming community. "
+                . "IMPORTANT CONTEXT: Today's exact current date and time is: $currentDateTimeStr\n\n"
                 . "Below is detailed performance data from past events. Each entry includes the event name, type, day of week, start time, duration, venue capacity, participants (fill rate %), and average community rating out of 5.\n\n"
                 . $stats . "\n\n"
                 . "Your task: Analyse this data and recommend the SINGLE most optimal next event. Your tone should be professional, confident, and persuasive — as if presenting a strategic report to stakeholders.\n\n"
+                . "STRICT CONSTRAINTS (MANDATORY):\n"
+                . "1. nomEvenement MUST be AT LEAST 8 characters long.\n"
+                . "2. typeEvenement MUST be AT LEAST 8 characters long.\n"
+                . "3. dateDebut MUST be EQUAL TO OR STRICTLY LATER THAN $currentDateTimeStr.\n"
+                . "4. dateFin MUST be AFTER dateDebut.\n\n"
                 . "Return ONLY a JSON object (no markdown, no extra text). Use this EXACT schema:\n"
-                . '{"nomEvenement":"A compelling event name (minimum 10 characters)","typeEvenement":"The event type matching existing types","dateDebut":"YYYY-MM-DDTHH:MM","dateFin":"YYYY-MM-DDTHH:MM","reasoning":"ONE sentence executive summary of the recommendation.","data_insights":"2-3 sentences citing specific numbers from the data: which time slots had the highest fill rates, which event types scored the best ratings, notable patterns observed.","time_rationale":"2-3 sentences explaining WHY this specific day, time, and duration were chosen based on the data patterns. Be specific with percentages and ratings.","type_rationale":"2-3 sentences explaining why this event type is recommended over alternatives, referencing its historical performance metrics.","confidence_score":85}';
+                . '{"nomEvenement":"A compelling event name (min 8 chars)","typeEvenement":"The event type (min 8 chars)","dateDebut":"YYYY-MM-DDTHH:MM","dateFin":"YYYY-MM-DDTHH:MM","reasoning":"ONE sentence executive summary of the recommendation.","data_insights":"2-3 sentences citing specific numbers from the data: which time slots had the highest fill rates, which event types scored the best ratings, notable patterns observed.","time_rationale":"2-3 sentences explaining WHY this specific day, time, and duration were chosen based on the data patterns. Be specific with percentages and ratings.","type_rationale":"2-3 sentences explaining why this event type is recommended over alternatives, referencing its historical performance metrics.","confidence_score":85}';
 
         
         try {

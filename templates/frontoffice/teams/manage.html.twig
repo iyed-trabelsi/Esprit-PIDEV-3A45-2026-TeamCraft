@@ -553,6 +553,12 @@
                     {{ form_end(eventForm) }}
 
                     <script>
+                    // Prevent z-index issues caused by nested modals by moving to body
+                    (function() {
+                        const modal = document.getElementById('aiDetailsModalFront');
+                        if (modal) document.body.appendChild(modal);
+                    })();
+
                     document.addEventListener('DOMContentLoaded', function() {
                         const btnFront = document.getElementById('ai-generate-btn-front');
                         if (btnFront) {
