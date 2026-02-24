@@ -11,8 +11,13 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 class MainController extends AbstractController
 {
     #[Route('/', name: 'app_home', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        // Bloque l'accès si le code de sécurité est requis mais pas encore validé
+        if ($request->getSession()->get('2fa_required')) {
+            return $this->redirectToRoute('app_verify_security');
+        }
+
         return $this->render('frontoffice/home/index.html.twig');
     }
 

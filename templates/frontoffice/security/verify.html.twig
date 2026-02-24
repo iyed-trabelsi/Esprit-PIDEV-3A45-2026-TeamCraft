@@ -1,12 +1,31 @@
 {% extends 'frontoffice/base.html.twig' %}
 
+{% block title %}Vérification de sécurité{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
-    <h2>Connexion inhabituelle détectée</h2>
-    <p>Un code a été généré (Vérifie ta base de données pour la démo).</p>
-    <form method="post">
-        <input type="text" name="code" class="form-control" placeholder="Entrez le code à 6 chiffres" required>
-        <button type="submit" class="btn btn-primary mt-3">Vérifier</button>
-    </form>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Connexion inhabituelle détectée</h3>
+                </div>
+                <div class="card-body">
+                    <p>Pour votre sécurité, nous avons envoyé un code de vérification à votre adresse email.</p>
+                    
+                    <form method="post" action="{{ path('app_verify_security') }}">
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Entrez le code à 6 chiffres</label>
+                            <input type="text" name="code" id="code" class="form-control form-control-lg text-center" placeholder="000000" required maxlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Vérifier le code</button>
+                    </form>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>Vérifiez votre base de données (colonne security_code) pour le test.</small>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -48,9 +48,8 @@
                         <th class="border-0 px-4 py-3"><a href="{{ path('admin_players', {q: q, sort: 'u.pseudo'}) }}" class="text-white text-decoration-none">Pseudo <i class="bi bi-arrow-down-up small"></i></a></th>
                         <th class="border-0 px-4 py-3"><a href="{{ path('admin_players', {q: q, sort: 'p.game'}) }}" class="text-white text-decoration-none">Jeu <i class="bi bi-arrow-down-up small"></i></a></th>
                         <th class="border-0 px-4 py-3">Rang</th>
-                        <th class="border-0 px-4 py-3">Rôle</th>
-                        <th class="border-0 px-4 py-3"><a href="{{ path('admin_players', {q: q, sort: 'p.region'}) }}" class="text-white text-decoration-none">Région <i class="bi bi-arrow-down-up small"></i></a></th>
                         <th class="border-0 px-4 py-3">Statut</th>
+                        <th class="border-0 px-4 py-3 text-center">Fiabilité (IA)</th> {# Nouvelle colonne #}
                         <th class="border-0 px-4 py-3 text-end">Actions</th>
                     </tr>
                 </thead>
@@ -60,11 +59,37 @@
                             <td class="px-4 py-3 fw-semibold bg-input-match">{{ player.user ? player.user.pseudo : 'N/A' }}</td>
                             <td class="px-4 py-3 bg-input-match">{{ player.game }}</td>
                             <td class="px-4 py-3 bg-input-match">{{ player.gameRank }}</td>
-                            <td class="px-4 py-3 bg-input-match">{{ player.role }}</td>
-                            <td class="px-4 py-3 bg-input-match">{{ player.region }}</td>
                             <td class="px-4 py-3 bg-input-match">
                                 <span class="badge-status {{ player.status|lower }}">{{ player.status }}</span>
                             </td>
+                            
+                            {# AFFICHAGE DU SCORE DE RISQUE #}
+                            <td class="px-4 py-3 bg-input-match text-center">
+    {% if player.user and player.user.loginHistories|length > 0 %}
+        {% set lastHistory = player.user.loginHistories|last %}
+        {% set score = lastHistory.riskScore %}
+        
+        <div class="d-flex flex-column align-items-center gap-2">
+            <span class="badge {% if score >= 80 %}bg-danger{% elseif score >= 50 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                Score: {{ score }}%
+            </span>
+
+            {# Bouton d'intervention rapide si le score est suspect #}
+            {% if score >= 50 and player.user.isActive %}
+                <form action="{{ path('admin_user_block', {id: player.user.id}) }}" method="post">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem;">
+                        <i class="bi bi-slash-circle"></i> Bloquer
+                    </button>
+                </form>
+            {% elseif not player.user.isActive %}
+                <span class="badge bg-secondary">Utilisateur Bloqué</span>
+            {% endif %}
+        </div>
+    {% else %}
+        <span class="text-muted small">Aucune donnée</span>
+    {% endif %}
+</td>
+
                             <td class="px-4 py-3 text-end bg-input-match">
                                 <button class="action-btn view" title="Voir" data-bs-toggle="modal" data-bs-target="#playerModal" onclick="prepareModal('view', '{{ player.id }}', '{{ player.user ? player.user.pseudo|e('js') }}', '{{ player.game|e('js') }}', '{{ player.gameRank|e('js') }}', '{{ player.role|e('js') }}', '{{ player.region|e('js') }}', '{{ player.status|e('js') }}')">
                                     <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
@@ -82,15 +107,15 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="7" class="text-center py-4 bg-input-match">Aucun joueur trouvé.</td>
+                            <td colspan="6" class="text-center py-4 bg-input-match">Aucun joueur trouvé.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-
     </div>
 
+    {# ... Pagination et Modal (inchangés) ... #}
     <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
         <span class="small text-muted">Affichage de {{ players|length }} sur {{ totalPlayers }} joueurs</span>
         <nav aria-label="Pagination joueurs">
@@ -98,13 +123,11 @@
                 <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
                     <a class="page-link" href="{{ path('admin_players', {page: currentPage - 1, q: q, sort: sort}) }}">Précédent</a>
                 </li>
-                
                 {% for i in 1..maxPages %}
                     <li class="page-item {{ currentPage == i ? 'active' : '' }}">
                         <a class="page-link" href="{{ path('admin_players', {page: i, q: q, sort: sort}) }}">{{ i }}</a>
                     </li>
                 {% endfor %}
-                
                 <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
                     <a class="page-link" href="{{ path('admin_players', {page: currentPage + 1, q: q, sort: sort}) }}">Suivant</a>
                 </li>
@@ -112,6 +135,7 @@
         </nav>
     </div>
 
+    {# Modal Code... #}
     <div class="modal fade" id="playerModal" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background: var(--tc-bg-dark); border: 1px solid var(--tc-border);">

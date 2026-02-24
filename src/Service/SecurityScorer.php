@@ -16,6 +16,7 @@ class SecurityScorer
 
     public function getRiskScore(User $user, string $currentIp, string $currentCity, string $currentUA): array
     {
+        // hedheya test : return ['score' => 100, 'reasons' => ['TEST FORCE']];
         $history = $this->historyRepository->findBy(['user' => $user], ['createdAt' => 'DESC'], 5);
         
         $score = 0;

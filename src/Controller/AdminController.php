@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Controller;
-
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,10 +20,39 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\TeamRepository;
 use App\Repository\OfferRepository;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 class AdminController extends AbstractController
 {
-   #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
+   #[Route('/admin/user/{id}/block', name: 'admin_user_block', methods: ['POST'])]
+   public function blockUser(User $user, EntityManagerInterface $em, MailerInterface $mailer): Response
+    {
+        // 1. Désactiver l'utilisateur
+        $user->setIsActive(false); 
+        $em->flush();
+
+        // 2. Préparer l'email d'avertissement
+        $email = (new Email())
+            ->from('security@teamcraft.com')
+            ->to($user->getEmail())
+            ->subject('Alerte de sécurité : Compte TeamCraft suspendu')
+            ->html("
+                <h2>Bonjour " . $user->getPseudo() . "</h2>
+                <p>Suite à une détection de connexion suspecte ou inhabituelle, votre compte a été <strong>suspendu par un administrateur</strong> par mesure de précaution.</p>
+                <p>Veuillez contacter le support pour procéder à la récupération de votre compte.</p>
+                <p>Cordialement,<br>L'équipe Sécurité TeamCraft</p>
+            ");
+
+        // 3. Envoyer l'email
+        $mailer->send($email);
+
+        $this->addFlash('success', 'Utilisateur bloqué et email d\'alerte envoyé.');
+
+        return $this->redirectToRoute('admin_players');
+    }
+
+    #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(
         Request $request, 
         RubriqueRepository $rubriqueRepository,

@@ -26,6 +26,10 @@ class LoginHistory
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    // NOUVEAU CHAMP POUR LE SCORE
+    #[ORM\Column(nullable: true)]
+    private ?int $riskScore = null;
+
     #[ORM\ManyToOne(inversedBy: 'loginHistories')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
@@ -43,7 +47,6 @@ class LoginHistory
     public function setIpAdress(string $ipAdress): static
     {
         $this->ipAdress = $ipAdress;
-
         return $this;
     }
 
@@ -55,7 +58,6 @@ class LoginHistory
     public function setUserAgent(string $userAgent): static
     {
         $this->userAgent = $userAgent;
-
         return $this;
     }
 
@@ -64,10 +66,9 @@ class LoginHistory
         return $this->city;
     }
 
-    public function setCity(string $city): static
+    public function setCity(?string $city): static
     {
         $this->city = $city;
-
         return $this;
     }
 
@@ -79,7 +80,17 @@ class LoginHistory
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+        return $this;
+    }
 
+    public function getRiskScore(): ?int
+    {
+        return $this->riskScore;
+    }
+
+    public function setRiskScore(?int $riskScore): static
+    {
+        $this->riskScore = $riskScore;
         return $this;
     }
 
@@ -91,7 +102,6 @@ class LoginHistory
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
         return $this;
     }
 }
