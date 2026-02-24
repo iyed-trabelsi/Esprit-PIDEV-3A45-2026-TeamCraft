@@ -1,0 +1,110 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block body %}
+<div class="container py-5 text-center">
+    <div class="card card-tc p-5 d-inline-block shadow-lg" style="background: #1a1d21; border-radius: 20px; border: 1px solid #333;">
+        <h2 class="text-white mb-4">Vérification Biométrique</h2>
+        
+        <div class="video-container" style="position: relative; width: 320px; height: 240px; margin: 0 auto; border: 2px solid #333; border-radius: 15px; overflow: hidden;">
+            <video id="video" width="320" height="240" autoplay muted style="position: absolute; top:0; left:0; object-fit: cover;"></video>
+            <canvas id="overlay" width="320" height="240" style="position: absolute; top:0; left:0; z-index: 10;"></canvas>
+        </div>
+
+        <div class="mt-4">
+            <span id="status-badge" class="badge bg-warning text-dark px-4 py-2" style="font-size: 0.9rem;">Initialisation...</span>
+        </div>
+        
+        <p class="text-white-50 mt-3 small">Seul l'administrateur authentifié peut franchir cette étape.</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('overlay');
+    const statusBadge = document.getElementById('status-badge');
+    
+    let faceMatcher = null;
+    let isIdentified = false;
+
+    async function startApp() {
+        try {
+            statusBadge.innerHTML = "Chargement des modèles...";
+            
+            // Chargement des modèles depuis /public/models
+            await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+
+            statusBadge.innerHTML = "Analyse de la référence...";
+            
+            // Chargement de ta photo admin
+            const img = await faceapi.fetchImage('/images/users/admin.jpg.jpg');
+            const refDetection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+                                             .withFaceLandmarks()
+                                             .withFaceDescriptor();
+
+            if (!refDetection) {
+                statusBadge.innerHTML = "Photo de référence introuvable";
+                return;
+            }
+
+            // Création du comparateur
+            faceMatcher = new faceapi.FaceMatcher(refDetection, 0.55);
+
+            // Accès Webcam
+            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            video.srcObject = stream;
+            
+            statusBadge.innerHTML = "Système Prêt ✅";
+            statusBadge.className = "badge bg-info text-dark px-3 py-2";
+
+        } catch (err) {
+            console.error(err);
+            statusBadge.innerHTML = "Erreur de chargement";
+            statusBadge.className = "badge bg-danger px-3 py-2";
+        }
+    }
+
+    video.addEventListener('play', () => {
+        const displaySize = { width: 320, height: 240 };
+        faceapi.matchDimensions(canvas, displaySize);
+
+        const detectionLoop = setInterval(async () => {
+            if (!faceMatcher || isIdentified) return;
+
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
+                                            .withFaceLandmarks()
+                                            .withFaceDescriptors();
+
+            const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            const resized = faceapi.resizeResults(detections, displaySize);
+            
+            resized.forEach(detection => {
+                const result = faceMatcher.findBestMatch(detection.descriptor);
+                const color = result.label !== 'unknown' ? '#00ff00' : '#ff0000';
+                const label = result.label !== 'unknown' ? 'ADMIN' : 'INCONNU';
+
+                // Dessiner le cadre
+                new faceapi.draw.DrawBox(detection.detection.box, { label, boxColor: color }).draw(canvas);
+
+                if (result.label !== 'unknown') {
+                    isIdentified = true;
+                    statusBadge.innerHTML = "ADMIN CONFIRMÉ ✅";
+                    statusBadge.className = "badge bg-success px-4 py-2";
+                    
+                    // On arrête la boucle et on redirige
+                    clearInterval(detectionLoop);
+                    setTimeout(() => {
+                        window.location.href = "/admin"; 
+                    }, 1500);
+                }
+            });
+        }, 200);
+    });
+
+    startApp();
+</script>
+{% endblock %}

@@ -27,7 +27,6 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
 
     public const LOGIN_ROUTE = 'app_login';
 
-    // UN SEUL CONSTRUCTEUR avec toutes les injections
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
         private SecurityScorer $securityScorer,
@@ -53,28 +52,22 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        /** @var User $user */
         $user = $token->getUser();
 
-        // 1. Vérification immédiate du statut (Compte activé/bloqué)
+        // 1. Vérification du statut du compte
         if (!$user->isActive()) {
-            // On déconnecte de force
             $request->getSession()->invalidate();
-            // Optionnel : ajouter un message flash pour expliquer le blocage
             $request->getSession()->getFlashBag()->add('danger', 'Votre compte est suspendu.');
-            
             return new RedirectResponse($this->urlGenerator->generate('app_login'));
         }
 
-        // 2. Préparation des données pour l'IA
+        // 2. Historique et Analyse de risque (IA)
         $ip = $request->getClientIp();
         $userAgent = $request->headers->get('User-Agent');
-        $city = 'Paris'; // Ville de test
+        $city = 'Paris'; // Ville de test ou via API GeoIP
 
-        // 3. Calcul du score via le service SecurityScorer
         $analysis = $this->securityScorer->getRiskScore($user, $ip, $city, $userAgent);
 
-        // 4. Enregistrement systématique dans l'historique
         $history = new LoginHistory();
         $history->setUser($user);
         $history->setIpAdress($ip);
@@ -85,20 +78,23 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
         
         $this->entityManager->persist($history);
 
-        // 5. Analyse du risque (Sécurité Adaptive)
+        // 3. CAS SPÉCIFIQUE : ADMIN -> Redirection vers FACE ID
+        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+            $this->entityManager->flush();
+            return new RedirectResponse($this->urlGenerator->generate('app_face_id'));
+        }
+
+        // 4. Analyse Adaptive (2FA par email si score élevé pour users non-admin)
         if ($analysis['score'] >= 50) {
             $code = (string)random_int(100000, 999999);
             $user->setSecurityCode($code);
-            
-            // On flush ici pour sauver le code et l'historique avant l'envoi
             $this->entityManager->flush();
 
-            // Envoi de l'email via Mailtrap
             $emailMessage = (new Email())
                 ->from('security@teamcraft.com')
                 ->to($user->getEmail())
                 ->subject('Code de sécurité TeamCraft')
-                ->html("<h2>Connexion inhabituelle</h2><p>Votre code de vérification est : <strong>$code</strong></p>");
+                ->html("<p>Votre code de vérification est : <strong>$code</strong></p>");
 
             $this->mailer->send($emailMessage);
 
@@ -106,7 +102,7 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
             return new RedirectResponse($this->urlGenerator->generate('app_verify_security'));
         }
 
-        // 6. Si tout est OK (score faible)
+        // 5. Redirection standard (Home)
         $this->entityManager->flush();
 
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {

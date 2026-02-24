@@ -11,6 +11,16 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class SecurityController extends AbstractController
 {
+    #[Route('/login/face-id', name: 'app_face_id')]
+    public function faceId(): Response
+    {
+        // On vérifie quand même que seul l'admin connecté peut être ici
+        if (!$this->getUser() || !in_array('ROLE_ADMIN', $this->getUser()->getRoles())) {
+            return $this->redirectToRoute('app_login');
+        }
+        return $this->render('frontoffice/security/face_id.html.twig');
+    }
+    
     #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
