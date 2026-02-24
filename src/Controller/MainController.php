@@ -11,9 +11,16 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 class MainController extends AbstractController
 {
     #[Route('/', name: 'app_home', methods: ['GET'])]
-    public function index(): Response
+    public function index(\App\Repository\OfferRepository $offerRepository): Response
     {
-        return $this->render('frontoffice/home/index.html.twig');
+        $sponsoredOffers = $offerRepository->findAllSorted(['offerType' => \App\Entity\Offer::TYPE_SPONSORED]);
+        
+        // Take top 3 for homepage
+        $sponsoredOffers = array_slice($sponsoredOffers, 0, 3);
+
+        return $this->render('frontoffice/home/index.html.twig', [
+            'sponsoredOffers' => $sponsoredOffers
+        ]);
     }
 
     #[Route('/login', name: 'app_login', methods: ['GET'])]
@@ -212,50 +219,71 @@ class MainController extends AbstractController
     }
 
     #[Route('/offres', name: 'app_offres', methods: ['GET'])]
-    public function offres(Request $request, \App\Repository\OfferRepository $offerRepository): Response
+    public function offres(Request $request, \App\Repository\OfferRepository $offerRepository, \Doctrine\ORM\EntityManagerInterface $em, \App\Service\SmartMatchingService $smartMatchingService): Response
     {
         $search = $request->query->get('search');
         $game = $request->query->get('game');
         $rank = $request->query->get('rank');
 
-        $qb = $offerRepository->createQueryBuilder('o')
-            ->leftJoin('o.team', 't');
-
-        if ($search) {
-            $qb->andWhere('o.title LIKE :search OR o.description LIKE :search OR t.name LIKE :search')
-                ->setParameter('search', '%' . $search . '%');
-        }
-
+        $criteria = [];
         if ($game) {
-            $qb->andWhere('o.game = :game')
-                ->setParameter('game', $game);
+            $criteria['game'] = $game;
         }
 
-        if ($rank) {
-            $qb->andWhere('o.rank LIKE :rank')
-                ->setParameter('rank', '%' . $rank . '%');
+        $offres = $offerRepository->findAllSorted($criteria, $search, $rank);
+
+        $favoriteIds = [];
+        $matchScores = [];
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        if ($user) {
+            $favorites = $em->getRepository(\App\Entity\FavoriteOffer::class)->findBy(['user' => $user]);
+            $favoriteIds = array_map(fn($f) => $f->getOffer()->getId(), $favorites);
+
+            if ($user->getPlayerProfile()) {
+                $matchScores = $smartMatchingService->predictMatchesBatch($user->getPlayerProfile(), $offres);
+            }
         }
-
-        $qb->orderBy('o.dateCreation', 'DESC');
-
-        $offres = $qb->getQuery()->getResult();
 
         if ($request->isXmlHttpRequest()) {
             return $this->render('frontoffice/offres/_offer_cards.html.twig', [
-                'offres' => $offres
+                'offres' => $offres,
+                'favoriteIds' => $favoriteIds,
+                'matchScores' => $matchScores
             ]);
         }
 
-        return $this->render('frontoffice/offres/index.html.twig', ['offres' => $offres]);
+        return $this->render('frontoffice/offres/index.html.twig', [
+            'offres' => $offres,
+            'favoriteIds' => $favoriteIds,
+            'matchScores' => $matchScores
+        ]);
     }
 
     #[Route('/offres/{id}', name: 'app_offres_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function offresShow(int $id, \App\Repository\OfferRepository $offerRepository, \App\Repository\PostulationRepository $postulationRepository): Response
+    public function offresShow(int $id, \App\Repository\OfferRepository $offerRepository, \App\Repository\PostulationRepository $postulationRepository, \App\Service\SmartMatchingService $smartMatchingService, \Doctrine\ORM\EntityManagerInterface $entityManager, \Symfony\Component\HttpFoundation\Request $request): Response
     {
         $offre = $offerRepository->find($id);
 
         if (!$offre) {
             throw $this->createNotFoundException('Offre non trouvée.');
+        }
+
+        // Track view (prevent duplicate counting with session)
+        $session = $request->getSession();
+        $viewedOffers = $session->get('viewed_offers', []);
+        
+        // If this offer wasn't viewed in this session in the last 24h, increment view count
+        $offerKey = 'offer_' . $id;
+        $lastViewed = $viewedOffers[$offerKey] ?? null;
+        $now = new \DateTimeImmutable();
+        
+        if (!$lastViewed || $lastViewed < $now->modify('-24 hours')) {
+            $offre->incrementViews();
+            $entityManager->flush();
+            $viewedOffers[$offerKey] = $now;
+            $session->set('viewed_offers', $viewedOffers);
         }
 
         // Check if current user has already applied
@@ -270,10 +298,65 @@ class MainController extends AbstractController
 
         $form = $this->createForm(\App\Form\PostulationType::class);
 
+        // Get Smart Matching Recommendations
+        $recommendations = $smartMatchingService->getTopPlayersForOffer($offre);
+        $recommendedPlayers = [];
+
+        foreach ($recommendations as $rec) {
+            /** @var \App\Entity\Player $p */
+            $p = $rec['player'];
+            $score = $rec['score'];
+            $user = $p->getUser();
+            $name = $user ? $user->getPseudo() : 'Joueur';
+
+            // Determine colors (similar to players list logic)
+            $gameKey = strtolower($p->getGame() ?? '');
+            $gameColor = match ($gameKey) {
+                'valorant' => 'valorant',
+                'lol', 'league of legends' => 'lol',
+                'cs2', 'csgo' => 'cs2',
+                'overwatch', 'ow2' => 'overwatch',
+                default => 'bg-secondary'
+            };
+
+            $rankLower = strtolower($p->getGameRank() ?? '');
+            $rankColor = 'bg-secondary';
+            if (str_contains($rankLower, 'iron') || str_contains($rankLower, 'bronze') || str_contains($rankLower, 'silver')) {
+                $rankColor = 'grey';
+            } elseif (str_contains($rankLower, 'gold') || str_contains($rankLower, 'platinum')) {
+                $rankColor = 'yellow';
+            } elseif (str_contains($rankLower, 'diamond') || str_contains($rankLower, 'emerald')) {
+                $rankColor = 'purple';
+            } elseif (str_contains($rankLower, 'master') || str_contains($rankLower, 'grandmaster') || str_contains($rankLower, 'challenger') || str_contains($rankLower, 'immortal') || str_contains($rankLower, 'radiant') || str_contains($rankLower, 'global')) {
+                $rankColor = 'green';
+            }
+
+            $recommendedPlayers[] = [
+                'id' => $p->getUser()->getId(), // Link to user profile usually
+                'name' => $name,
+                'role' => $p->getRole() ?? 'N/A',
+                'game' => $p->getGame() ?? 'N/A',
+                'gameColor' => $gameColor,
+                'rank' => $p->getGameRank() ?? 'N/A',
+                'rankColor' => $rankColor,
+                'initial' => mb_substr($name, 0, 1),
+                'score' => $score,
+                'compatibilityLevel' => $rec['compatibility_level'] ?? 'Low'
+            ];
+        }
+
+        // Check if favorited
+        $isFavorited = false;
+        if ($this->getUser()) {
+            $isFavorited = $entityManager->getRepository(\App\Entity\FavoriteOffer::class)->isFavorited($this->getUser(), $offre);
+        }
+
         return $this->render('frontoffice/offres/show.html.twig', [
             'offre' => $offre,
             'hasApplied' => $hasApplied,
-            'form' => $form->createView()
+            'form' => $form->createView(),
+            'recommendedPlayers' => $recommendedPlayers,
+            'isFavorited' => $isFavorited
         ]);
     }
 
@@ -319,6 +402,12 @@ class MainController extends AbstractController
             $postulation->setOffer($offre);
             $postulation->setStatus('pending');
 
+            // Calculate and store match score at time of application
+            if ($this->getUser() && $this->getUser()->getPlayerProfile()) {
+                $prediction = $smartMatchingService->predictMatch($this->getUser()->getPlayerProfile(), $offre);
+                $postulation->setMatchScore((float) $prediction['match_score']);
+            }
+
             $entityManager->persist($postulation);
             $entityManager->flush();
 
@@ -349,5 +438,72 @@ class MainController extends AbstractController
         ]);
     }
 
+    #[Route('/offres/{id}/favorite', name: 'app_offer_favorite', methods: ['POST'])]
+    public function favoriteOffer(int $id, \App\Repository\OfferRepository $offerRepository, \App\Repository\FavoriteOfferRepository $favoriteOfferRepository, \Doctrine\ORM\EntityManagerInterface $em): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        if (!$this->getUser()) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => false, 'message' => 'You must be logged in'], 401);
+        }
+
+        $offer = $offerRepository->find($id);
+        if (!$offer) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => false, 'message' => 'Offer not found'], 404);
+        }
+
+        // Check if already favorited
+        if ($favoriteOfferRepository->isFavorited($this->getUser(), $offer)) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => false, 'message' => 'Already favorited'], 400);
+        }
+
+        $favorite = new \App\Entity\FavoriteOffer();
+        $favorite->setUser($this->getUser());
+        $favorite->setOffer($offer);
+
+        $em->persist($favorite);
+        $em->flush();
+
+        return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => true, 'message' => 'Offer added to favorites']);
+    }
+
+    #[Route('/offres/{id}/unfavorite', name: 'app_offer_unfavorite', methods: ['POST'])]
+    public function unfavoriteOffer(int $id, \App\Repository\OfferRepository $offerRepository, \App\Repository\FavoriteOfferRepository $favoriteOfferRepository, \Doctrine\ORM\EntityManagerInterface $em): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        if (!$this->getUser()) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => false, 'message' => 'You must be logged in'], 401);
+        }
+
+        $offer = $offerRepository->find($id);
+        if (!$offer) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => false, 'message' => 'Offer not found'], 404);
+        }
+
+        $favorite = $favoriteOfferRepository->findOneByUserAndOffer($this->getUser(), $offer);
+        if (!$favorite) {
+            return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => false, 'message' => 'Not favorited'], 400);
+        }
+
+        $em->remove($favorite);
+        $em->flush();
+
+        return new \Symfony\Component\HttpFoundation\JsonResponse(['success' => true, 'message' => 'Offer removed from favorites']);
+    }
+
+    #[Route('/my-favorites', name: 'app_my_favorites', methods: ['GET'])]
+    public function myFavorites(\App\Repository\FavoriteOfferRepository $favoriteOfferRepository): Response
+    {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $favorites = $favoriteOfferRepository->findByUser($this->getUser());
+        
+        // Extract offers from favorites
+        $offers = array_map(fn($fav) => $fav->getOffer(), $favorites);
+
+        return $this->render('frontoffice/offres/favorites.html.twig', [
+            'offres' => $offers,
+            'favorites' => $favorites
+        ]);
+    }
 
 }

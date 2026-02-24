@@ -13,9 +13,24 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\NotificationService;
 
 class TeamController extends AbstractController
 {
+    private NotificationService $notificationService;
+    private \App\Service\PremiumService $premiumService;
+    private \App\Service\OfferLifecycleService $offerLifecycleService;
+
+    public function __construct(
+        NotificationService $notificationService,
+        \App\Service\PremiumService $premiumService,
+        \App\Service\OfferLifecycleService $offerLifecycleService
+    ) {
+        $this->notificationService = $notificationService;
+        $this->premiumService = $premiumService;
+        $this->offerLifecycleService = $offerLifecycleService;
+    }
+
     #[Route('/teams', name: 'app_teams')]
     public function index(Request $request, \App\Repository\TeamRepository $teamRepository, \Twig\Environment $twig): Response
     {
@@ -171,6 +186,12 @@ class TeamController extends AbstractController
                 $offer->setTeam($team);
                 $offer->setDateCreation(new \DateTime());
 
+                // Calculate expiration date based on validityPeriod selection
+                $validityDays = $offerForm->get('validityPeriod')->getData() ?: 15;
+                $expiration = new \DateTime();
+                $expiration->modify('+' . $validityDays . ' days');
+                $offer->setDateExpiration($expiration);
+
                 // Handle Poster Upload
                 $posterFile = $offerForm->get('poster')->getData();
                 if ($posterFile) {
@@ -225,6 +246,19 @@ class TeamController extends AbstractController
         // Initialize new Event for modal
         $evenement = new \App\Entity\Evenement();
         $eventForm = $this->createForm(\App\Form\EvenementType::class, $evenement);
+        // Calculate statistics for offers
+        $offerStats = [];
+        foreach ($team->getOffers() as $offer) {
+            $views = $offer->getViews();
+            $applications = $offer->getPostulations()->count();
+            $conversionRate = $views > 0 ? round(($applications / $views) * 100, 1) : 0;
+            
+            $offerStats[$offer->getId()] = [
+                'views' => $views,
+                'applications' => $applications,
+                'conversionRate' => $conversionRate
+            ];
+        }
 
         return $this->render('frontoffice/teams/manage.html.twig', [
             'team' => $team,
@@ -236,7 +270,8 @@ class TeamController extends AbstractController
             'eventForm' => $eventForm->createView(),
             'isOwner' => $isOwner,
             'isCoOwner' => $isCoOwner,
-            'canManage' => $canManage
+            'canManage' => $canManage,
+            'offerStats' => $offerStats
         ]);
     }
 
@@ -495,6 +530,14 @@ class TeamController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Update expiration date if validity period was changed
+            $validityDays = $form->get('validityPeriod')->getData();
+            if ($validityDays) {
+                $expiration = new \DateTime();
+                $expiration->modify('+' . $validityDays . ' days');
+                $offer->setDateExpiration($expiration);
+            }
+            
             // Handle Poster Update if needed
             $posterFile = $form->get('poster')->getData();
             if ($posterFile) {
@@ -511,6 +554,16 @@ class TeamController extends AbstractController
                 } catch (\Exception $e) {
                     $this->addFlash('error', 'Error uploading poster');
                 }
+            }
+
+            // Handle activation if status changed to ACTIVE
+            if ($offer->getStatus() === Offer::STATUS_ACTIVE && !$offer->getActivatedAt()) {
+                $offer->setActivatedAt(new \DateTime());
+                $this->notificationService->createNotification(
+                    $user,
+                    'OFFER_PUBLISHED',
+                    sprintf('Your offer "%s" is now active and visible to players.', $offer->getTitle())
+                );
             }
 
             $em->flush();
@@ -571,5 +624,43 @@ class TeamController extends AbstractController
         }
 
         return $this->redirectToRoute('team_manage', ['id' => $id]);
+    }
+    #[Route('/offers/{id}/upgrade/{type}', name: 'offer_upgrade', methods: ['POST'])]
+    public function upgradeOffer(int $id, string $type, EntityManagerInterface $em, Request $request): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $offer = $em->getRepository(Offer::class)->find($id);
+
+        if (!$offer) {
+            throw $this->createNotFoundException('Offer not found');
+        }
+
+        if ($offer->getTeam()->getOwner() !== $user) {
+            throw $this->createAccessDeniedException('You are not authorized to upgrade this offer.');
+        }
+
+        if (!$this->isCsrfTokenValid('upgrade_offer_' . $offer->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('team_manage', ['id' => $offer->getTeam()->getId()]);
+        }
+
+        switch (strtoupper($type)) {
+            case 'FEATURED':
+                $this->premiumService->upgradeToFeatured($offer);
+                $this->addFlash('success', 'Offer boosted to FEATURED!');
+                break;
+            case 'SPONSORED':
+                $this->premiumService->upgradeToSponsored($offer);
+                $this->addFlash('success', 'Offer boosted to SPONSORED!');
+                break;
+            default:
+                $this->addFlash('error', 'Invalid upgrade type.');
+        }
+
+        return $this->redirectToRoute('team_manage', ['id' => $offer->getTeam()->getId()]);
     }
 }

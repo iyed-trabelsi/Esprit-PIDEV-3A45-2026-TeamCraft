@@ -56,7 +56,6 @@
                                 <a class="dropdown-item user-dropdown-item" href="{{ path('app_profile') }}">
                                     <i class="bi bi-person-circle"></i>
                                     <span>Profil</span>
-
                                 </a>
                             </li>
                             <li>
@@ -66,7 +65,12 @@
                                     {% if navbarData.friendRequestsCount > 0 %}
                                         <span class="position-absolute top-50 translate-middle-y badge rounded-pill bg-danger" style="right: 70px; font-size: 0.65rem;">{{ navbarData.friendRequestsCount }}</span>
                                     {% endif %}
-
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item user-dropdown-item" href="{{ path('app_my_favorites') }}">
+                                    <i class="bi bi-heart-fill"></i>
+                                    <span>Favorites</span>
                                 </a>
                             </li>
                             <li>
@@ -76,7 +80,6 @@
                                     {% if navbarData.notificationsCount > 0 %}
                                         <span class="position-absolute top-50 translate-middle-y badge rounded-pill bg-danger" style="right: 70px; font-size: 0.65rem;">{{ navbarData.notificationsCount }}</span>
                                     {% endif %}
-
                                 </a>
                             </li>
                             
@@ -86,7 +89,6 @@
                                 <a class="dropdown-item user-dropdown-item" href="{{ path('admin_dashboard') }}">
                                     <i class="bi bi-speedometer2"></i>
                                     <span>Dashboard</span>
-
                                 </a>
                             </li>
                             {% endif %}
@@ -96,12 +98,10 @@
                                 <a class="dropdown-item user-dropdown-item text-danger" href="{{ path('app_logout') }}">
                                     <i class="bi bi-box-arrow-right"></i>
                                     <span>Déconnexion</span>
-
                                 </a>
                             </li>
                         </ul>
                     </div>
-
                 {% else %}
                     <a class="nav-link text-white" href="{{ path('app_login') }}">Log in</a>
                     <a class="btn btn-tc-primary" href="{{ path('app_register') }}">Register</a>

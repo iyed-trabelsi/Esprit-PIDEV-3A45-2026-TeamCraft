@@ -1,17 +1,5 @@
 {% for o in offres %}
-    <div class="col-12 col-sm-6 col-lg-4">
-        <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
-            <div class="discovery-avatar mx-auto mb-3">{{ o.team.name|first|upper }}</div>
-            <h3 class="discovery-card-title mb-1">{{ o.title }}</h3>
-            <p class="discovery-card-subtitle mb-3 text-muted small text-uppercase fw-bold">{{ o.team.name }}</p>
-            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-                {% set gameClass = o.game|lower == 'league of legends' ? 'lol' : o.game|lower %}
-                <span class="badge-game {{ gameClass }}">{{ o.game }}</span>
-                <span class="badge-rank purple">{{ o.rank }}</span>
-            </div>
-            <a href="{{ path('app_offres_show', { id: o.id }) }}" class="btn btn-recruit mt-auto text-decoration-none text-center">View Offer</a>
-        </div>
-    </div>
+    {% include 'frontoffice/offres/_offer_card.html.twig' with {'offre': o, 'favoriteIds': favoriteIds, 'matchScores': matchScores} %}
 {% else %}
     <div class="col-12 text-center py-5">
         <p class="text-muted">Aucune offre ne correspond à vos critères.</p>

@@ -4,6 +4,37 @@
 {% block admin_subheading %}Liste de toutes les offres de recrutement avec leur jeu et statut.{% endblock %}
 
 {% block admin_content %}
+    <style>
+        .nav-tabs .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link:hover {
+            color: var(--tc-primary) !important;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--tc-primary) !important;
+            border-bottom: 3px solid var(--tc-primary) !important;
+            background: transparent !important;
+        }
+    </style>
+    {# Tab Navigation #}
+    <ul class="nav nav-tabs mb-4" id="offersTabs" role="tablist" style="border-bottom: 2px solid var(--tc-border);">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-content" type="button" role="tab" aria-controls="list-content" aria-selected="true" style="color: var(--tc-text); border: none; font-weight: 600; padding: 0.75rem 1.5rem;">
+                <i class="bi bi-list-ul me-2"></i>Liste des offres
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats-content" type="button" role="tab" aria-controls="stats-content" aria-selected="false" style="color: var(--tc-text); border: none; font-weight: 600; padding: 0.75rem 1.5rem;">
+                <i class="bi bi-bar-chart-fill me-2"></i>Statistiques
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="offersTabContent">
+        {# LIST TAB #}
+        <div class="tab-pane fade show active" id="list-content" role="tabpanel" aria-labelledby="list-tab">
+
     <div class="discovery-filter-container mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-3">
@@ -89,5 +120,125 @@
             </ul>
         </nav>
     </div>
+        </div>{# End list-content #}
+
+        {# STATISTICS TAB #}
+        <div class="tab-pane fade" id="stats-content" role="tabpanel" aria-labelledby="stats-tab">
+            <div class="row g-4">
+                {# Summary Cards #}
+                <div class="col-md-4">
+                    <div class="card-tc p-4 text-center" style="border-left: 4px solid #22c55e;">
+                        <div class="small text-muted text-uppercase mb-2 fw-bold">Acceptées</div>
+                        <div class="h2 text-white fw-bold mb-0">{{ stats.accepted }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-tc p-4 text-center" style="border-left: 4px solid #ef4444;">
+                        <div class="small text-muted text-uppercase mb-2 fw-bold">Refusées</div>
+                        <div class="h2 text-white fw-bold mb-0">{{ stats.refused }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-tc p-4 text-center" style="border-left: 4px solid #f59e0b;">
+                        <div class="small text-muted text-uppercase mb-2 fw-bold">En attente</div>
+                        <div class="h2 text-white fw-bold mb-0">{{ stats.pending }}</div>
+                    </div>
+                </div>
+
+                {# Donut Chart #}
+                <div class="col-lg-6">
+                    <div class="card-tc p-4">
+                        <h5 class="text-white fw-bold mb-4">Répartition des candidatures</h5>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="statusDonutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {# Bar Chart #}
+                <div class="col-lg-6">
+                    <div class="card-tc p-4">
+                        <h5 class="text-white fw-bold mb-4">Statistiques par statut</h5>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="statusBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>{# End stats-content #}
+    </div>{# End tab-content #}
+
+    {# Chart.js Library #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Donut Chart
+        const donutCtx = document.getElementById('statusDonutChart');
+        if (donutCtx) {
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Acceptées', 'Refusées', 'En attente'],
+                    datasets: [{
+                        data: [{{ stats.accepted }}, {{ stats.refused }}, {{ stats.pending }}],
+                        backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#fff',
+                                padding: 20,
+                                font: { size: 13, weight: '600' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Bar Chart
+        const barCtx = document.getElementById('statusBarChart');
+        if (barCtx) {
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Acceptées', 'Refusées', 'En attente'],
+                    datasets: [{
+                        label: 'Nombre de candidatures',
+                        data: [{{ stats.accepted }}, {{ stats.refused }}, {{ stats.pending }}],
+                        backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { 
+                                color: '#9ca3af',
+                                stepSize: 1
+                            },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff', font: { weight: '600' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 {% endblock %}
+
 

@@ -2,39 +2,33 @@
 
 namespace App\Entity;
 
-use App\Repository\PostulationRepository;
+use App\Repository\NotificationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity(repositoryClass: PostulationRepository::class)]
-class Postulation
+#[ORM\Entity(repositoryClass: NotificationRepository::class)]
+class Notification
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'notifications')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(inversedBy: 'postulations')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Offer $offer = null;
-
     #[ORM\Column(length: 50)]
-    private ?string $status = 'pending';
+    private ?string $type = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Assert\Length(max: 1000, maxMessage: "Le message ne peut pas dépasser {{ limit }} caractères.")]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $message = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $matchScore = null;
+    #[ORM\Column]
+    private bool $isRead = false;
 
     public function __construct()
     {
@@ -58,26 +52,14 @@ class Postulation
         return $this;
     }
 
-    public function getOffer(): ?Offer
+    public function getType(): ?string
     {
-        return $this->offer;
+        return $this->type;
     }
 
-    public function setOffer(?Offer $offer): static
+    public function setType(string $type): static
     {
-        $this->offer = $offer;
-
-        return $this;
-    }
-
-    public function getStatus(): ?string
-    {
-        return $this->status;
-    }
-
-    public function setStatus(string $status): static
-    {
-        $this->status = $status;
+        $this->type = $type;
 
         return $this;
     }
@@ -87,7 +69,7 @@ class Postulation
         return $this->message;
     }
 
-    public function setMessage(?string $message): static
+    public function setMessage(string $message): static
     {
         $this->message = $message;
 
@@ -106,14 +88,14 @@ class Postulation
         return $this;
     }
 
-    public function getMatchScore(): ?float
+    public function isRead(): ?bool
     {
-        return $this->matchScore;
+        return $this->isRead;
     }
 
-    public function setMatchScore(?float $matchScore): static
+    public function setIsRead(bool $isRead): static
     {
-        $this->matchScore = $matchScore;
+        $this->isRead = $isRead;
 
         return $this;
     }

@@ -1,0 +1,113 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}My Favorites - TeamCraft{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <div class="container py-5 flex-grow-1">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="icon-box p-2 rounded" style="background: rgba(220, 38, 38, 0.1);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="text-danger" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="h2 fw-bold text-white mb-0">My Favorites</h1>
+                <p class="text-muted mb-0">{{ offres|length }} saved offer{{ offres|length != 1 ? 's' : '' }}</p>
+            </div>
+        </div>
+
+        {% if offres is empty %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-heart" style="font-size: 4rem; color: #94a3b8;"></i>
+                </div>
+                <h3 class="text-white mb-3">No favorites yet</h3>
+                <p class="text-muted mb-4">Start exploring offers and save the ones you like!</p>
+                <a href="{{ path('app_offres') }}" class="btn btn-primary px-4">
+                    <i class="bi bi-search me-2"></i>Browse Offers
+                </a>
+            </div>
+        {% else %}
+            <!-- Offers Grid -->
+            <div class="row g-4">
+                {% set favoriteIds = [] %}
+                {% for fav in favorites %}
+                    {% set favoriteIds = favoriteIds|merge([fav.offer.id]) %}
+                {% endfor %}
+                {% for offer in offres %}
+                    {% include 'frontoffice/offres/_offer_card.html.twig' with {'offre': offer, 'favoriteIds': favoriteIds} %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Favorite toggle functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.favorite-btn')) {
+            e.preventDefault();
+            const btn = e.target.closest('.favorite-btn');
+            const offerId = btn.dataset.offerId;
+            const icon = btn.querySelector('i');
+            const isFavorited = icon.classList.contains('bi-heart-fill');
+            
+            const url = isFavorited 
+                ? `/offres/${offerId}/unfavorite`
+                : `/offres/${offerId}/favorite`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // If we are on the favorites page and unfavoriting, we might want to remove the card
+                    if (window.location.pathname.includes('/my-favorites') && isFavorited) {
+                        const card = btn.closest('.col-12');
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            // Check if empty
+                            if (document.querySelectorAll('.discovery-card').length === 0) {
+                                location.reload(); // Show empty state
+                            }
+                        }, 300);
+                    } else {
+                        // Toggle icon
+                        if (isFavorited) {
+                            icon.classList.remove('bi-heart-fill');
+                            icon.classList.add('bi-heart');
+                        } else {
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill');
+                        }
+                    }
+                } else {
+                    if (data.message === 'You must be logged in') {
+                        window.location.href = '/login';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -13,6 +13,7 @@ use Doctrine\Common\Collections\Collection;
 use App\Entity\Team;
 use App\Entity\FriendRequest;
 use App\Entity\Message;
+use App\Entity\Notification;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -124,6 +125,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(options: ['default' => false])]
     private ?bool $isMusicEnabled = false;
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'App\Entity\Notification', orphanRemoval: true)]
+    private Collection $notifications;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Application::class, orphanRemoval: true)]
+    private Collection $applications;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastActivityAt = null;
 
     public function __construct()
     {
@@ -134,6 +143,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->sentMessages = new ArrayCollection();
         $this->receivedMessages = new ArrayCollection();
         $this->team = new ArrayCollection();
+        $this->notifications = new ArrayCollection();
+        $this->applications = new ArrayCollection();
+        $this->lastActivityAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * @return Collection<int, Notification>
+     */
+    public function getNotifications(): Collection
+    {
+        return $this->notifications;
+    }
+
+    public function addNotification(Notification $notification): static
+    {
+        if (!$this->notifications->contains($notification)) {
+            $this->notifications->add($notification);
+            $notification->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNotification(Notification $notification): static
+    {
+        if ($this->notifications->removeElement($notification)) {
+            // set the owning side to null (unless already changed)
+            if ($notification->getUser() === $this) {
+                $notification->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getLastActivityAt(): ?\DateTimeImmutable
+    {
+        return $this->lastActivityAt;
+    }
+
+    public function setLastActivityAt(?\DateTimeImmutable $lastActivityAt): static
+    {
+        $this->lastActivityAt = $lastActivityAt;
+        return $this;
     }
 
     public function getId(): ?int

@@ -36,9 +36,23 @@ class OfferType extends AbstractType
             ->add('nbPlayerRecruited', \Symfony\Component\Form\Extension\Core\Type\IntegerType::class, [
                 'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
             ])
-            ->add('dateExpiration', \Symfony\Component\Form\Extension\Core\Type\DateType::class, [
-                'widget' => 'single_text',
-                'attr' => ['class' => 'form-control bg-dark text-white border-secondary border-opacity-25']
+            ->add('validityPeriod', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
+                'label' => 'Validity Period',
+                'mapped' => false,
+                'choices' => [
+                    '7 days' => 7,
+                    '15 days' => 15,
+                    '30 days' => 30,
+                ],
+                'data' => 15, // Default to 15 days
+                'attr' => ['class' => 'form-select bg-dark text-white border-secondary border-opacity-25']
+            ])
+            ->add('status', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
+                'choices' => [
+                    'Draft' => Offer::STATUS_DRAFT,
+                    'Published (Active)' => Offer::STATUS_ACTIVE,
+                ],
+                'attr' => ['class' => 'form-select bg-dark text-white border-secondary border-opacity-25']
             ])
             ->add('description', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, [
                 'required' => false,

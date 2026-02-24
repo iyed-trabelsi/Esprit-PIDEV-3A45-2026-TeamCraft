@@ -213,7 +213,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/admin/offers', name: 'admin_offers', methods: ['GET'])]
-    public function offers(\Symfony\Component\HttpFoundation\Request $request, \App\Repository\OfferRepository $offerRepository): Response
+    public function offers(\Symfony\Component\HttpFoundation\Request $request, \App\Repository\OfferRepository $offerRepository, \App\Repository\PostulationRepository $postulationRepository): Response
     {
         $allOffers = $offerRepository->findAll();
         $limit = 5;
@@ -228,11 +228,32 @@ class AdminController extends AbstractController
         $offset = ($page - 1) * $limit;
         $paginatedOffers = array_slice($allOffers, $offset, $limit);
 
+        // Calculate statistics for all applications
+        $allApplications = $postulationRepository->findAll();
+        $stats = [
+            'accepted' => 0,
+            'refused' => 0,
+            'pending' => 0,
+            'total' => count($allApplications)
+        ];
+
+        foreach ($allApplications as $application) {
+            $status = strtolower($application->getStatus() ?? 'pending');
+            if ($status === 'accepted') {
+                $stats['accepted']++;
+            } elseif ($status === 'refused') {
+                $stats['refused']++;
+            } else {
+                $stats['pending']++;
+            }
+        }
+
         return $this->render('backoffice/offers.html.twig', [
             'offers' => $paginatedOffers,
             'currentPage' => $page,
             'maxPages' => $maxPages,
-            'totalOffers' => $totalOffers
+            'totalOffers' => $totalOffers,
+            'stats' => $stats
         ]);
     }
 

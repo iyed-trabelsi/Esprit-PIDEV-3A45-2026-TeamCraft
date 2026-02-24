@@ -39,6 +39,14 @@ class Player
 
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $availability = null;
+    #[ORM\Column(nullable: true)]
+    private ?int $experienceYears = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $winrate = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $kd = null;
 
     #[ORM\OneToMany(targetEntity: CompetitiveRank::class, mappedBy: 'player', orphanRemoval: true)]
     private Collection $competitiveRanks;
@@ -134,6 +142,42 @@ class Player
     public function setSelectedGames(?array $selectedGames): static
     {
         $this->selectedGames = $selectedGames ?? [];
+
+        return $this;
+    }
+
+    public function getExperienceYears(): ?int
+    {
+        return $this->experienceYears;
+    }
+
+    public function setExperienceYears(?int $experienceYears): static
+    {
+        $this->experienceYears = $experienceYears;
+
+        return $this;
+    }
+
+    public function getWinrate(): ?float
+    {
+        return $this->winrate;
+    }
+
+    public function setWinrate(?float $winrate): static
+    {
+        $this->winrate = $winrate;
+
+        return $this;
+    }
+
+    public function getKd(): ?float
+    {
+        return $this->kd;
+    }
+
+    public function setKd(?float $kd): static
+    {
+        $this->kd = $kd;
 
         return $this;
     }

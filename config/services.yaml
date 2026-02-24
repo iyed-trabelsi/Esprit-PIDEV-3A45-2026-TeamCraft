@@ -26,6 +26,7 @@ parameters:
     # Google Gemini API Key for AI Scheduling
     gemini_api_key: '%env(default::GEMINI_API_KEY)%'
     openai_api_key: '%env(default::OPENAI_API_KEY)%'
+    ai_service_url: '%env(default::AI_SERVICE_URL)%'
 
 services:
     # default configuration for services in *this* file
