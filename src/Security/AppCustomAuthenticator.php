@@ -64,7 +64,7 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
         // 2. Historique et Analyse de risque (IA)
         $ip = $request->getClientIp();
         $userAgent = $request->headers->get('User-Agent');
-        $city = 'Berlin'; // Ville de test ou via API GeoIP
+        $city = 'Ausralia'; // Ville de test ou via API GeoIP
 
         $analysis = $this->securityScorer->getRiskScore($user, $ip, $city, $userAgent);
 

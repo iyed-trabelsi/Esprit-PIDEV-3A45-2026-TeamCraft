@@ -1,0 +1,13 @@
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\styles\app.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\dompdf\dompdf\lib\res\html.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\phpunit\php-code-coverage\src\Report\Html\Renderer\Template\css\bootstrap.min.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\phpunit\php-code-coverage\src\Report\Html\Renderer\Template\css\custom.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\phpunit\php-code-coverage\src\Report\Html\Renderer\Template\css\nv.d3.min.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\phpunit\php-code-coverage\src\Report\Html\Renderer\Template\css\octicons.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\phpunit\php-code-coverage\src\Report\Html\Renderer\Template\css\style.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\symfony\error-handler\Resources\assets\css\error.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\symfony\error-handler\Resources\assets\css\exception.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\symfony\error-handler\Resources\assets\css\exception_full.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\symfony\twig-bridge\Resources\views\Email\zurb_2\notification\local.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\symfony\twig-bridge\Resources\views\Email\zurb_2\main.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\vendor\symfony\var-dumper\Resources\css\htmlDescriptor.css

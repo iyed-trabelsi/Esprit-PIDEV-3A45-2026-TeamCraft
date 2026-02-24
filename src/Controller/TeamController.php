@@ -625,42 +625,48 @@ class TeamController extends AbstractController
 
         return $this->redirectToRoute('team_manage', ['id' => $id]);
     }
-    #[Route('/offers/{id}/upgrade/{type}', name: 'offer_upgrade', methods: ['POST'])]
-    public function upgradeOffer(int $id, string $type, EntityManagerInterface $em, Request $request): Response
+
+    // ─── Live Streaming ───────────────────────────────────────────────────
+
+    #[Route('/teams/{id}/broadcast', name: 'team_broadcast', methods: ['GET'])]
+    public function broadcastPage(int $id, EntityManagerInterface $em): Response
     {
         $user = $this->getUser();
         if (!$user) {
             throw $this->createAccessDeniedException();
         }
 
-        $offer = $em->getRepository(Offer::class)->find($id);
-
-        if (!$offer) {
-            throw $this->createNotFoundException('Offer not found');
+        $team = $em->getRepository(Team::class)->find($id);
+        if (!$team) {
+            throw $this->createNotFoundException('Team not found');
         }
 
-        if ($offer->getTeam()->getOwner() !== $user) {
-            throw $this->createAccessDeniedException('You are not authorized to upgrade this offer.');
+        $isOwner = $team->getOwner() === $user;
+        $isCoOwner = $team->isCoOwner($user);
+        $canBroadcast = $isOwner || $isCoOwner;
+
+        return $this->render('frontoffice/teams/broadcast.html.twig', [
+            'team' => $team,
+            'canBroadcast' => $canBroadcast,
+        ]);
+    }
+
+    #[Route('/teams/{id}/live', name: 'team_live', methods: ['GET'])]
+    public function livePage(int $id, EntityManagerInterface $em): Response
+    {
+        // Bypass login for testing on ngrok
+        // $user = $this->getUser();
+        // if (!$user) {
+        //     throw $this->createAccessDeniedException();
+        // }
+
+        $team = $em->getRepository(Team::class)->find($id);
+        if (!$team) {
+            throw $this->createNotFoundException('Team not found');
         }
 
-        if (!$this->isCsrfTokenValid('upgrade_offer_' . $offer->getId(), $request->request->get('_token'))) {
-            $this->addFlash('error', 'Invalid CSRF token.');
-            return $this->redirectToRoute('team_manage', ['id' => $offer->getTeam()->getId()]);
-        }
-
-        switch (strtoupper($type)) {
-            case 'FEATURED':
-                $this->premiumService->upgradeToFeatured($offer);
-                $this->addFlash('success', 'Offer boosted to FEATURED!');
-                break;
-            case 'SPONSORED':
-                $this->premiumService->upgradeToSponsored($offer);
-                $this->addFlash('success', 'Offer boosted to SPONSORED!');
-                break;
-            default:
-                $this->addFlash('error', 'Invalid upgrade type.');
-        }
-
-        return $this->redirectToRoute('team_manage', ['id' => $offer->getTeam()->getId()]);
+        return $this->render('frontoffice/teams/live.html.twig', [
+            'team' => $team,
+        ]);
     }
 }

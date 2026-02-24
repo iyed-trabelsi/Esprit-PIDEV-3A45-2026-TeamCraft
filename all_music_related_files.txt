@@ -1,0 +1,5 @@
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\all_music_related_files.txt
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\music_files_found.txt
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\src\Controller\MusicController.php
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\templates\frontoffice\partials\_music_player.html.twig
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\var\cache\dev\ContainerKJssSYD\getMusicControllerService.php
