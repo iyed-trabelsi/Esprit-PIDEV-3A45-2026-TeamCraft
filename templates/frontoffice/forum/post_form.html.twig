@@ -1,0 +1,95 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ is_edit ? 'Modifier le post' : 'Nouveau post' }} - Forum TEAMCRAFT{% endblock %}
+
+{% block flash_messages %}
+    {{ parent() }}
+    {% if toxic_error is defined and toxic_error %}
+        <div class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 border-0 alert-warning-custom" role="alert" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; font-weight: 600; font-size: 1.05rem; padding: 1.25rem 3rem 1.25rem 1.5rem; border-left: 5px solid #b45309; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+            {{ toxic_error|raw }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1 d-flex flex-column justify-content-center">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_forum') }}" class="text-secondary text-decoration-none">Forum</a></li>
+                {% if post.rubrique %}
+                    <li class="breadcrumb-item"><a href="{{ path('app_forum_rubrique_show', { id: post.rubrique.id }) }}" class="text-secondary text-decoration-none">{{ post.rubrique.nomRubrique }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ is_edit ? 'Modifier' : 'Nouveau post' }}</li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card bg-dark border-0 shadow-lg text-white" style="border-radius: 1rem; background: #1a1a1a;">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-5">
+                            <h1 class="h2 fw-bold mb-2 text-white">{{ is_edit ? 'Modifier le post' : 'Nouveau post' }}</h1>
+                            <p class="text-white-50">{{ is_edit ? 'Modifiez le contenu de votre post' : 'Publiez un nouveau sujet dans la rubrique' }}</p>
+                        </div>
+
+                        {# Flash messages displayed within the form - REMOVED to show as top banner #}
+
+                        {{ form_start(form) }}
+                            <div class="mb-4">
+                                {{ form_errors(form) }}
+                            </div>
+                            <div class="mb-4">
+                                {{ form_label(form.titre, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.titre, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.titre) }}
+                            </div>
+                            <div class="mb-4">
+                                {{ form_label(form.contenu, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.contenu, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.contenu) }}
+                            </div>
+                            <div class="mb-4">
+                                {{ form_label(form.typePost, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.typePost, {'attr': {'class': 'form-select bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.typePost) }}
+                            </div>
+                            
+                            {% if form.statut is defined %}
+                            <div class="mb-4">
+                                {{ form_label(form.statut, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.statut, {'attr': {'class': 'form-select bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.statut) }}
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-4">
+                                {{ form_label(form.image, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.image, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.image) }}
+                            </div>
+                            {% if form.rubrique is defined %}
+                                <div class="mb-5">
+                                    {{ form_label(form.rubrique, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                    {{ form_widget(form.rubrique, {'attr': {'class': 'form-select bg-black text-white border-secondary'}}) }}
+                                    {{ form_errors(form.rubrique) }}
+                                </div>
+                            {% else %}
+                                <div class="mb-5"></div>
+                            {% endif %}
+
+                            <div class="d-grid gap-3 d-md-flex justify-content-md-between align-items-center">
+                                <a href="{{ post.rubrique ? path('app_forum_rubrique_show', { id: post.rubrique.id }) : path('app_forum') }}" class="btn btn-outline-danger px-4">Cancel</a>
+                                <button type="submit" class="btn btn-success px-5 fw-bold">{{ is_edit ? 'Enregistrer' : 'Publier le post' }}</button>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

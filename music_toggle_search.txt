@@ -1,0 +1,2 @@
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\templates\frontoffice\partials\_music_player.html.twig
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\var\cache\dev\twig\e7\e78a6ce0808bd8743a486b8d62f709e5.php

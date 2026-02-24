@@ -1,0 +1,700 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}🎙 Diffusion Live — {{ team.name }} | TeamCraft{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .broadcast-wrapper {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #0a0a0f;
+    }
+
+    /* ── Header ── */
+    .broadcast-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        background: rgba(10,10,15,0.95);
+        border-bottom: 1px solid #1e293b;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    /* ── Live badge ── */
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #dc2626;
+        color: white;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        padding: 0.3rem 0.75rem;
+        border-radius: 4px;
+        animation: livePulse 2s infinite;
+    }
+
+    .live-badge .live-dot {
+        width: 6px; height: 6px;
+        background: white; border-radius: 50%;
+        animation: dotBlink 1.2s infinite;
+    }
+
+    .live-badge.hidden { display: none !important; }
+
+    @keyframes livePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.6); }
+        50%       { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+    }
+
+    @keyframes dotBlink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.2; }
+    }
+
+    /* ── Content layout ── */
+    .broadcast-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        gap: 1.5rem;
+    }
+
+    /* ── Video container ── */
+    .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        background: #0f0f1a;
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 1px solid #1e293b;
+        aspect-ratio: 16/9;
+        transition: border-color 0.3s;
+    }
+
+    .video-container.live {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 2px rgba(220,38,38,0.3), 0 0 40px rgba(220,38,38,0.1);
+    }
+
+    #localVideo {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        display: block;
+        background: #000;
+        transform: scaleX(-1); /* Mirror effect */
+    }
+
+    /* ── Idle overlay ── */
+    .idle-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.88);
+        color: #f1f5f9;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .idle-overlay.hidden { display: none; }
+
+    .camera-icon-big {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #334155;
+    }
+
+    /* ── Controls ── */
+    .broadcast-controls {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .controls-left { display: flex; align-items: center; gap: 1rem; }
+    .controls-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    .btn-start-stream {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        border: none;
+        color: white;
+        font-weight: 700;
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-start-stream:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(220,38,38,0.4); }
+    .btn-start-stream:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-stop-stream {
+        background: rgba(220,38,38,0.1);
+        border: 1px solid rgba(220,38,38,0.4);
+        color: #f87171;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .btn-stop-stream:hover { background: rgba(220,38,38,0.2); }
+    .btn-stop-stream.visible { display: flex; }
+
+    /* ── Camera/Mic selects ── */
+    .device-select {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #94a3b8;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+
+    /* ── Viewer count ── */
+    .viewer-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid #334155;
+        color: #94a3b8;
+        font-size: 0.82rem;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+        font-size: 0.78rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .status-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #22c55e;
+        animation: dotBlink 1.5s infinite;
+    }
+
+    .status-dot.red { background: #dc2626; }
+
+    /* ── Error box ── */
+    .error-box {
+        width: 100%;
+        max-width: 900px;
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.3);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: #fca5a5;
+        font-size: 0.85rem;
+        display: none;
+    }
+
+    .error-box.visible { display: flex; align-items: center; gap: 0.5rem; }
+
+    /* ── Access denied ── */
+    .access-denied-card {
+        background: rgba(15,15,26,0.9);
+        border: 1px solid #1e293b;
+        border-radius: 1rem;
+        padding: 3rem;
+        text-align: center;
+        max-width: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+{% if not canBroadcast %}
+{# ── Access denied ──────────────────────────────────────────────── #}
+<div class="broadcast-wrapper align-items-center justify-content-center" style="display:flex;">
+    <div class="access-denied-card">
+        <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+        <h4 class="text-white fw-bold mb-2">Accès refusé</h4>
+        <p class="text-muted mb-4">Seul le propriétaire et les co-propriétaires de la team peuvent diffuser un live.</p>
+        <a href="{{ path('team_live', {id: team.id}) }}" class="btn btn-outline-info me-2">
+            <i class="bi bi-eye me-1"></i> Regarder le live
+        </a>
+        <a href="{{ path('team_manage', {id: team.id}) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+</div>
+{% else %}
+{# ── Broadcaster UI ──────────────────────────────────────────────── #}
+<div class="broadcast-wrapper">
+    <!-- Header -->
+    <div class="broadcast-header">
+        <div class="d-flex align-items-center gap-3">
+            {% if team.logo %}
+                <img src="{{ asset('uploads/teams/' ~ team.logo) }}" alt="{{ team.name }}" class="rounded-circle" width="36" height="36" style="object-fit:cover;">
+            {% else %}
+                <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center text-dark fw-bold" style="width:36px;height:36px;font-size:0.9rem;">
+                    {{ team.name|first|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <div class="text-white fw-bold" style="font-size:0.95rem;">{{ team.name }}</div>
+                <div style="font-size:0.7rem;color:#64748b;">Mode Diffusion</div>
+            </div>
+            <span class="live-badge hidden" id="liveIndicator">
+                <span class="live-dot"></span> EN DIRECT
+            </span>
+        </div>
+        <a href="{{ path('team_manage', {id: team.id}) }}" style="background:none;border:1px solid #334155;color:#94a3b8;padding:0.4rem 1rem;border-radius:0.5rem;font-size:0.85rem;text-decoration:none;">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+
+    <!-- Content -->
+    <div class="broadcast-content">
+
+        <!-- Error box -->
+        <div class="error-box" id="errorBox">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span id="errorText"></span>
+        </div>
+
+        <!-- Video preview -->
+        <div class="video-container" id="videoContainer">
+            <video id="localVideo" autoplay playsinline muted></video>
+
+            <!-- Idle overlay (shown before stream starts) -->
+            <div class="idle-overlay" id="idleOverlay">
+                <div class="camera-icon-big">📷</div>
+                <h5 class="text-white mb-2">Prêt à diffuser</h5>
+                <p class="text-muted mb-0" style="font-size:0.85rem;">
+                    Clique sur <strong style="color:#f1f5f9;">Start Streaming</strong> pour activer ta caméra<br>
+                    et commencer la diffusion en direct.
+                </p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="broadcast-controls">
+            <div class="controls-left">
+                <button class="btn-start-stream" id="btnStart">
+                    <i class="bi bi-broadcast"></i> Start Streaming
+                </button>
+                <button class="btn-stop-stream" id="btnStop">
+                    <i class="bi bi-stop-circle-fill"></i> Stop Stream
+                </button>
+
+                <!-- Device selectors (shown when streaming) -->
+                <div id="deviceSelectors" style="display:none; gap:0.5rem; align-items:center;">
+                    <select class="device-select" id="cameraSelect" title="Caméra"></select>
+                    <select class="device-select" id="micSelect" title="Microphone"></select>
+                </div>
+            </div>
+
+            <div class="controls-right">
+                <span class="viewer-count-badge" id="viewerCountBadge">
+                    <i class="bi bi-eye"></i>
+                    <span id="viewerCount">0</span> spectateur(s)
+                </span>
+                <a href="{{ path('team_live', {id: team.id}) }}" target="_blank" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);color:#38bdf8;padding:0.4rem 0.9rem;border-radius:0.5rem;font-size:0.8rem;text-decoration:none;">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Lien Viewer
+                </a>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div class="status-bar" id="statusBar">
+            <span class="status-dot red hidden" id="statusDot"></span>
+            <span id="statusText" style="color:#64748b;">En attente de démarrage...</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+{% if canBroadcast %}
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const TEAM_ID    = {{ team.id }};
+    const SIGNAL_URL = 'https://bits-geological-procedure-telecharger.trycloudflare.com'; // Cloudflare signaling server
+
+    // ─── DOM refs ─────────────────────────────────────────────────────────
+    const btnStart       = document.getElementById('btnStart');
+    const btnStop        = document.getElementById('btnStop');
+    const localVideo     = document.getElementById('localVideo');
+    const idleOverlay    = document.getElementById('idleOverlay');
+    const videoContainer = document.getElementById('videoContainer');
+    const liveIndicator  = document.getElementById('liveIndicator');
+    const viewerCount    = document.getElementById('viewerCount');
+    const statusText     = document.getElementById('statusText');
+    const statusDot      = document.getElementById('statusDot');
+    const deviceSelectors= document.getElementById('deviceSelectors');
+    const cameraSelect   = document.getElementById('cameraSelect');
+    const micSelect      = document.getElementById('micSelect');
+    const errorBox       = document.getElementById('errorBox');
+    const errorText      = document.getElementById('errorText');
+
+    // ─── State ─────────────────────────────────────────────────────────────
+    let localStream  = null;
+    let isStreaming  = false;
+    const peerConnections = {}; // { viewerSocketId: RTCPeerConnection }
+
+    const ICE_SERVERS = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+    };
+
+    // ─── Socket.io ─────────────────────────────────────────────────────────
+    const socket = io(SIGNAL_URL, { transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => {
+        console.log('[Broadcaster] Connected to signaling server:', socket.id);
+        setStatus('Connecté au serveur de signalisation', false);
+    });
+
+    socket.on('connect_error', (err) => {
+        showError('Impossible de se connecter au serveur de signalisation. Vérifie que le serveur Node.js tourne sur le port 3001.');
+        console.error('[Broadcaster] Socket error:', err);
+    });
+
+    // A new viewer joined → create offer for them
+    socket.on('broadcaster-ready', () => {
+        // This is sent to viewers, not broadcaster – ignore
+    });
+
+    // Viewer connected → send offer
+    socket.on('viewer-disconnected', ({ viewerId }) => {
+        if (peerConnections[viewerId]) {
+            peerConnections[viewerId].close();
+            delete peerConnections[viewerId];
+            console.log('[Broadcaster] Viewer disconnected and cleaned up:', viewerId);
+        }
+    });
+
+    // When signaling server tells broadcaster a viewer is ready (viewer just joined)
+    // This is triggered by re-emitting broadcaster-ready to the new viewer
+    // We intercept new viewers by watching for offer requests from the server
+    // (server sends 'viewer-joined' event)
+
+    // When signaling server tells broadcaster a viewer is ready
+    socket.on('viewer-joined', async ({ viewerId }) => {
+        console.log('%c[Broadcaster] 🟢 Un viewer a rejoint!', 'color: #22c55e; font-weight: bold;', viewerId);
+        if (!isStreaming) {
+            console.warn('[Broadcaster] Viewer joined but I am not streaming yet.');
+            return;
+        }
+        if (!localStream) {
+            console.error('[Broadcaster] No local stream available to share.');
+            return;
+        }
+        await createOfferForViewer(viewerId);
+    });
+
+    socket.on('answer', async ({ from, answer }) => {
+        console.log('[Broadcaster] 📩 Réponse reçue de:', from);
+        const pc = peerConnections[from];
+        if (pc) {
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                console.log('[Broadcaster] ✅ Remote description set for viewer:', from);
+            } catch (err) {
+                console.error('[Broadcaster] ❌ Error setting remote description:', err);
+            }
+        } else {
+            console.warn('[Broadcaster] Answer received for unknown viewer:', from);
+        }
+    });
+
+    socket.on('candidate', async ({ from, candidate }) => {
+        const pc = peerConnections[from];
+        if (pc && candidate) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                console.log('[Broadcaster] ❄️ ICE candidate added for viewer:', from);
+            } catch (err) {
+                console.warn('[Broadcaster] ⚠️ ICE candidate error:', err);
+            }
+        }
+    });
+
+    socket.on('viewer-count', ({ count }) => {
+        console.log('[Broadcaster] 👥 Viewer count:', count);
+        if (viewerCount) {
+            viewerCount.textContent = count;
+            // Petit effet visuel
+            viewerCount.parentElement.style.transform = 'scale(1.1)';
+            setTimeout(() => { viewerCount.parentElement.style.transform = 'scale(1)'; }, 200);
+        }
+    });
+
+    // ─── Create offer for a viewer ────────────────────────────────────────
+    async function createOfferForViewer(viewerId) {
+        const pc = new RTCPeerConnection(ICE_SERVERS);
+        peerConnections[viewerId] = pc;
+
+        // Add local tracks
+        localStream.getTracks().forEach(track => {
+            pc.addTrack(track, localStream);
+        });
+
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit('candidate', { to: viewerId, candidate: event.candidate });
+            }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+            console.log(`[Broadcaster] ICE state for ${viewerId}:`, pc.iceConnectionState);
+        };
+
+        try {
+            const offer = await pc.createOffer({
+                offerToReceiveAudio: false,
+                offerToReceiveVideo: false
+            });
+            await pc.setLocalDescription(offer);
+            socket.emit('offer', { to: viewerId, offer });
+            console.log('[Broadcaster] Offer sent to:', viewerId);
+        } catch (err) {
+            console.error('[Broadcaster] Error creating offer:', err);
+        }
+    }
+
+    // ─── Start streaming ───────────────────────────────────────────────────
+    async function startStream() {
+        hideError();
+        btnStart.disabled = true;
+        btnStart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Démarrage...';
+        setStatus('Activation de la caméra...', false);
+
+        try {
+            // Get user media
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: true
+            });
+
+            localVideo.srcObject = localStream;
+            idleOverlay.classList.add('hidden');
+            videoContainer.classList.add('live');
+
+            isStreaming = true;
+
+            // Announce to signaling server as broadcaster
+            socket.emit('broadcaster', { teamId: TEAM_ID });
+
+            // Update UI
+            liveIndicator.classList.remove('hidden');
+            btnStart.style.display = 'none';
+            btnStop.classList.add('visible');
+            deviceSelectors.style.display = 'flex';
+
+            setStatus('🔴 EN DIRECT — En attente de spectateurs...', true);
+
+            // Populate device selectors
+            await populateDevices();
+
+        } catch (err) {
+            console.error('[Broadcaster] getUserMedia error:', err);
+            btnStart.disabled = false;
+            btnStart.innerHTML = '<i class="bi bi-broadcast"></i> Start Streaming';
+            setStatus('Erreur de démarrage', false);
+
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                showError('Permission caméra/microphone refusée. Accorde l\'accès dans les paramètres de ton navigateur.');
+            } else if (err.name === 'NotFoundError') {
+                showError('Aucune caméra ou microphone trouvé sur cet appareil.');
+            } else {
+                showError('Impossible d\'accéder à la caméra: ' + err.message);
+            }
+        }
+    }
+
+    // ─── Stop streaming ────────────────────────────────────────────────────
+    function stopStream() {
+        if (!isStreaming) return;
+
+        // Notify server
+        socket.emit('stop-stream', { teamId: TEAM_ID });
+
+        // Close all peer connections
+        Object.values(peerConnections).forEach(pc => pc.close());
+        Object.keys(peerConnections).forEach(k => delete peerConnections[k]);
+
+        // Stop local stream
+        if (localStream) {
+            localStream.getTracks().forEach(t => t.stop());
+            localStream = null;
+        }
+
+        localVideo.srcObject = null;
+        isStreaming = false;
+
+        // Reset UI
+        idleOverlay.classList.remove('hidden');
+        videoContainer.classList.remove('live');
+        liveIndicator.classList.add('hidden');
+        btnStart.style.display = '';
+        btnStart.disabled = false;
+        btnStart.innerHTML = '<i class="bi bi-broadcast"></i> Start Streaming';
+        btnStop.classList.remove('visible');
+        deviceSelectors.style.display = 'none';
+        viewerCount.textContent = '0';
+
+        setStatus('Stream terminé.', false);
+        console.log('[Broadcaster] Stream stopped');
+    }
+
+    // ─── Populate camera/mic selectors ────────────────────────────────────
+    async function populateDevices() {
+        // Clear current
+        cameraSelect.innerHTML = '';
+        micSelect.innerHTML = '';
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        devices.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.deviceId;
+            opt.textContent = d.label || (d.kind === 'videoinput' ? `Caméra ${cameraSelect.length + 1}` : `Micro ${micSelect.length + 1}`);
+            
+            if (d.kind === 'videoinput') {
+                cameraSelect.appendChild(opt);
+                // Pre-select current
+                if (localStream && localStream.getVideoTracks()[0].label === d.label) opt.selected = true;
+            }
+            if (d.kind === 'audioinput') {
+                micSelect.appendChild(opt);
+                // Pre-select current
+                if (localStream && localStream.getAudioTracks()[0].label === d.label) opt.selected = true;
+            }
+        });
+    }
+
+    // ─── Switch Camera / Microphone ───────────────────────────────────────
+    async function switchDevice(kind, deviceId) {
+        if (!localStream) return;
+
+        console.log(`[Broadcaster] Attempting to switch ${kind} to:`, deviceId);
+        
+        // Stop current track first to release hardware (crucial for mobile)
+        const oldTrack = kind === 'video' ? localStream.getVideoTracks()[0] : localStream.getAudioTracks()[0];
+        if (oldTrack) oldTrack.stop();
+
+        const constraints = {
+            audio: kind === 'audio' ? { deviceId: { exact: deviceId } } : true,
+            video: kind === 'video' ? { deviceId: { exact: deviceId } } : true
+        };
+
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+            const newTrack = kind === 'video' ? newStream.getVideoTracks()[0] : newStream.getAudioTracks()[0];
+
+            // Replace in local stream
+            if (oldTrack) localStream.removeTrack(oldTrack);
+            localStream.addTrack(newTrack);
+
+            // Re-assign to video element to force update
+            if (kind === 'video') {
+                localVideo.srcObject = null;
+                localVideo.srcObject = localStream;
+            }
+
+            // Replace in all active peer connections
+            for (const pc of Object.values(peerConnections)) {
+                const senders = pc.getSenders();
+                const sender = senders.find(s => s.track && s.track.kind === kind);
+                if (sender) {
+                    await sender.replaceTrack(newTrack);
+                    console.log(`[Broadcaster] Track replaced in RTCPeerConnection for a viewer`);
+                }
+            }
+
+            console.log(`[Broadcaster] ${kind} switched successfully.`);
+            
+            // Refresh device list to update labels if they changed
+            setTimeout(populateDevices, 1000);
+
+        } catch (err) {
+            console.error(`[Broadcaster] Error switching ${kind}:`, err);
+            showError(`Impossible de changer de ${kind}: ` + err.message);
+            
+            // Fallback: try to restart ANY camera if the specific one failed
+            if (kind === 'video') {
+                console.log('[Broadcaster] Attempting fallback to default camera...');
+                startStream(); 
+            }
+        }
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────
+    function setStatus(msg, isLive) {
+        statusText.textContent = msg;
+        statusText.style.color = isLive ? '#22c55e' : '#64748b';
+        statusDot.classList.toggle('hidden', !isLive);
+    }
+
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.classList.add('visible');
+    }
+
+    function hideError() {
+        errorBox.classList.remove('visible');
+    }
+
+    // ─── Event listeners ───────────────────────────────────────────────────
+    btnStart.addEventListener('click', startStream);
+    btnStop.addEventListener('click', () => {
+        if (confirm('Arrêter le stream en direct ?')) stopStream();
+    });
+
+    cameraSelect.addEventListener('change', () => switchDevice('video', cameraSelect.value));
+    micSelect.addEventListener('change', () => switchDevice('audio', micSelect.value));
+
+    // Warn before leaving if streaming
+    window.addEventListener('beforeunload', (e) => {
+        if (isStreaming) {
+            stopStream();
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

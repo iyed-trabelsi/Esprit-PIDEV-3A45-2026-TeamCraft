@@ -1,0 +1,60 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Log In - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="position-relative flex-grow-1 d-flex align-items-center py-5" style="min-height: calc(100vh - 80px);">
+        <div class="container position-relative z-1">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-5">
+                    <div class="card card-tc p-4 p-md-5">
+                        <h2 class="text-center fw-bold mb-4 text-white">Log In</h2>
+                        <form method="post" class="form-tc" action="{{ path('app_login') }}">
+                            {% if error %}
+                                <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" name="_username" id="email" class="form-control" placeholder="you@example.com" value="{{ last_username }}" required autofocus>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" name="_password" id="password" class="form-control" placeholder="••••••••" required>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="showPasswordLogin">
+                                    <label class="form-check-label" for="showPasswordLogin">
+                                        Show password
+                                    </label>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="mb-4">
+                                <a href="{{ path('connect_google_start') }}" class="google-btn-full w-100">
+                                    <div class="google-content d-flex align-items-center justify-content-center p-2 border rounded bg-white">
+                                        <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google logo" class="google-logo me-2" style="width: 20px;">
+                                        <span class="google-text text-dark fw-bold">Continue with Google</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                            <button type="submit" class="btn btn-tc-primary w-100 py-3">Log In</button>
+                        </form>
+                        <script>
+                            (function () {
+                                const checkbox = document.getElementById('showPasswordLogin');
+                                const passwordInput = document.getElementById('password');
+                                if (checkbox && passwordInput) {
+                                    checkbox.addEventListener('change', function () {
+                                        passwordInput.type = this.checked ? 'text' : 'password';
+                                    });
+                                }
+                            })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

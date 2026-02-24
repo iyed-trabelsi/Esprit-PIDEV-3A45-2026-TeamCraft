@@ -1,0 +1,6 @@
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\templates\frontoffice\partials\_music_player.html.twig
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\templates\frontoffice\base.html.twig
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\var\cache\dev\profiler\index.csv
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\var\cache\dev\twig\84\842da5b61f4a14bcebf385cdc13123f4.php
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\var\cache\dev\twig\e7\e78a6ce0808bd8743a486b8d62f709e5.php
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\var\log\dev.log

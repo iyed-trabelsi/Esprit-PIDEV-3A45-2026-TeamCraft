@@ -1,0 +1,248 @@
+{{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false', enctype: 'multipart/form-data' } }) }}
+    {{ form_errors(form) }}
+    <div class="admin-form-widgets">
+        
+        <!-- AI Suggestion Area -->
+        <div class="mb-4">
+            <button type="button" id="ai-generate-btn-back" class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius: 8px; border-width: 2px;">
+                <i class="bi bi-magic me-2"></i>Suggérer le moment optimal avec l'IA
+            </button>
+            <!-- Hidden button for details, appears after generation -->
+            <button type="button" id="ai-details-btn-back" class="btn btn-sm text-info w-100 mt-2 d-none d-flex align-items-center justify-content-center gap-1" style="background: transparent; border: none; text-decoration: underline;" data-bs-toggle="modal" data-bs-target="#aiDetailsModalBack">
+                <i class="bi bi-info-circle"></i> Voir les détails de la génération
+            </button>
+        </div>
+
+        <!-- AI Details Modal (Rich Report) -->
+        <div class="modal fade" id="aiDetailsModalBack" tabindex="-1" aria-labelledby="aiDetailsModalBackLabel" aria-hidden="true" style="z-index: 1070;">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content border-0" style="background: #0d1117; border-radius: 16px; overflow: hidden;">
+
+                    <!-- Header with gradient -->
+                    <div class="modal-header border-0 p-0">
+                        <div class="w-100 p-4" style="background: linear-gradient(135deg, #0d2137 0%, #0a3d62 50%, #1a1a2e 100%); border-bottom: 1px solid rgba(0, 212, 255, 0.2);">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,212,255,0.15);display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,212,255,0.3);">
+                                    <i class="bi bi-robot text-info fs-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="modal-title mb-0 text-white fw-bold" id="aiDetailsModalBackLabel">Rapport d'Analyse IA</h5>
+                                    <small class="text-info opacity-75">Gemini 2.5 Flash · Analyse stratégique</small>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <!-- Executive Summary -->
+                            <div class="mt-3 p-3 rounded-3" style="background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.15);">
+                                <p id="ai-summary-text-back" class="mb-0 text-white-75 fst-italic" style="font-size: 0.95rem; line-height: 1.6;"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-body p-4" style="background: #0d1117;">
+
+                        <!-- Stat Cards Row -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-4">
+                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2);">
+                                    <div class="fw-bold text-info fs-4 mb-1" id="ai-confidence-back">—</div>
+                                    <small class="text-white-50">Confiance IA</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(40,167,69,0.07); border: 1px solid rgba(40,167,69,0.2);">
+                                    <div class="fw-bold text-success fs-5 mb-1" id="ai-event-type-badge-back">—</div>
+                                    <small class="text-white-50">Type suggéré</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(255,193,7,0.07); border: 1px solid rgba(255,193,7,0.2);">
+                                    <div class="fw-bold text-warning fs-5 mb-1" id="ai-event-name-badge-back" style="font-size: 0.8rem !important;"></div>
+                                    <small class="text-white-50">Nom proposé</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Data Insights -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#00d4ff,#0077ff);"></div>
+                                <h6 class="mb-0 text-white fw-semibold">📊 Analyse des données historiques</h6>
+                            </div>
+                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                <p id="ai-insights-text-back" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                            </div>
+                        </div>
+
+                        <!-- Section: Time Rationale -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#00ff87,#00d4ff);"></div>
+                                <h6 class="mb-0 text-white fw-semibold">🕐 Justification du créneau horaire</h6>
+                            </div>
+                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                <p id="ai-time-text-back" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                            </div>
+                        </div>
+
+                        <!-- Section: Type Rationale -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#ffd700,#ff8c00);"></div>
+                                <h6 class="mb-0 text-white fw-semibold">🏆 Justification du type d'événement</h6>
+                            </div>
+                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                <p id="ai-type-text-back" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0" style="background: #0d1117; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4">
+            {{ form_label(form.nomEvenement, 'Nom de l\'événement', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-tag"></i></span>
+                {{ form_widget(form.nomEvenement, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Tournoi Valorant 2024'} }) }}
+            </div>
+            {{ form_errors(form.nomEvenement) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.typeEvenement, 'Type d\'événement', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-layers"></i></span>
+                {{ form_widget(form.typeEvenement, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Compétition, Social, etc.'} }) }}
+            </div>
+            {{ form_errors(form.typeEvenement) }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                {{ form_label(form.dateDebut, 'Date de début', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-calendar-check"></i></span>
+                    {{ form_widget(form.dateDebut, { 'attr': {'class': 'form-control'} }) }}
+                </div>
+                {{ form_errors(form.dateDebut) }}
+            </div>
+            <div class="col-md-6 mb-4">
+                {{ form_label(form.dateFin, 'Date de fin', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-calendar-x"></i></span>
+                    {{ form_widget(form.dateFin, { 'attr': {'class': 'form-control'} }) }}
+                </div>
+                {{ form_errors(form.dateFin) }}
+            </div>
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.status, 'Statut', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-info-circle"></i></span>
+                {{ form_widget(form.status, { 'attr': {'class': 'form-select'} }) }}
+            </div>
+            <div class="form-text mt-1" style="color: rgba(255, 255, 255, 0.9) !important;">Choisissez si l'événement est ouvert ou fermé aux inscriptions.</div>
+            {{ form_errors(form.status) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.place, 'Lieu / Place', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-geo-alt"></i></span>
+                {{ form_widget(form.place, { 'attr': {'class': 'form-select'} }) }}
+            </div>
+            {{ form_errors(form.place) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.imageFile, 'Image de l\'événement (facultatif)', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            {% if evenement is defined and evenement.imageEvenement %}
+                <div class="mb-2 d-flex align-items-center gap-3">
+                    <img src="{{ asset('uploads/events/' ~ evenement.imageEvenement) }}"
+                         alt="Image actuelle"
+                         style="height: 80px; width: 120px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                    <span class="text-muted small"><i class="bi bi-image me-1"></i>Image actuelle — remplacez-la en téléchargeant une nouvelle ci-dessous.</span>
+                </div>
+            {% endif %}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-image"></i></span>
+                {{ form_widget(form.imageFile, { 'attr': {'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'} }) }}
+            </div>
+            <div class="form-text mt-1" style="color: rgba(255, 255, 255, 0.6) !important;">Formats acceptés : jpeg, png, webp — Taille max : 3 Mo.</div>
+            {{ form_errors(form.imageFile) }}
+        </div>
+    </div>
+    
+    <div class="mt-4 pt-2">
+        <button type="submit" class="btn btn-tc-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-check-circle"></i>
+            <span>{{ button_label|default('Enregistrer les modifications') }}</span>
+        </button>
+    </div>
+{{ form_end(form) }}
+
+<script>
+// Prevent z-index issues caused by backdrop-filter by moving modal to body
+(function() {
+    const modal = document.getElementById('aiDetailsModalBack');
+    if (modal) document.body.appendChild(modal);
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const btnBack = document.getElementById('ai-generate-btn-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', function(e) {
+            e.preventDefault();
+            const originalText = btnBack.innerHTML;
+            btnBack.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyse historique en cours...';
+            btnBack.disabled = true;
+
+            fetch('/api/events/ai-generate')
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success && response.data) {
+                        const data = response.data;
+                        const nomInput = document.querySelector('[id$="_nomEvenement"]');
+                        const typeInput = document.querySelector('[id$="_typeEvenement"]');
+                        const debutInput = document.querySelector('[id$="_dateDebut"]');
+                        const finInput = document.querySelector('[id$="_dateFin"]');
+                        
+                        if (data.nomEvenement && nomInput) nomInput.value = data.nomEvenement;
+                        if (data.typeEvenement && typeInput) typeInput.value = data.typeEvenement;
+                        if (data.dateDebut && debutInput) debutInput.value = data.dateDebut;
+                        if (data.dateFin && finInput) finInput.value = data.dateFin;
+                        
+                        // Populate rich modal fields
+                        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+                        set('ai-summary-text-back',      data.reasoning      || "Analyse complète disponible ci-dessous.");
+                        set('ai-confidence-back',        data.confidence_score ? data.confidence_score + '%' : '—');
+                        set('ai-event-type-badge-back',  data.typeEvenement  || '—');
+                        set('ai-event-name-badge-back',  data.nomEvenement   || '—');
+                        set('ai-insights-text-back',     data.data_insights  || data.reasoning || '');
+                        set('ai-time-text-back',         data.time_rationale || '');
+                        set('ai-type-text-back',         data.type_rationale || '');
+                        
+                        const detailsBtn = document.getElementById('ai-details-btn-back');
+                        if (detailsBtn) detailsBtn.classList.remove('d-none');
+
+                        // Automatically open the modal for the user to see the details
+                        const modalElement = document.getElementById('aiDetailsModalBack');
+                        if (modalElement && typeof bootstrap !== 'undefined') {
+                            const aiModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                            aiModal.show();
+                        }
+                    }
+                })
+                .catch(err => console.error("AI Fetch Error: ", err))
+                .finally(() => {
+                    btnBack.innerHTML = originalText;
+                    btnBack.disabled = false;
+                });
+        });
+    }
+});
+</script>

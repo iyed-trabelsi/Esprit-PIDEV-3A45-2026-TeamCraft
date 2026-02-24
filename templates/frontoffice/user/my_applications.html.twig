@@ -1,0 +1,50 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Mes Candidatures - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <h1 class="h2 fw-bold mb-4 text-white">Mes Candidatures</h1>
+
+        <div class="row g-4">
+            {% for app in applications %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card-tc h-100 p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge-game {{ app.offer.game|lower == 'league of legends' ? 'lol' : app.offer.game|lower }}">{{ app.offer.game }}</span>
+                        {% if app.status == 'accepted' %}
+                            <span class="badge bg-success">Acceptée</span>
+                        {% elseif app.status == 'refused' %}
+                            <span class="badge bg-danger">Refusée</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="h5 fw-bold mb-1 text-white">{{ app.offer.title }}</h3>
+                    <p class="text-muted small mb-3">{{ app.offer.team.name }}</p>
+
+                    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
+                        <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+                            <span>Envoyée le</span>
+                            <span>{{ app.createdAt|date('d/m/Y') }}</span>
+                        </div>
+                        <a href="{{ path('app_offres_show', {id: app.offer.id}) }}" class="btn btn-sm btn-outline-light w-100">Voir l'offre</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-info bg-dark border-secondary border-opacity-25 text-white">
+                    Vous n'avez envoyé aucune candidature pour le moment. 
+                    <a href="{{ path('app_offres') }}" class="text-info fw-bold">Parcourir les offres</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

@@ -1,0 +1,7 @@
+# Local AI Image Moderation - CLIP (no external APIs)
+# Python 3.9+ recommended. Install in a venv: python -m venv .venv && .venv\Scripts\activate (Windows) or source .venv/bin/activate (Linux/Mac)
+
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.30.0
+Pillow>=9.0.0

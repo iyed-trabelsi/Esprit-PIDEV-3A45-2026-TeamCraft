@@ -1,0 +1,169 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}TEAMCRAFT - Build Your Legacy{% endblock %}
+
+{% block body_class %}d-flex flex-column{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="hero position-relative flex-grow-1 d-flex align-items-center justify-content-center text-center" style="min-height: calc(100vh - 80px);">
+        <div class="container position-relative z-1 py-5">
+            <p class="font-display text-uppercase mb-3" style="color: var(--tc-neon-green); font-size: 0.9rem; letter-spacing: 0.2em;">The future of esports recruiting</p>
+            <h1 class="font-display display-3 fw-bold text-uppercase mb-4" style="line-height: 1.1;">
+                Build Your<br>Legacy
+            </h1>
+            <p class="lead mx-auto mb-5" style="max-width: 520px; color: var(--tc-text); font-size: 1.15rem;">
+                Trusted by competitive players and esports teams worldwide.
+            </p>
+            <div class="mt-4">
+                <img src="{{ asset('images/favicon.png') }}" alt="TEAMCRAFT" style="max-height: 150px; width: auto; filter: drop-shadow(0 0 50px rgba(0, 243, 255, 0.4));">
+            </div>
+
+        </div>
+    </section>
+
+    <section class="about-us py-5 position-relative" style="background: rgba(0, 2, 8, 0.4); border-top: 1px solid rgba(0, 243, 255, 0.1);">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <p class="font-display text-uppercase mb-3" style="color: var(--tc-neon-blue); font-size: 0.9rem; letter-spacing: 0.2em;">About Us</p>
+                    <h2 class="font-display h1 fw-bold text-uppercase mb-4" style="line-height: 1.2; color: #fff;">
+                        TeamCraft is an esports recruitment <br> platform <span style="color: var(--tc-neon-blue);">designed to connect</span> talented <br> players with competitive teams.
+                    </h2>
+                    <p class="lead mb-5" style="color: var(--tc-text); font-size: 1.1rem; max-width: 500px;">
+                        We help players showcase their skills and help teams discover the right talent faster.
+                    </p>
+                    <a href="#" class="btn btn-tc-primary btn-lg px-5">LEARN MORE</a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="position-relative">
+                        <div class="position-absolute w-100 h-100" style="background: linear-gradient(45deg, var(--tc-neon-blue), transparent); filter: blur(100px); opacity: 0.1; z-index: 0;"></div>
+                        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000" alt="Esports Team" class="img-fluid rounded-4 position-relative z-1" style="border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works py-5 position-relative">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="font-display display-5 fw-bold text-uppercase mb-3" style="color: #fff;">How It Works</h2>
+                <p class="lead" style="color: var(--tc-text);">Get recruited in three simple steps.</p>
+            </div>
+            
+            <div class="row text-center position-relative">
+                <!-- Step 1 -->
+                <div class="col-md-4 mb-5 mb-md-0 position-relative">
+                    <div class="step-icon-wrapper mb-4 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0, 243, 255, 0.05); border: 2px solid rgba(0, 243, 255, 0.2); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus" style="color: var(--tc-neon-blue);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+                    </div>
+                    <p class="text-uppercase mb-2" style="color: var(--tc-neon-blue); font-size: 0.8rem; letter-spacing: 0.1em; font-weight: 600;">Step 01</p>
+                    <h3 class="h4 font-display text-uppercase mb-3" style="color: #fff;">Create Your Profile</h3>
+                    <p style="color: var(--tc-text); font-size: 0.95rem;">Build your profile and highlight your skills.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="col-md-4 mb-5 mb-md-0 position-relative">
+                    <div class="step-icon-wrapper mb-4 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0, 243, 255, 0.05); border: 2px solid rgba(0, 243, 255, 0.2); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up" style="color: var(--tc-neon-blue);"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                    </div>
+                    <p class="text-uppercase mb-2" style="color: var(--tc-neon-blue); font-size: 0.8rem; letter-spacing: 0.1em; font-weight: 600;">Step 02</p>
+                    <h3 class="h4 font-display text-uppercase mb-3" style="color: #fff;">Showcase Your Stats</h3>
+                    <p style="color: var(--tc-text); font-size: 0.95rem;">Display your in-game stats and achievements.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="col-md-4 position-relative">
+                    <div class="step-icon-wrapper mb-4 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0, 243, 255, 0.05); border: 2px solid rgba(0, 243, 255, 0.2); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-handshake" style="color: var(--tc-neon-blue);"><path d="m11 17 2 2 6-6"/><path d="m18 10 1-1a2 2 0 0 0-3-3l-1 1"/><path d="m14 4-2 2-6 6"/><path d="m6 14-1 1a2 2 0 0 0 3 3l1-1"/><path d="M16 11l2 2"/><path d="m10 13-2-2"/></svg>
+                    </div>
+                    <p class="text-uppercase mb-2" style="color: var(--tc-neon-blue); font-size: 0.8rem; letter-spacing: 0.1em; font-weight: 600;">Step 03</p>
+                    <h3 class="h4 font-display text-uppercase mb-3" style="color: #fff;">Get Recruited by Teams</h3>
+                    <p style="color: var(--tc-text); font-size: 0.95rem;">Get discovered by competitive teams looking for talent.</p>
+                </div>
+
+                <div class="position-absolute d-none d-md-block" style="top: 50px; left: 15%; right: 15%; height: 2px; background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent); z-index: -1;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What We Offer Section -->
+    <section class="what-we-offer py-5" style="background: rgba(0, 2, 8, 0.4);">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="font-display display-5 fw-bold text-uppercase mb-3" style="color: #fff;">What We Offer</h2>
+            </div>
+
+            <div class="row g-4">
+                <!-- Feature 1 -->
+                <div class="col-md-6">
+                    <div class="feature-card p-4 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); height: 100%; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer; overflow: hidden; position: relative;">
+                        <div class="d-flex align-items-center gap-4 position-relative z-1">
+                            <div class="icon-box" style="color: var(--tc-neon-blue);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display text-uppercase mb-2" style="color: #fff; font-size: 1.25rem;">Player Profiles & Stats</h4>
+                                <p class="mb-0" style="color: var(--tc-text); font-size: 0.9rem;">Detailed profiles with in-game stats.</p>
+                            </div>
+                        </div>
+                        <div class="position-absolute top-0 end-0 w-50 h-100" style="background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.05)); z-index: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="col-md-6">
+                    <div class="feature-card p-4 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); height: 100%; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer; overflow: hidden; position: relative;">
+                        <div class="d-flex align-items-center gap-4 position-relative z-1">
+                            <div class="icon-box" style="color: var(--tc-neon-green);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display text-uppercase mb-2" style="color: #fff; font-size: 1.25rem;">Team Management</h4>
+                                <p class="mb-0" style="color: var(--tc-text); font-size: 0.9rem;">Manage rosters and track player performance.</p>
+                            </div>
+                        </div>
+                        <div class="position-absolute top-0 end-0 w-50 h-100" style="background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.05)); z-index: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="col-md-6">
+                    <div class="feature-card p-4 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); height: 100%; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer; overflow: hidden; position: relative;">
+                        <div class="d-flex align-items-center gap-4 position-relative z-1">
+                            <div class="icon-box" style="color: #00f3ff;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-plus"><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h9"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><path d="M19 16v6"/><path d="M16 19h6"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display text-uppercase mb-2" style="color: #fff; font-size: 1.25rem;">Recruitment Offers</h4>
+                                <p class="mb-0" style="color: var(--tc-text); font-size: 0.9rem;">Receive and send offers for esports recruitment.</p>
+                            </div>
+                        </div>
+                        <div class="position-absolute top-0 end-0 w-50 h-100" style="background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.05)); z-index: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="col-md-6">
+                    <div class="feature-card p-4 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); height: 100%; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer; overflow: hidden; position: relative;">
+                        <div class="d-flex align-items-center gap-4 position-relative z-1">
+                            <div class="icon-box" style="color: #ecc94b;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trophy"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display text-uppercase mb-2" style="color: #fff; font-size: 1.25rem;">Events & Tournaments</h4>
+                                <p class="mb-0" style="color: var(--tc-text); font-size: 0.9rem;">Participate in online events and challenges.</p>
+                            </div>
+                        </div>
+                        <div class="position-absolute top-0 end-0 w-50 h-100" style="background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.05)); z-index: 0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
