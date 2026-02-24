@@ -5,15 +5,36 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
-class UserRepository extends ServiceEntityRepository
+/**
+ * @extends ServiceEntityRepository<User>
+ */
+class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
     }
 
-    // Compte tous les utilisateurs
+    /**
+     * Utilisé pour mettre à jour automatiquement le hachage du mot de passe.
+     */
+    public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
+    {
+        if (!$user instanceof User) {
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', $user::class));
+        }
+
+        $user->setPassword($newHashedPassword);
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+    }
+
+    // --- TES MÉTHODES DE STATISTIQUES (HEAD) ---
+
     public function countAllUsers(): int
     {
         return (int) $this->createQueryBuilder('u')
@@ -22,7 +43,6 @@ class UserRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    // Compte selon le statut actif/inactif
     public function countActiveUsers(bool $isActive): int
     {
         return (int) $this->createQueryBuilder('u')
@@ -33,7 +53,6 @@ class UserRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    // Récupère la répartition par genre (format pour Chart.js)
     public function countByGender(): array
     {
         $results = $this->createQueryBuilder('u')
@@ -42,7 +61,6 @@ class UserRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        // Formate pour que le Twig puisse lire {{ genderDistribution.homme }}
         $stats = ['homme' => 0, 'femme' => 0];
         foreach ($results as $res) {
             $label = strtolower($res['label'] ?? '');
@@ -52,9 +70,9 @@ class UserRepository extends ServiceEntityRepository
         }
         return $stats;
     }
+
     public function countBannedUsers(): int
     {
-        // On se base sur le champ status de l'entité Player lié à l'User
         return (int) $this->createQueryBuilder('u')
             ->select('count(u.id)')
             ->innerJoin('u.playerProfile', 'p')
@@ -62,5 +80,19 @@ class UserRepository extends ServiceEntityRepository
             ->setParameter('status', 'Banned')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    // --- MÉTHODES DES COLLÈGUES (MAIN) ---
+
+    /**
+     * @return User[]
+     */
+    public function findUsersWithRole(string $role): array
+    {
+        $users = $this->createQueryBuilder('u')
+            ->orderBy('u.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+        return array_filter($users, fn (User $u) => \in_array($role, $u->getRoles(), true));
     }
 }

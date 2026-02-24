@@ -92,4 +92,41 @@ class PlayerRepository extends ServiceEntityRepository
 
         return (int)$qb->getQuery()->getSingleScalarResult();
     }
+
+    /**
+     * Find player candidates for Smart Matching (optimized query).
+     * Pre-filters by game to avoid loading all players.
+     * Includes players whose main game OR CompetitiveRank matches ONE of the offer's game aliases.
+     *
+     * @param string[] $gameAliases
+     * @return Player[]
+     */
+    public function findCandidatesForOffer(array $gameAliases, int $limit = 50): array
+    {
+        if (empty($gameAliases)) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.user', 'u')
+            ->addSelect('u')
+            ->leftJoin('p.competitiveRanks', 'cr')
+            ->addSelect('cr');
+
+        $orX = $qb->expr()->orX();
+
+        foreach ($gameAliases as $i => $alias) {
+            $pattern = '%' . strtolower(trim($alias)) . '%';
+            $orX->add('LOWER(p.game) LIKE :game_' . $i);
+            $orX->add('LOWER(cr.game) LIKE :game_' . $i);
+            $qb->setParameter('game_' . $i, $pattern);
+        }
+
+        $qb->andWhere($orX)
+           ->orderBy('p.id', 'DESC')
+           ->setMaxResults($limit)
+           ->distinct();
+
+        return $qb->getQuery()->getResult();
+    }
 }

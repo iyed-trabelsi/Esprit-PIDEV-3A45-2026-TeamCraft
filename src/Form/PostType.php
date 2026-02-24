@@ -57,6 +57,7 @@ class PostType extends AbstractType
                 'label' => 'Statut',
                 'choices' => [
                     'Publié' => 'published',
+                    'En attente de modération' => 'pending_review',
                     'Archivé' => 'archived',
                 ],
             ]);

@@ -1,23 +1,38 @@
 {{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
     {{ form_errors(form) }}
     <div class="admin-form-widgets">
-        <div class="mb-3">
-            {{ form_label(form.dateInscription) }}
-            {{ form_widget(form.dateInscription) }}
+        <div class="mb-4">
+            {{ form_label(form.dateInscription, 'Date d\'inscription', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-calendar-event"></i></span>
+                {{ form_widget(form.dateInscription, { 'attr': {'class': 'form-control'} }) }}
+            </div>
             {{ form_errors(form.dateInscription) }}
         </div>
-        <div class="mb-3">
-            {{ form_label(form.evenement) }}
-            {{ form_widget(form.evenement) }}
+
+        <div class="mb-4">
+            {{ form_label(form.evenement, 'Événement', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-trophy"></i></span>
+                {{ form_widget(form.evenement, { 'attr': {'class': 'form-select'} }) }}
+            </div>
             {{ form_errors(form.evenement) }}
         </div>
-        <div class="mb-3">
-            {{ form_label(form.user) }}
-            {{ form_widget(form.user) }}
+
+        <div class="mb-4">
+            {{ form_label(form.user, 'Utilisateur', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-person"></i></span>
+                {{ form_widget(form.user, { 'attr': {'class': 'form-select'} }) }}
+            </div>
             {{ form_errors(form.user) }}
         </div>
     </div>
-    <div class="mt-4">
-        <button type="submit" class="btn btn-tc-primary w-100">{{ button_label|default('Enregistrer') }}</button>
+    
+    <div class="mt-4 pt-2">
+        <button type="submit" class="btn btn-tc-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-check-circle"></i>
+            <span>{{ button_label|default('Enregistrer la participation') }}</span>
+        </button>
     </div>
 {{ form_end(form) }}

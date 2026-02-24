@@ -1,0 +1,30 @@
+{
+    "candidates": [
+        {
+            "content": {
+                "parts": [
+                    {
+                        "text": "{\"nomEvenement\":\"Strategic Team Synergy Practice\",\"typeEvenement\":\"practice\",\"dateDebut\":\"2024-06-12T19:00\",\"dateFin\":\"2024-06-12T21:00\",\"reasoning\":\"This practice session is optimally scheduled to refine our team's strategic execution and communication following recent scrims. It will focus on analyzing VODs from previous matches, implementing new counter-strat theories, and practicing objective control in a low-pressure environment. The timing allows for maximum player availability post-work\/school hours, ensuring full roster participation and dedicated focus before upcoming competitive engagements, maximizing skill development and cohesion.\"}"
+                    }
+                ],
+                "role": "model"
+            },
+            "finishReason": "STOP",
+            "index": 0
+        }
+    ],
+    "usageMetadata": {
+        "promptTokenCount": 128,
+        "candidatesTokenCount": 143,
+        "totalTokenCount": 716,
+        "promptTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 128
+            }
+        ],
+        "thoughtsTokenCount": 445
+    },
+    "modelVersion": "gemini-2.5-flash",
+    "responseId": "QE-aaatwyrXbyg_-6O-RCg"
+}

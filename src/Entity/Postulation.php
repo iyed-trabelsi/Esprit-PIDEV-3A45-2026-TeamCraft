@@ -33,6 +33,9 @@ class Postulation
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $matchScore = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -99,6 +102,18 @@ class Postulation
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getMatchScore(): ?float
+    {
+        return $this->matchScore;
+    }
+
+    public function setMatchScore(?float $matchScore): static
+    {
+        $this->matchScore = $matchScore;
 
         return $this;
     }

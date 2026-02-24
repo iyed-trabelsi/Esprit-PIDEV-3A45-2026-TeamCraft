@@ -108,4 +108,25 @@ class RubriqueRepository extends ServiceEntityRepository
 
         return array_column($results, 'topic');
     }
+
+    public function countByTopic(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->select('r.topic as topic, COUNT(r.id) as count')
+            ->where('r.topic IS NOT NULL')
+            ->andWhere("r.topic != ''")
+            ->groupBy('r.topic')
+            ->orderBy('count', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+    public function countByState(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->select('r.etat as state, COUNT(r.id) as count')
+            ->groupBy('r.etat')
+            ->orderBy('count', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

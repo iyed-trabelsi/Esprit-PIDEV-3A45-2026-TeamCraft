@@ -7,8 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: TeamRepository::class)]
+#[UniqueEntity(fields: ['name'], message: 'Ce nom d\'équipe est déjà utilisé.')]
 class Team
 {
     #[ORM\Id]
@@ -34,6 +36,13 @@ class Team
     #[ORM\ManyToMany(targetEntity: User::class)]
     #[ORM\JoinTable(name: 'team_members')]
     private Collection $members;
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'team_co_owners')]
+    private Collection $coOwners;
 
     #[ORM\ManyToOne(inversedBy: 'teams')]
     #[ORM\JoinColumn(nullable: false)]
@@ -109,11 +118,17 @@ class Team
     #[ORM\OneToMany(mappedBy: 'team', targetEntity: Offer::class, orphanRemoval: true)]
     private \Doctrine\Common\Collections\Collection $offers;
 
+    #[ORM\OneToMany(mappedBy: 'team', targetEntity: TeamMessage::class, orphanRemoval: true)]
+    private Collection $messages;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->offers = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->offers = new \Doctrine\Common\Collections\ArrayCollection();
         $this->members = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->coOwners = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->messages = new ArrayCollection();
     }
 
     /**
@@ -141,6 +156,40 @@ class Team
     }
 
     /**
+     * @return Collection<int, User>
+     */
+    public function getCoOwners(): Collection
+    {
+        return $this->coOwners;
+    }
+
+    public function addCoOwner(User $coOwner): static
+    {
+        if (!$this->coOwners->contains($coOwner)) {
+            $this->coOwners->add($coOwner);
+        }
+
+        return $this;
+    }
+
+    public function removeCoOwner(User $coOwner): static
+    {
+        $this->coOwners->removeElement($coOwner);
+
+        return $this;
+    }
+
+    public function isCoOwner(User $user): bool
+    {
+        return $this->coOwners->contains($user);
+    }
+
+    public function hasManagementAccess(User $user): bool
+    {
+        return $this->owner === $user || $this->isCoOwner($user);
+    }
+
+    /**
      * @return \Doctrine\Common\Collections\Collection<int, Offer>
      */
     public function getOffers(): \Doctrine\Common\Collections\Collection
@@ -164,6 +213,36 @@ class Team
             // set the owning side to null (unless already changed)
             if ($offer->getTeam() === $this) {
                 $offer->setTeam(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, TeamMessage>
+     */
+    public function getMessages(): Collection
+    {
+        return $this->messages;
+    }
+
+    public function addMessage(TeamMessage $message): static
+    {
+        if (!$this->messages->contains($message)) {
+            $this->messages->add($message);
+            $message->setTeam($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMessage(TeamMessage $message): static
+    {
+        if ($this->messages->removeElement($message)) {
+            // set the owning side to null (unless already changed)
+            if ($message->getTeam() === $this) {
+                $message->setTeam(null);
             }
         }
 

@@ -29,7 +29,16 @@
                 <span class="badge-game {{ gameClass }}">{{ offre.game }}</span>
                 <span class="badge-rank purple">{{ offre.rank }}</span>
             </div>
-            <h1 class="h2 fw-bold discovery-card-title mb-2">{{ offre.title }}</h1>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h1 class="h2 fw-bold discovery-card-title mb-0">{{ offre.title }}</h1>
+                {% if app.user %}
+                    <button class="favorite-btn btn btn-link p-0" 
+                            data-offer-id="{{ offre.id }}" 
+                            style="background: none; border: none; font-size: 2rem; color: #dc2626; cursor: pointer;">
+                        <i class="bi bi-heart{{ isFavorited ? '-fill' : '' }}"></i>
+                    </button>
+                {% endif %}
+            </div>
             <p class="discovery-card-subtitle mb-4 text-muted small text-uppercase fw-bold">{{ offre.team.name }}</p>
             <div class="post-body mb-4" style="color: var(--tc-text); line-height: 1.6;">{{ offre.description }}</div>
             
@@ -58,7 +67,109 @@
         </div>
 
         <a href="{{ path('app_offres') }}" class="discovery-view-all text-decoration-none">← Retour aux offres</a>
+
+        {% if recommendedPlayers is defined and recommendedPlayers is not empty %}
+        <div class="mt-5 border-top border-secondary border-opacity-25 pt-5">
+            <h3 class="h4 text-white fw-bold mb-4">🔥 Top 3 joueurs recommandés</h3>
+            <div class="row g-4">
+                {% for p in recommendedPlayers %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="discovery-card h-100 p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="discovery-avatar me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">{{ p.initial }}</div>
+                                <div>
+                                    <h4 class="h6 text-white fw-bold mb-0">{{ p.name }}</h4>
+                                    <small class="text-muted">{{ p.role }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge-game {{ p.gameColor }}">{{ p.game }}</span>
+                                <span class="badge-rank {{ p.rankColor }}">{{ p.rank }}</span>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white-50 small fw-bold">Compatibilité</span>
+                                    {% set badgeColor = p.score >= 80 ? 'bg-success' : (p.score >= 50 ? 'bg-warning' : 'bg-danger') %}
+                                    <span class="badge {{ badgeColor }} text-uppercase" style="font-size: 0.65rem;">
+                                        {{ p.compatibilityLevel }} Match
+                                    </span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="progress flex-grow-1" style="height: 8px; background-color: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                        <div class="progress-bar {{ badgeColor }} progress-bar-animated" 
+                                             role="progressbar" 
+                                             style="width: {{ p.score }}%; transition: width 1.5s ease-in-out;" 
+                                             aria-valuenow="{{ p.score }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <span class="text-white small fw-bold" style="min-width: 40px;">{{ p.score }}%</span>
+                                </div>
+                            </div>
+                            
+                            {# Check if profile route exists, otherwise disable link #}
+                            <a href="{{ path('app_profile_show', {id: p.id}) }}" class="btn btn-sm btn-outline-light mt-4 w-100">Voir le profil</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </section>
 
     {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Favorite toggle functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.favorite-btn')) {
+            e.preventDefault();
+            const btn = e.target.closest('.favorite-btn');
+            const offerId = btn.dataset.offerId;
+            const icon = btn.querySelector('i');
+            const isFavorited = icon.classList.contains('bi-heart-fill');
+            
+            const url = isFavorited 
+                ? `/offres/${offerId}/unfavorite`
+                : `/offres/${offerId}/favorite`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Toggle icon
+                    if (isFavorited) {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    } else {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    }
+                } else {
+                    if (data.message === 'You must be logged in') {
+                        window.location.href = '/login';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+});
+</script>
 {% endblock %}

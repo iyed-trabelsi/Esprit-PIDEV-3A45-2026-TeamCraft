@@ -63,6 +63,12 @@ class GoogleAuthenticator extends OAuth2Authenticator
                     $user->setPassword('google_auth_dummy');
 
                     $this->entityManager->persist($user);
+
+                    // Create the associated Player entity
+                    $player = new \App\Entity\Player();
+                    $player->setUser($user);
+                    $this->entityManager->persist($player);
+
                     $this->entityManager->flush();
                 }
 

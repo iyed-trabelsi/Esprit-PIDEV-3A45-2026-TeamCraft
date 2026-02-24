@@ -55,15 +55,35 @@
             color: rgba(255, 255, 255, 0.4) !important;
         }
         /* Erreurs de validation : affichées uniquement après soumission, sous chaque champ */
-        .admin-form-widgets .mb-3 ul {
+        .admin-form-widgets .mb-3 ul, .admin-form-widgets .mb-4 ul {
             list-style: none;
             padding: 0;
             margin: 0.35rem 0 0 0;
             font-size: 0.875rem;
-            color: #f87171;
+            color: #ff4d4d !important; /* Strong Red */
         }
-        .admin-form-widgets .mb-3 ul li {
+        .admin-form-widgets .mb-3 ul li, .admin-form-widgets .mb-4 ul li {
             margin-top: 0.15rem;
+            font-weight: 500;
+        }
+
+        /* Dropdown Visibility Fix */
+        .dropdown-menu {
+            z-index: 2000 !important;
+            background-color: #1e293b !important; /* Solid Slate 800 */
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+        .dropdown-item {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .dropdown-item:hover {
+            background-color: rgba(56, 189, 248, 0.2) !important;
+            color: white !important;
+        }
+        .dropdown-item.active {
+            background-color: var(--tc-cyan) !important;
+            color: white !important;
         }
     </style>
 {% endblock %}
@@ -177,8 +197,44 @@
                 </div>
             </header>
 
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert" style="background: rgba({{ label == 'error' ? '220, 38, 38' : '13, 110, 253' }}, 0.2); color: white; backdrop-filter: blur(5px);">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-{{ label == 'error' ? 'exclamation-octagon' : 'check-circle' }}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
             {% block admin_content %}{% endblock %}
         </main>
     </div>
+
+    <script>
+        document.addEventListener('turbo:before-cache', function() {
+            // Hide all open dropdowns to prevent them from sticking in the cache
+            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                const dropdowns = document.querySelectorAll('.dropdown-toggle.show');
+                dropdowns.forEach(toggle => {
+                    const instance = bootstrap.Dropdown.getInstance(toggle);
+                    if (instance) instance.hide();
+                });
+            }
+        });
+
+        document.addEventListener('turbo:load', function() {
+            // Re-initialize Bootstrap components if necessary
+            if (typeof bootstrap !== 'undefined') {
+                const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+                dropdownElements.forEach(el => {
+                    const oldInstance = bootstrap.Dropdown.getInstance(el);
+                    if (oldInstance) oldInstance.dispose();
+                });
+            }
+        });
+    </script>
 {% endblock %}
 

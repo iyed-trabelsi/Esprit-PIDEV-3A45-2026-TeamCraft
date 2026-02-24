@@ -18,3 +18,17 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Python
+ai_moderation/.venv/
+ai_moderation/__pycache__/
+*.pyc
+
+# OS / IDE
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

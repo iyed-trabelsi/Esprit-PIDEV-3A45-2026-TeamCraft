@@ -47,23 +47,30 @@
 
                     <!-- Team Name -->
                     <div class="mb-4">
-                        {{ form_label(form.name, null, {'label_attr': {'class': 'form-label text-white fw-bold'}}) }}
-                        {{ form_widget(form.name, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-50 py-3', 'placeholder': 'e.g. Shadow Wolves'}}) }}
-                         <div class="text-danger small mt-1">{{ form_errors(form.name) }}</div>
+                        {{ form_label(form.name, null, {'label_attr': {'class': 'form-label text-white'}}) }}
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'required': false}}) }}
+                        <div class="text-danger mt-1">{{ form_errors(form.name) }}</div>
                     </div>
 
-                    <!-- Games Selection -->
+                    <!-- Games Played -->
                     <div class="mb-5">
-                         <label class="form-label text-white fw-bold mb-3">Games Played</label>
-                         <div class="d-flex flex-wrap gap-2">
-                            {% for child in form.games %}
-                                <div class="game-checkbox-wrapper">
-                                    {{ form_widget(child, {'attr': {'class': 'btn-check'}}) }}
-                                    {{ form_label(child, null, {'label_attr': {'class': 'btn btn-outline-secondary d-flex align-items-center gap-2'}}) }}
+                        {{ form_label(form.games, null, {'label_attr': {'class': 'form-label text-white mb-3'}}) }}
+                        <div class="row g-2">
+                            {% for choice in form.games %}
+                                <div class="col-6">
+                                    <div class="form-check p-0">
+                                        {{ form_widget(choice, {'attr': {'class': 'btn-check game-checkbox'}}) }}
+                                        <label class="btn btn-outline-secondary w-100 text-start text-white border-secondary d-flex justify-content-between align-items-center" for="{{ choice.vars.id }}">
+                                            {{ choice.vars.label }}
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg opacity-0 check-icon" viewBox="0 0 16 16">
+                                              <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                            </svg>
+                                        </label>
+                                    </div>
                                 </div>
                             {% endfor %}
-                         </div>
-                         <div class="text-danger small mt-1">{{ form_errors(form.games) }}</div>
+                        </div>
+                        <div class="text-danger mt-1">{{ form_errors(form.games) }}</div>
                     </div>
 
                     <!-- Actions -->
@@ -83,10 +90,34 @@
 
     {% include 'frontoffice/partials/_footer_full.html.twig' %}
 
+    <style>
+        .form-check .btn-outline-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #6c757d;
+        }
+        .form-check .btn-check:checked + .btn-outline-secondary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .form-check .btn-check:checked + .btn-outline-secondary .check-icon {
+            opacity: 1 !important;
+        }
+        .text-danger ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+            display: block;
+        }
+        .text-danger li {
+            font-size: 0.875rem;
+        }
+    </style>
+
     <script>
-            const teamLogoInput = document.getElementById('team_logo');
+        document.addEventListener('DOMContentLoaded', function() {
+            const teamLogoInput = document.getElementById('{{ form.logo.vars.id }}');
             const logoPreview = document.getElementById('logoPreview');
-            const defaultLogoIcon = document.getElementById('defaultLogoIcon');
+            const cameraIcon = document.getElementById('cameraIcon');
 
             // Image Preview Logic
             if (teamLogoInput) {
@@ -97,7 +128,7 @@
                         reader.onload = function(e) {
                             logoPreview.src = e.target.result;
                             logoPreview.classList.remove('d-none');
-                            defaultLogoIcon.classList.add('d-none');
+                            if (cameraIcon) cameraIcon.classList.add('d-none');
                         }
                         reader.readAsDataURL(file);
                     }

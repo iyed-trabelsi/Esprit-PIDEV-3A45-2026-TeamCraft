@@ -2,73 +2,47 @@
 
 namespace App\Controller;
 use App\Entity\User;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use App\Entity\Comment;
 use App\Entity\Player;
 use App\Entity\Post;
 use App\Entity\Rubrique;
+use App\Entity\Comment;
 use App\Repository\AdminRepository;
 use App\Repository\CommentRepository;
 use App\Repository\PostRepository;
 use App\Repository\RubriqueRepository;
 use App\Repository\PlayerRepository;
 use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\TeamRepository;
 use App\Repository\OfferRepository;
+use App\Repository\PostulationRepository;
+use App\Repository\SignalementRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
 class AdminController extends AbstractController
 {
-   #[Route('/admin/user/{id}/block', name: 'admin_user_block', methods: ['POST'])]
-   public function blockUser(User $user, EntityManagerInterface $em, MailerInterface $mailer): Response
-    {
-        // 1. Désactiver l'utilisateur
-        $user->setIsActive(false); 
-        $em->flush();
-
-        // 2. Préparer l'email d'avertissement
-        $email = (new Email())
-            ->from('security@teamcraft.com')
-            ->to($user->getEmail())
-            ->subject('Alerte de sécurité : Compte TeamCraft suspendu')
-            ->html("
-                <h2>Bonjour " . $user->getPseudo() . "</h2>
-                <p>Suite à une détection de connexion suspecte ou inhabituelle, votre compte a été <strong>suspendu par un administrateur</strong> par mesure de précaution.</p>
-                <p>Veuillez contacter le support pour procéder à la récupération de votre compte.</p>
-                <p>Cordialement,<br>L'équipe Sécurité TeamCraft</p>
-            ");
-
-        // 3. Envoyer l'email
-        $mailer->send($email);
-
-        $this->addFlash('success', 'Utilisateur bloqué et email d\'alerte envoyé.');
-
-        return $this->redirectToRoute('admin_players');
-    }
-
-    #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
+#[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(
         Request $request, 
         RubriqueRepository $rubriqueRepository,
         UserRepository $userRepo, 
         PostRepository $postRepository, 
         CommentRepository $commentRepository,
-        PlayerRepository $playerRepo,      // Ajouté
-        TeamRepository $teamRepo,        // Ajouté
-        OfferRepository $offerRepo,      // Ajouté
-        \Twig\Environment $twig
+        PlayerRepository $playerRepo,
+        TeamRepository $teamRepo,
+        OfferRepository $offerRepo
     ): Response {
         
-        // STATS RÉELLES DEPUIS LA BDD
+        // 1. STATS RÉELLES
         $stats = [
             'totalUsers' => $userRepo->countAllUsers(),
-            'totalPlayers' => $playerRepo->count([]), // Compte réel de la table Player
+            'totalPlayers' => $playerRepo->count([]),
             'activeUsers' => $userRepo->countActiveUsers(true),
             'inactiveUsers' => $userRepo->countActiveUsers(false),
             'bannedUsers' => $userRepo->countBannedUsers(),
@@ -77,54 +51,63 @@ class AdminController extends AbstractController
         
         $limit = 5;
 
-        // RÉCUPÉRATION DES DONNÉES RÉELLES
-        $players = $playerRepo->findAll(); 
-        $teams = $teamRepo->findAll();
-        $offers = $offerRepo->findAll();
-        
-        // Si vous n'avez pas encore d'entité Event en BDD, on garde le statique
-        $events = $this->getEvents(); 
-
-        // --- Gestion Pagination Rubriques ---
+        // 2. PAGINATION RUBRIQUES
         $pageRubriques = max(1, $request->query->getInt('page_rubriques', 1));
         $allRubriques = $rubriqueRepository->findBy([], ['dateCreation' => 'DESC']);
         $totalRubriques = count($allRubriques);
         $maxPagesRubriques = (int) ceil($totalRubriques / $limit) ?: 1;
         $rubriques = array_slice($allRubriques, ($pageRubriques - 1) * $limit, $limit);
 
-        // --- Gestion Pagination Posts ---
+        // 3. PAGINATION POSTS
         $pagePosts = max(1, $request->query->getInt('page_posts', 1));
         $allPosts = $postRepository->findBy([], ['dateCreation' => 'DESC']);
         $totalPosts = count($allPosts);
         $maxPagesPosts = (int) ceil($totalPosts / $limit) ?: 1;
         $posts = array_slice($allPosts, ($pagePosts - 1) * $limit, $limit);
 
-        // --- Gestion Pagination Commentaires ---
+        // 4. PAGINATION COMMENTAIRES
         $pageComments = max(1, $request->query->getInt('page_comments', 1));
         $allComments = $commentRepository->findAllForAdmin();
         $totalComments = count($allComments);
         $maxPagesComments = (int) ceil($totalComments / $limit) ?: 1;
         $comments = array_slice($allComments, ($pageComments - 1) * $limit, $limit);
-
+        
         return $this->render('backoffice/dashboard.html.twig', [
             'userStats' => $stats,
-            'players' => $players,
-            'teams' => $teams,
-            'offers' => $offers,
-            'events' => $events,
+            'players' => $playerRepo->findAll(),
+            'teams' => $teamRepo->findAll(),
+            'offers' => $offerRepo->findAll(),
+            'events' => $this->getEvents(), // Méthode privée en bas
             'rubriques' => $rubriques,
             'rubriquesCurrentPage' => $pageRubriques,
             'rubriquesMaxPages' => $maxPagesRubriques,
-            'rubriquesTotal' => $totalRubriques,
             'posts' => $posts,
             'postsCurrentPage' => $pagePosts,
             'postsMaxPages' => $maxPagesPosts,
-            'postsTotal' => $totalPosts,
             'comments' => $comments,
             'commentsCurrentPage' => $pageComments,
             'commentsMaxPages' => $maxPagesComments,
-            'commentsTotal' => $totalComments,
+            'rubriquesByTopic' => $rubriqueRepository->countByTopic(),
+            'postsByType' => $postRepository->countByType(),
         ]);
+    }
+
+    #[Route('/admin/user/{id}/block', name: 'admin_user_block', methods: ['POST'])]
+    public function blockUser(User $user, EntityManagerInterface $em, MailerInterface $mailer): Response
+    {
+        $user->setIsActive(false); 
+        $em->flush();
+
+        $email = (new Email())
+            ->from('security@teamcraft.com')
+            ->to($user->getEmail())
+            ->subject('Alerte de sécurité : Compte TeamCraft suspendu')
+            ->html("<h2>Bonjour " . $user->getPseudo() . "</h2><p>Votre compte a été suspendu.</p>");
+
+        $mailer->send($email);
+        $this->addFlash('success', 'Utilisateur bloqué et email envoyé.');
+
+        return $this->redirectToRoute('admin_players');
     }
 
     #[Route('/admin/players', name: 'admin_players', methods: ['GET'])]
@@ -135,15 +118,8 @@ class AdminController extends AbstractController
         $q = $request->query->get('q');
         $sort = $request->query->get('sort');
 
-        // On passe $q ET $sort pour que le compte total soit correct avec les filtres
         $totalPlayers = $playerRepository->countForAdmin($q, $sort);
-
         $maxPages = (int) ceil($totalPlayers / $limit) ?: 1;
-
-        if ($page > $maxPages) {
-            $page = $maxPages;
-        }
-
         $offset = ($page - 1) * $limit;
         $players = $playerRepository->findForAdmin($q, $sort, $limit, $offset);
 
@@ -153,7 +129,7 @@ class AdminController extends AbstractController
             'maxPages' => $maxPages,
             'totalPlayers' => $totalPlayers,
             'q' => $q,
-            'sort' => $sort // Virgule ajoutée ici
+            'sort' => $sort
         ]);
     }
 
@@ -262,7 +238,7 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
     }
 
     #[Route('/admin/offers', name: 'admin_offers', methods: ['GET'])]
-    public function offers(\Symfony\Component\HttpFoundation\Request $request, \App\Repository\OfferRepository $offerRepository): Response
+    public function offers(\Symfony\Component\HttpFoundation\Request $request, \App\Repository\OfferRepository $offerRepository, \App\Repository\PostulationRepository $postulationRepository): Response
     {
         $allOffers = $offerRepository->findAll();
         $limit = 5;
@@ -277,11 +253,32 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
         $offset = ($page - 1) * $limit;
         $paginatedOffers = array_slice($allOffers, $offset, $limit);
 
+        // Calculate statistics for all applications
+        $allApplications = $postulationRepository->findAll();
+        $stats = [
+            'accepted' => 0,
+            'refused' => 0,
+            'pending' => 0,
+            'total' => count($allApplications)
+        ];
+
+        foreach ($allApplications as $application) {
+            $status = strtolower($application->getStatus() ?? 'pending');
+            if ($status === 'accepted') {
+                $stats['accepted']++;
+            } elseif ($status === 'refused') {
+                $stats['refused']++;
+            } else {
+                $stats['pending']++;
+            }
+        }
+
         return $this->render('backoffice/offers.html.twig', [
             'offers' => $paginatedOffers,
             'currentPage' => $page,
             'maxPages' => $maxPages,
-            'totalOffers' => $totalOffers
+            'totalOffers' => $totalOffers,
+            'stats' => $stats
         ]);
     }
 
@@ -350,6 +347,10 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
             ]));
         }
 
+
+        $rubriquesByTopic = $rubriqueRepository->countByTopic();
+        $rubriquesByState = $rubriqueRepository->countByState();
+
         return $this->render('backoffice/rubriques.html.twig', [
             'rubriques' => $rubriques,
             'currentPage' => $page,
@@ -357,6 +358,8 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
             'total' => $total,
             'q' => $q,
             'sort' => $sort,
+            'rubriquesByTopic' => $rubriquesByTopic,
+            'rubriquesByState' => $rubriquesByState
         ]);
     }
 
@@ -394,7 +397,7 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
     }
 
     #[Route('/admin/posts', name: 'admin_posts', methods: ['GET'])]
-    public function posts(Request $request, PostRepository $postRepository, \Twig\Environment $twig): Response
+    public function posts(Request $request, PostRepository $postRepository, \App\Repository\SignalementRepository $signalementRepository, \Twig\Environment $twig): Response
     {
         $limit = 5;
         $page = max(1, $request->query->getInt('page', 1));
@@ -408,6 +411,14 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
         }
         $offset = ($page - 1) * $limit;
         $posts = $postRepository->findForAdmin($q, $sort, $limit, $offset);
+
+        // Fetch reports (could be paginated too, but for now list all or recent)
+        // Let's fetch pending reports primarily, or all.
+        // User asked for a table.
+        $reports = $signalementRepository->findBy(['status' => 'pending'], ['dateSignalement' => 'DESC']);
+
+        // Statistiques par type de post
+        $postsByType = $postRepository->countByType($q);
 
         if ($request->isXmlHttpRequest()) {
             return new Response($twig->load('backoffice/posts.html.twig')->renderBlock('posts_list', [
@@ -427,7 +438,61 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
             'total' => $total,
             'q' => $q,
             'sort' => $sort,
+            'reports' => $reports,
+            'postsByType' => $postsByType,
         ]);
+    }
+
+    #[Route('/admin/report/{id}/dismiss', name: 'admin_report_dismiss', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function dismissReport(int $id, Request $request, \App\Repository\SignalementRepository $signalementRepository, EntityManagerInterface $em): Response
+    {
+        $report = $signalementRepository->find($id);
+        if ($report && $this->isCsrfTokenValid('dismiss_report_' . $id, (string) $request->request->get('_token'))) {
+            $report->setStatus('dismissed');
+            $em->flush();
+            $this->addFlash('success', 'Signalement ignoré/traité.');
+        }
+        return $this->redirectToRoute('admin_posts');
+    }
+
+    #[Route('/admin/user/{id}/ban', name: 'admin_user_ban', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function userBan(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $em): Response
+    {
+        $user = $userRepository->find($id);
+        
+        /** @var \App\Entity\User $currentUser */
+        $currentUser = $this->getUser();
+        if ($user && $user->getId() === $currentUser->getId()) {
+            $this->addFlash('error', 'Vous ne pouvez pas modifier votre propre statut.');
+            return $this->redirectToRoute('admin_posts');
+        }
+
+        if ($user && $this->isCsrfTokenValid('ban_user_' . $id, (string) $request->request->get('_token'))) {
+            $isBanned = $user->isBanned();
+            $user->setIsBanned(!$isBanned);
+            $em->flush();
+
+            $message = $user->isBanned() ? 'Utilisateur banni.' : 'Bannissement levé.';
+            $this->addFlash('success', $message);
+        }
+        return $this->redirectToRoute('admin_posts');
+    }
+
+    #[Route('/admin/posts/{id}/delete-image', name: 'admin_post_delete_image', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function postDeleteImage(int $id, Request $request, PostRepository $postRepository, EntityManagerInterface $em): Response
+    {
+        $post = $postRepository->find($id);
+        if ($post && $this->isCsrfTokenValid('admin_post_delete_image_' . $id, (string) $request->request->get('_token'))) {
+            $imagePath = $this->getParameter('uploads_post_dir') . '/' . $post->getImage();
+            if ($post->getImage() && file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+            $post->setImage(null);
+            $post->setImageSensitivity(null);
+            $em->flush();
+            $this->addFlash('success', 'Image du post supprimée.');
+        }
+        return $this->redirectToRoute('admin_posts');
     }
 
     #[Route('/admin/posts/{id}/delete', name: 'admin_post_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -435,9 +500,13 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
     {
         $post = $postRepository->find($id);
         if ($post && $this->isCsrfTokenValid('admin_post_delete_' . $id, (string) $request->request->get('_token'))) {
+            $rubrique = $post->getRubrique();
+            if ($rubrique) {
+                $rubrique->setNbPosts(max(0, $rubrique->getNbPosts() - 1));
+            }
             $em->remove($post);
             $em->flush();
-            $this->addFlash('success', 'Post supprimé.');
+            $this->addFlash('success', 'Post supprimé et compteur mis à jour.');
         }
         return $this->redirectToRoute('admin_posts');
     }
@@ -447,7 +516,7 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
     {
         $post = $postRepository->find($id);
         $statut = $request->request->get('statut');
-        if ($post && \in_array($statut, ['published', 'archived'], true) && $this->isCsrfTokenValid('admin_post_statut_' . $id, (string) $request->request->get('_token'))) {
+        if ($post && \in_array($statut, ['published', 'archived', 'pending_review'], true) && $this->isCsrfTokenValid('admin_post_statut_' . $id, (string) $request->request->get('_token'))) {
             $post->setStatut($statut);
             $em->flush();
             $this->addFlash('success', 'Statut du post mis à jour.');
@@ -571,5 +640,24 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
             ['id' => 2, 'title' => 'Actuality', 'game' => 'OVERWATCH', 'replies' => 5, 'status' => 'Ouvert'],
             ['id' => 3, 'title' => 'LF Team', 'game' => 'VALORANT', 'replies' => 8, 'status' => 'Fermé'],
         ];
+    }
+
+    #[Route('/admin/rubriques/sync-counts', name: 'admin_rubriques_sync_counts', methods: ['POST'])]
+    public function syncCounts(\App\Repository\RubriqueRepository $rubriqueRepository, EntityManagerInterface $em, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('sync_counts', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token invalide.');
+            return $this->redirectToRoute('admin_rubriques');
+        }
+
+        $rubriques = $rubriqueRepository->findAll();
+        foreach ($rubriques as $rubrique) {
+            $count = count($rubrique->getPosts());
+            $rubrique->setNbPosts($count);
+        }
+        $em->flush();
+
+        $this->addFlash('success', 'Les compteurs de posts ont été synchronisés pour toutes les rubriques.');
+        return $this->redirectToRoute('admin_rubriques');
     }
 }

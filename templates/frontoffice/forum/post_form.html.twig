@@ -2,6 +2,16 @@
 
 {% block title %}{{ is_edit ? 'Modifier le post' : 'Nouveau post' }} - Forum TEAMCRAFT{% endblock %}
 
+{% block flash_messages %}
+    {{ parent() }}
+    {% if toxic_error is defined and toxic_error %}
+        <div class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 border-0 alert-warning-custom" role="alert" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; font-weight: 600; font-size: 1.05rem; padding: 1.25rem 3rem 1.25rem 1.5rem; border-left: 5px solid #b45309; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+            {{ toxic_error|raw }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+        </div>
+    {% endif %}
+{% endblock %}
+
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
@@ -24,6 +34,8 @@
                             <h1 class="h2 fw-bold mb-2 text-white">{{ is_edit ? 'Modifier le post' : 'Nouveau post' }}</h1>
                             <p class="text-white-50">{{ is_edit ? 'Modifiez le contenu de votre post' : 'Publiez un nouveau sujet dans la rubrique' }}</p>
                         </div>
+
+                        {# Flash messages displayed within the form - REMOVED to show as top banner #}
 
                         {{ form_start(form) }}
                             <div class="mb-4">

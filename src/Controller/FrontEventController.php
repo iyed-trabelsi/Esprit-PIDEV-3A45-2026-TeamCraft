@@ -2,14 +2,19 @@
 
 namespace App\Controller;
 
+use App\Entity\Place;
 use App\Entity\Evenement;
 use App\Form\EvenementType;
 use App\Repository\EvenementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\EventReview;
+use App\Repository\EventReviewRepository;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class FrontEventController extends AbstractController
 {
@@ -182,7 +187,7 @@ class FrontEventController extends AbstractController
         return $this->redirectToRoute('app_events', [], Response::HTTP_SEE_OTHER);
     }
 
-    private function validateEvenement(Evenement $evenement, bool $isNew = false): array
+    private function validateEvenement(Evenement $evenement, \Symfony\Component\Form\FormInterface $form, bool $isNew = false): array
     {
         $errors = [];
         
@@ -204,15 +209,32 @@ class FrontEventController extends AbstractController
             $errors[] = 'La date de fin doit être postérieure à la date de début.';
         }
         
-        if (!in_array($evenement->getStatus(), ['open', 'closed'])) {
-            $errors[] = 'Le statut doit être "open" ou "closed".';
+        if (!in_array($evenement->getStatus(), ['open', 'closed', 'over'])) {
+            $errors[] = 'Le statut doit être "open", "closed" ou "over".';
+        }
+
+        // Manual Photo Validation
+        $imageFile = $form->get('imageFile')->getData();
+        if ($imageFile) {
+            $ext = strtolower($imageFile->guessExtension());
+            $allowed = ['jpeg', 'jpg', 'png', 'webp'];
+            if (!in_array($ext, $allowed)) {
+                $msg = 'Seuls les formats jpeg, png et webp sont acceptés.';
+                $errors[] = $msg;
+                $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
+            }
+            if ($imageFile->getSize() > 3 * 1024 * 1024) {
+                $msg = 'L\'image ne doit pas dépasser 3 Mo.';
+                $errors[] = $msg;
+                $form->get('imageFile')->addError(new \Symfony\Component\Form\FormError($msg));
+            }
         }
         
         return $errors;
     }
 
     #[Route('/events/edit/{id}', name: 'app_front_event_edit', methods: ['POST'])]
-    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $entityManager, EvenementRepository $evenementRepository): Response
+    public function edit(Request $request, Evenement $evenement, EntityManagerInterface $entityManager, EvenementRepository $evenementRepository, \Symfony\Component\String\Slugger\SluggerInterface $slugger): Response
     {
         // Check if user is the organizer
         if ($this->getUser() !== $evenement->getOrganisateur()) {
@@ -228,7 +250,7 @@ class FrontEventController extends AbstractController
 
         if ($form->isSubmitted()) {
             // Manual Validation (same as backoffice) - ignore Symfony validation
-            $errors = $this->validateEvenement($evenement, false);
+            $errors = $this->validateEvenement($evenement, $form, false);
 
             if (count($errors) > 0) {
                 foreach ($errors as $error) {
@@ -239,6 +261,19 @@ class FrontEventController extends AbstractController
                 $request->getSession()->set('reopen_edit_event_modal_' . $evenement->getId(), true);
                 return $this->redirectToRoute($redirectRoute, $redirectParams);
             } else {
+                // Handle image upload (facultatif)
+                $imageFile = $form->get('imageFile')->getData();
+                if ($imageFile) {
+                    $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir') . '/public/uploads/events',
+                        $newFilename
+                    );
+                    $evenement->setImageEvenement($newFilename);
+                }
+
                 $entityManager->flush();
                 $this->addFlash('success', 'Événement modifié avec succès.');
                 return $this->redirectToRoute($redirectRoute, $redirectParams, Response::HTTP_SEE_OTHER);
@@ -249,7 +284,7 @@ class FrontEventController extends AbstractController
     }
 
     #[Route('/events/create', name: 'app_front_event_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): Response
+    public function create(Request $request, EntityManagerInterface $entityManager, \Symfony\Component\String\Slugger\SluggerInterface $slugger): Response
     {
         $evenement = new Evenement();
         $form = $this->createForm(EvenementType::class, $evenement);
@@ -260,7 +295,7 @@ class FrontEventController extends AbstractController
 
         if ($form->isSubmitted()) {
             // Manual Validation (same as backoffice) - ignore Symfony validation
-            $errors = $this->validateEvenement($evenement, true);
+            $errors = $this->validateEvenement($evenement, $form, true);
 
             if (count($errors) > 0) {
                 foreach ($errors as $error) {
@@ -270,6 +305,19 @@ class FrontEventController extends AbstractController
                 $request->getSession()->set('reopen_create_event_modal', true);
                 return $this->redirectToRoute($redirectRoute, $redirectParams);
             } else {
+                // Handle image upload (facultatif)
+                $imageFile = $form->get('imageFile')->getData();
+                if ($imageFile) {
+                    $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir') . '/public/uploads/events',
+                        $newFilename
+                    );
+                    $evenement->setImageEvenement($newFilename);
+                }
+
                 $evenement->setOrganisateur($this->getUser());
                 $entityManager->persist($evenement);
                 $entityManager->flush();
@@ -309,7 +357,214 @@ class FrontEventController extends AbstractController
 
         return $this->render('frontoffice/events/_my_events_section.html.twig', [
             'myEvents' => $myEvents,
-            'eventForms' => $eventForms
+            'eventForms' => $eventForms,
+            'is_team_manage' => true
+        ]);
+    }
+
+    #[Route('/api/my-events/calendar', name: 'app_api_my_events_calendar', methods: ['GET'])]
+    public function calendarData(EntityManagerInterface $entityManager, EvenementRepository $repo): Response
+    {
+        $user = $this->getUser();
+        
+        // Fetch ALL events instead of just participated ones
+        $events = $repo->findAll();
+        
+        $eventsData = [];
+        foreach ($events as $event) {
+            // Sync status using existing logic
+            $this->updateEventStatus($event, $entityManager);
+            
+            // Check if user is participating
+            $isParticipating = false;
+            if ($user) {
+                foreach ($event->getParticipations() as $p) {
+                    if ($p->getUser() === $user) {
+                        $isParticipating = true;
+                        break;
+                    }
+                }
+            }
+
+            // Status-based coloring
+            // Green (#10b981) for Open
+            // Red (#f43f5e) for Closed
+            // Grey (#6c757d) for Over
+            $color = '#10b981'; 
+            if ($event->getStatus() === 'over') {
+                $color = '#6c757d';
+            } elseif ($event->getStatus() === 'closed') {
+                $color = '#f43f5e';
+            }
+
+            $eventsData[] = [
+                'id' => $event->getId(),
+                'title' => ($isParticipating ? '★ ' : '') . $event->getNomEvenement(),
+                'start' => $event->getDateDebut()->format(\DateTime::ISO8601),
+                'end' => $event->getDateFin()->format(\DateTime::ISO8601),
+                'color' => $color,
+                'url' => $this->generateUrl('app_events'),
+                'extendedProps' => [
+                    'status' => $event->getStatus(),
+                    'type' => $event->getTypeEvenement(),
+                    'place' => $event->getPlace()->getNomPlace(),
+                    'isParticipating' => $isParticipating
+                ]
+            ];
+        }
+
+        return $this->json($eventsData);
+    }
+
+    #[Route('/api/place/add', name: 'api_add_place', methods: ['POST'])]
+    public function addPlace(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!$data) {
+            return $this->json(['success' => false, 'errors' => ['Requête invalide.']]);
+        }
+
+        $place = new Place();
+        $place->setNomPlace($data['nomPlace'] ?? '');
+        $place->setTypePlace($data['typePlace'] ?? '');
+        $place->setAdresse($data['adresse'] ?? '');
+        $place->setCapaciteMax((int) ($data['capaciteMax'] ?? 0));
+
+        // Manual PHP Validation (matching BackOffice logic exactly)
+        $errors = [];
+        if (empty($place->getNomPlace()) || strlen($place->getNomPlace()) < 3) {
+            $errors['nomPlace'] = 'Le nom du lieu doit contenir au moins 3 caractères.';
+        }
+        if (empty($place->getTypePlace()) || strlen($place->getTypePlace()) < 3) {
+            $errors['typePlace'] = 'Le type du lieu doit contenir au moins 3 caractères.';
+        }
+        if (empty($place->getAdresse()) || strlen($place->getAdresse()) < 5) {
+            $errors['adresse'] = "L'adresse doit contenir au moins 5 caractères.";
+        }
+        if ($place->getCapaciteMax() < 1 || $place->getCapaciteMax() > 50000) {
+            $errors['capaciteMax'] = 'La capacité doit être comprise entre 1 et 50000.';
+        }
+
+        if (count($errors) > 0) {
+            return $this->json(['success' => false, 'errors' => $errors]);
+        }
+
+        $entityManager->persist($place);
+        $entityManager->flush();
+
+        return $this->json([
+            'success' => true, 
+            'message' => 'Lieu ajouté avec succès!',
+            'place' => [
+                'id' => $place->getId(),
+                'nomPlace' => $place->getNomPlace(),
+                'adresse' => $place->getAdresse()
+            ]
+        ]);
+    }
+
+    #[Route('/events/{id}/reviews', name: 'app_front_event_reviews', methods: ['GET'])]
+    public function getReviews(Evenement $evenement, EventReviewRepository $reviewRepo): JsonResponse
+    {
+        $reviews = $reviewRepo->findBy(['evenement' => $evenement], ['createdAt' => 'DESC']);
+        
+        $data = [];
+        foreach ($reviews as $review) {
+            $user = $review->getUser();
+            $data[] = [
+                'id' => $review->getId(),
+                'username' => $user->getUsername() ?: ($user->getPseudo() ?: 'Utilisateur'),
+                'userAvatar' => $user->getProfilePicture(),
+                'rating' => (float) $review->getRating(),
+                'message' => $review->getMessage(),
+                'createdAt' => $review->getCreatedAt()->format('Y-m-d H:i:s')
+            ];
+        }
+
+        return $this->json([
+            'averageRating' => $evenement->getAverageRating(),
+            'reviewCount' => $evenement->getReviewCount(),
+            'reviews' => $data
+        ]);
+    }
+
+    #[Route('/events/{id}/review/submit', name: 'app_front_event_review_submit', methods: ['POST'])]
+    public function submitReview(Request $request, Evenement $evenement, EntityManagerInterface $em, EventReviewRepository $reviewRepo, ValidatorInterface $validator): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['success' => false, 'error' => 'Vous devez être connecté pour laisser un avis.'], 401);
+        }
+
+        if ($evenement->getStatus() !== 'over') {
+            return $this->json(['success' => false, 'error' => 'Cet événement n\'est pas encore terminé.'], 403);
+        }
+
+        // Check participation
+        $hasParticipated = false;
+        foreach ($evenement->getParticipations() as $p) {
+            if ($p->getUser() === $user) {
+                $hasParticipated = true;
+                break;
+            }
+        }
+
+        if (!$hasParticipated) {
+            return $this->json(['success' => false, 'error' => 'Vous n\'avez pas participé à cet événement.'], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (!$data || !isset($data['rating'])) {
+            return $this->json(['success' => false, 'error' => 'Données invalides.'], 400);
+        }
+
+        $rating = (float) $data['rating'];
+        $message = isset($data['message']) ? trim($data['message']) : null;
+        if (empty($message)) {
+            $message = null;
+        }
+
+        // Check if review already exists -> Update instead of Create
+        $review = $reviewRepo->findOneBy(['user' => $user, 'evenement' => $evenement]);
+        $isNew = false;
+        if (!$review) {
+            $review = new EventReview();
+            $review->setUser($user);
+            $review->setEvenement($evenement);
+            $isNew = true;
+        }
+
+        $review->setRating((string) $rating);
+        $review->setMessage($message);
+
+        $errors = $validator->validate($review);
+        if (count($errors) > 0) {
+            return $this->json(['success' => false, 'error' => $errors[0]->getMessage()], 400);
+        }
+
+        if ($isNew) {
+            $em->persist($review);
+        }
+        $em->flush();
+
+        // Recalculate average
+        $allReviews = $reviewRepo->findBy(['evenement' => $evenement]);
+        $totalRating = 0.0;
+        foreach ($allReviews as $r) {
+            $totalRating += (float) $r->getRating();
+        }
+        $count = count($allReviews);
+        if ($count > 0) {
+            $evenement->setAverageRating(round($totalRating / $count, 1));
+            $evenement->setReviewCount($count);
+        }
+        $em->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Avis ' . ($isNew ? 'ajouté' : 'modifié') . ' avec succès.',
+            'averageRating' => $evenement->getAverageRating(),
+            'reviewCount' => $count
         ]);
     }
 }

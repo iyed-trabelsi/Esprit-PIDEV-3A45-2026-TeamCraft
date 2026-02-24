@@ -10,6 +10,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Count;
 
 class TeamType extends AbstractType
 {
@@ -18,8 +20,11 @@ class TeamType extends AbstractType
         $builder
             ->add('name', TextType::class, [
                 'label' => 'Team Name',
-                'attr' => ['placeholder' => 'Enter your team name'],
+                'attr' => ['placeholder' => "Entrez le nom de l'équipe"],
                 'required' => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le nom de l\'équipe ne peut pas être vide.']),
+                ],
             ])
             ->add('logo', FileType::class, [
                 'label' => 'Team Logo (PNG/JPG)',
@@ -46,6 +51,9 @@ class TeamType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
                 'required' => true,
+                'constraints' => [
+                    new Count(['min' => 1, 'minMessage' => 'Veuillez sélectionner au moins un jeu dans "Games Played".']),
+                ],
             ]);
     }
 

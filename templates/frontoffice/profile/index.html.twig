@@ -184,7 +184,8 @@
         color: #fff;
     }
 
-    .btn-tc-primary {
+    /* Scoped button styles for profile page only */
+    .profile-container .btn-tc-primary {
         background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%);
         color: #0f111a;
         border: none;
@@ -194,14 +195,14 @@
         transition: all 0.3s ease;
     }
 
-    .btn-tc-primary:hover {
+    .profile-container .btn-tc-primary:hover {
         background: linear-gradient(135deg, #00cc7d 0%, #00aa6d 100%);
         transform: translateY(-2px);
         box-shadow: 0 4px 15px rgba(0, 255, 157, 0.4);
         color: #0f111a;
     }
 
-    .btn-tc-secondary {
+    .profile-container .btn-tc-secondary {
         background: rgba(255, 255, 255, 0.05);
         color: #fff;
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -211,7 +212,7 @@
         transition: all 0.3s ease;
     }
 
-    .btn-tc-secondary:hover {
+    .profile-container .btn-tc-secondary:hover {
         background: rgba(255, 255, 255, 0.1);
         border-color: rgba(255, 255, 255, 0.3);
         color: #fff;
@@ -256,6 +257,47 @@
                             <button class="btn btn-edit-profile">RECRUIT ME</button>
                         </div>
                     {% endif %}
+
+
+                    <div class="text-start mt-4 pt-3 border-top border-white-10">
+                        <h5 class="section-title mb-3">Bio</h5>
+                        {% if user.bio %}
+                            <p class="text-white-50 mt-3 fst-italic">"{{ user.bio }}"</p>
+                        {% else %}
+                             <p class="text-white-50 mt-3 fst-italic">No bio yet.</p>
+                        {% endif %}
+
+                        <div class="mt-4 pt-3 border-top border-white-10">
+                            <h6 class="text-white-50 text-uppercase small mb-3">Links</h6>
+                            <div class="d-flex gap-3 flex-wrap">
+                                {% if user.twitch %}
+                                    <a href="{{ user.twitch }}" target="_blank" class="btn btn-dark d-flex align-items-center gap-2 px-3 py-2" style="background: #6441a5; border: none;">
+                                        <i class="bi bi-twitch"></i> Twitch
+                                    </a>
+                                {% endif %}
+                                {% if user.kick %}
+                                    <a href="{{ user.kick }}" target="_blank" class="btn btn-dark d-flex align-items-center gap-2 px-3 py-2" style="background: #53FC18; border: none; color: black;">
+                                        <strong>K</strong> Kick
+                                    </a>
+                                {% endif %}
+                                {% if user.discord %}
+                                    <a href="{{ user.discord }}" target="_blank" class="btn btn-dark d-flex align-items-center gap-2 px-3 py-2" style="background: #5865F2; border: none;">
+                                        <i class="bi bi-discord"></i> Discord
+                                    </a>
+                                {% endif %}
+                                 {% if user.youtube %}
+                                    <a href="{{ user.youtube }}" target="_blank" class="btn btn-dark d-flex align-items-center gap-2 px-3 py-2" style="background: #FF0000; border: none;">
+                                        <i class="bi bi-youtube"></i> YouTube
+                                    </a>
+                                {% endif %}
+                                {% if user.twitter %}
+                                    <a href="{{ user.twitter }}" target="_blank" class="btn btn-dark d-flex align-items-center gap-2 px-3 py-2" style="background: #1DA1F2; border: none;">
+                                        <i class="bi bi-link-45deg"></i> Link
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -349,98 +391,146 @@
                     </div>
                 </div>
 
-                <!-- Post History -->
-                <div class="card card-tc-profile p-4">
-                    <h3 class="section-title"><i class="bi bi-newspaper text-success"></i> Post History</h3>
-                    {% for post in postHistory %}
-                        <div class="post-item">
-                            <div class="d-flex gap-3">
-                                <div style="width: 60px; height: 60px; background: #1a1d29; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="bi bi-image text-white-50"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <h5 class="mb-0 text-white">{{ post.title }}</h5>
-                                        <span class="badge-status">{{ post.status }}</span>
-                                    </div>
-                                    <p class="small text-white-50 mb-2">{{ post.excerpt }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+            <div class="card card-tc-profile p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h3 class="section-title mb-0"><i class="bi bi-collection-play text-success"></i> Mes moments forts</h3>
+                    {% if app.user and app.user.id == user.id %}
+                        <button id="openUploadModalBtn" class="btn btn-tc-primary btn-sm">Postuler</button>
+                    {% endif %}
                 </div>
-
-                <!-- Forum History -->
-                <div class="card card-tc-profile p-4">
-                    <h3 class="section-title"><i class="bi bi-chat-dots text-success"></i> Forum History</h3>
-                    {% for forum in forumHistory %}
-                        <div class="p-3 mb-3" style="background: rgba(255,255,255,0.02); border-radius: 10px;">
-                            <span class="badge bg-danger mb-2">{{ forum.category }}</span>
-                            <h5 class="text-white">{{ forum.topic }}</h5>
-                            <p class="small text-white-50 mb-3">{{ forum.description }}</p>
-                            
-                            <div class="comments-list">
-                                {% for comment in forum.comments %}
-                                    <div class="forum-comment">
-                                        <div class="d-flex gap-2 align-items-center mb-1">
-                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-secondary" style="width: 24px; height: 24px; font-size: 0.7rem;">
-                                                {{ comment.author|first|upper }}
-                                            </div>
-                                            <span class="fw-bold small text-white">{{ comment.author }}</span>
-                                            <span class="text-white smaller" style="font-size: 0.7rem;">• {{ comment.time }}</span>
+                {% if highlights is defined and highlights is not empty %}
+                    <div class="row g-4">
+                        {% for item in highlights|slice(0,5) %}
+                            <div class="col-12" id="media-item-{{ item.id }}">
+                                <div class="card bg-dark border-secondary">
+                                    <div class="card-header bg-transparent border-secondary d-flex align-items-center">
+                                         <div class="avatar-wrapper me-2" style="width: 40px; height: 40px; font-size: 1rem;">
+                                            {% if user.profilePicture %}
+                                                <img src="{{ user.profilePicture }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                            {% else %}
+                                                {{ user.pseudo|first|upper }}
+                                            {% endif %}
                                         </div>
-                                        <p class="small mb-0 text-white-50 ps-4">{{ comment.content }}</p>
+                                        <div>
+                                            <h6 class="mb-0 text-white">{{ user.pseudo }}</h6>
+                                            <small class="text-white-50">{{ item.createdAt|date('d M Y') }}</small>
+                                        </div>
                                     </div>
-                                {% endfor %}
+                                    <div class="position-relative bg-black d-flex justify-content-center align-items-center" style="min-height: 200px; max-height: 300px; overflow: hidden;">
+                                        {% if item.type == 'video' %}
+                                            <video controls class="w-100 h-100" style="object-fit: contain; max-height: 300px;">
+                                                <source src="{{ item.url }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        {% else %}
+                                            <img src="{{ item.url }}" alt="{{ item.title }}" class="img-fluid" style="max-height: 300px; object-fit: contain;">
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <button class="btn btn-sm btn-outline-danger like-btn py-0 px-2" style="font-size: 0.8rem;" data-id="{{ item.id }}">
+                                                <i class="bi bi-heart{% if item.isLiked %}Md{% endif %}"></i> <span class="like-count">{{ item.likes }}</span>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-light comment-toggle-btn py-0 px-2" style="font-size: 0.8rem;" data-id="{{ item.id }}">
+                                                <i class="bi bi-chat"></i> Comment
+                                            </button>
+                                        </div>
+                                        {% if item.title %}
+                                            <h6 class="card-title text-white mb-1" style="font-size: 0.95rem;">{{ item.title }}</h6>
+                                        {% endif %}
+                                        {% if item.description %}
+                                            <p class="card-text text-white-50 small mb-1" style="font-size: 0.85rem;">{{ item.description }}</p>
+                                        {% endif %}
+
+                                        <!-- Comments Section -->
+                                        <div class="comments-section d-none" id="comments-section-{{ item.id }}">
+                                            <hr class="border-secondary my-2">
+                                            <div class="comments-list mb-3" id="comments-list-{{ item.id }}">
+                                                <!-- Comments will be loaded here via JS -->
+                                            </div>
+                                            {% if app.user %}
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control bg-dark text-white border-secondary comment-input" placeholder="Add a comment..." data-id="{{ item.id }}">
+                                                    <button class="btn btn-primary send-comment-btn" data-id="{{ item.id }}"><i class="bi bi-send"></i></button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-white-50 py-4">
+                        <p class="mb-2">Aucun média pour le moment.</p>
+                        {% if app.user and app.user.id == user.id %}
+                            <button id="openUploadModalBtn2" class="btn btn-tc-primary">Postuler</button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
             </div>
 
             <!-- Right Column -->
             <div class="col-lg-4">
-                <!-- Team Status -->
-                <div class="card card-tc-profile p-4">
-                    <h3 class="section-title"><i class="bi bi-people text-success"></i> Team Status</h3>
-                    {% if teamStatus.hasTeam %}
-                        <div class="mb-3">
-                            <h6 class="text-white-50 small text-uppercase mb-3">Team: <span class="text-white">{{ teamStatus.teamName }}</span></h6>
-                            <div class="players-list">
-                                {% for player in teamStatus.players %}
-                                    <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded" style="background: rgba(255,255,255,0.02);">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-tc-primary text-white small" style="width: 30px; height: 30px; font-weight: bold;">
-                                                {{ player.name|first|upper }}
-                                            </div>
-                                            <div>
-                                                <div class="small fw-bold text-white">{{ player.name }}</div>
-                                                <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ player.role }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="smaller {% if player.status == 'Online' %}text-success{% elseif player.status == 'In Game' %}text-warning{% else %}text-white-25{% endif %}" style="font-size: 0.7rem;">
-                                                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> {{ player.status }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
+
+
+                <!-- Friend List (ex-Team Status) -->
+                {% if app.user and app.user.id == user.id %}
+                <div class="card card-tc-profile p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="section-title mb-0"><i class="bi bi-people text-success"></i> Friends List</h3>
+                    </div>
+                    {% if friends is defined and friends is not empty %}
+                        <!-- Search Bar -->
+                        <div class="position-relative mb-3">
+                            <input type="text" id="friend-search" class="form-control form-control-sm text-white ps-5" placeholder="Search friends..." style="background-color: rgba(241, 223, 223, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px;">
+                            <style>
+                                #friend-search::placeholder {
+                                    color: rgba(255, 255, 255, 0.6);
+                                }
+                            </style>
+                            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
                         </div>
-                        <button class="btn btn-edit-profile w-100 py-2 mt-2">
-                            <i class="bi bi-chat-left-text me-2"></i> TEAM CHAT
-                        </button>
+                        <div class="team-list" id="friend-list">
+                            {% for friend in friends %}
+                                <div class="team-member d-flex align-items-center mb-3" data-pseudo="{{ friend.pseudo|lower }}">
+                                    <div class="member-avatar rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        {% if friend.profilePicture %}
+                                            <img src="{{ friend.profilePicture }}" alt="{{ friend.pseudo }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                            {{ friend.pseudo|first|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="member-info">
+                                        <h6 class="mb-0 text-white">
+                                            <a href="{{ path('app_profile_show', {id: friend.id}) }}" class="text-white text-decoration-none">{{ friend.pseudo }}</a>
+                                        </h6>
+                                        <small class="text-success"><i class="bi bi-circle-fill" style="font-size: 8px;"></i> Friend</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <a href="{{ path('app_chat_conversation', {id: friend.id}) }}" class="btn btn-sm" style="background: none; border: none;">
+                                            <img src="{{ asset('images/message_icon.png') }}" alt="Chat" style="width: 24px; height: 24px;">
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div id="no-friends-found" class="text-center text-white-50 d-none mt-3">No friends found</div>
                     {% else %}
-                        <div class="text-center py-3">
-                            <p class="text-white-50 mb-3">Aucune équipe active</p>
-                            <button class="btn btn-edit-profile w-100 py-2">
-                                <i class="bi bi-plus-circle me-2"></i> AVAILABLE FOR RECRUITMENT
-                            </button>
+                        <div class="text-center text-white-50">
+                            <p>No friends added yet.</p>
+                            <a href="{{ path('app_players') }}" class="btn btn-sm btn-tc-primary mt-2">Find Players</a>
                         </div>
                     {% endif %}
+
+                    <div class="mt-3 text-center border-top border-white-10 pt-3">
+                        <a href="{{ path('app_chat_index') }}" class="btn btn-edit-profile w-100">
+                            <i class="bi bi-chat-dots me-1"></i> Chat
+                        </a>
+                    </div>
                 </div>
+                {% endif %}
 
                 <!-- Competitive Rank -->
                 <div class="card card-tc-profile p-4">
@@ -505,32 +595,286 @@
                     {% endif %}
                 </div>
 
-
-                {% if app.user and app.user.id == user.id %}
-                    <!-- Account Settings -->
-                    <div class="card card-tc-profile p-4">
-                        <h3 class="section-title"><i class="bi bi-gear text-success"></i> Account Settings</h3>
-                        <a href="#" class="settings-link">
-                            <i class="bi bi-lock text-primary"></i>
-                            <span>Change password</span>
-                        </a>
-                        <a href="#" class="settings-link">
-                            <i class="bi bi-person-bounding-box text-primary"></i>
-                            <span>Change avatar</span>
-                        </a>
-                        <a href="#" class="settings-link">
-                            <div class="d-flex justify-content-between w-100 align-items-center">
-                                <div class="d-flex align-items-center gap-3">
-                                    <i class="bi bi-bell text-primary"></i>
-                                    <span>Notification preferences</span>
+                <!-- Steam CS2 Stats -->
+                <div class="card card-tc-profile p-4 mb-4" style="border-top: 3px solid #a7c957;">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h3 class="section-title mb-0"><i class="bi bi-steam text-success"></i> Steam CS2 Stats</h3>
+                        {% if user.steamId %}
+                            <span class="badge bg-dark border border-white-10 text-white-50 small">{{ user.steamId|slice(0, 10) }}...</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if app.user and app.user.id == user.id %}
+                        <!-- Steam ID Input Form -->
+                        <form method="post" action="{{ path('app_profile_steam_fetch') }}" class="mb-3">
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    <input type="text" name="steam_id" class="form-control form-control-sm text-white" 
+                                           placeholder="Steam ID (17 digits)" 
+                                           value="{{ user.steamId }}"
+                                           style="background-color: rgba(241, 223, 223, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" required>
                                 </div>
-                                <div class="d-flex gap-1" style="font-size: 0.7rem;">
-                                    🇫🇷 🇬🇧
+                                <div class="col-4">
+                                    <button type="submit" class="btn btn-sm btn-tc-primary w-100 py-1" style="font-size: 0.7rem; background: #a7c957; border-color: #a7c957;">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Update CS2
+                                    </button>
                                 </div>
                             </div>
-                        </a>
+                            <small class="text-white-25 d-block mt-1" style="font-size: 0.65rem;">
+                                <i class="bi bi-info-circle"></i> Steam profile must be public.
+                            </small>
+                        </form>
+                    {% endif %}
+
+                    {% if steamStats %}
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="p-2 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">WINRATE</div>
+                                    <div class="fw-bold text-success small">{{ steamStats.winRate ?? 0 }}%</div>
+                                    <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ steamStats.wins }}W / {{ steamStats.losses }}L</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">K/D RATIO</div>
+                                    <div class="fw-bold text-warning small">{{ steamStats.kdRatio ?? 0 }}</div>
+                                    <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ steamStats.kills }}K / {{ steamStats.deaths }}D</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">HEADSHOTS</div>
+                                    <div class="fw-bold text-danger small">{{ steamStats.headshotPercentage ?? 0 }}%</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">PLAYTIME</div>
+                                    <div class="fw-bold text-white small">{{ steamStats.totalPlaytime ?? 0 }}h</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3 mb-2">
+                            <small class="text-white-50" style="font-size: 0.7rem;">
+                                <i class="bi bi-clock"></i> Updated: {{ (steamStats.lastUpdated ?? date())|date('d/m/Y H:i') }}
+                            </small>
+                        </div>
+
+                        {% if app.user and app.user.id == user.id %}
+                            <div class="mt-2">
+                                <a href="{{ path('app_profile_cv_download', {game: 'cs2'}) }}"
+                                   class="btn btn-sm btn-outline-success w-100 d-flex align-items-center justify-content-center gap-2 py-2"
+                                   style="font-size: 0.75rem; border-color: rgba(167,201,87,0.3); background: rgba(167,201,87,0.05);">
+                                    <i class="bi bi-file-earmark-pdf"></i> Download CS2 CV
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4 bg-dark bg-opacity-25 rounded border border-white-10">
+                            <i class="bi bi-steam text-white-50 fs-2 mb-2 d-block"></i>
+                            <p class="text-white-50 small mb-0">No CS2 stats available</p>
+                            {% if app.user and app.user.id == user.id %}
+                                <small class="text-white-25">Enter your Steam ID above to fetch your stats</small>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- League of Legends Stats Card -->
+                {% if riotStats.lol is defined or (app.user and app.user.id == user.id) %}
+                <div class="card card-tc-profile p-4 mb-4" style="border-top: 3px solid #00aaff;">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h3 class="section-title mb-0"><i class="bi bi-shield-shaded text-primary"></i> League of Legends</h3>
+                        {% if riotStats.lol is defined %}
+                            <span class="badge bg-dark border border-white-10 text-white-50 small">{{ riotStats.lol.riotId }}</span>
+                        {% endif %}
                     </div>
+                    
+                    {% if app.user and app.user.id == user.id %}
+                        <!-- LoL Fetch Form -->
+                        <form method="post" action="{{ path('app_profile_riot_fetch') }}" class="mb-3">
+                            <input type="hidden" name="game" value="lol">
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    <input type="text" name="riot_id" class="form-control form-control-sm text-white" 
+                                           placeholder="Riot ID (Name#Tag)" 
+                                           value="{{ riotStats.lol.riotId|default('') }}"
+                                           style="background-color: rgba(241, 223, 223, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" required>
+                                </div>
+                                <div class="col-4">
+                                    <select name="region" class="form-control form-control-sm text-white" style="background-color: rgba(241, 223, 223, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" required>
+                                        <option value="EUW" selected>EUW</option>
+                                        <option value="EUNE">EUNE</option>
+                                        <option value="NA">NA</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-sm btn-tc-primary w-100 py-1" style="font-size: 0.7rem;">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Update LoL Stats
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
+
+                    {% if riotStats.lol is defined %}
+                        {% set stats = riotStats.lol %}
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="p-2 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">RANK</div>
+                                    <div class="fw-bold text-white small">{{ stats.tier|default('UNRANKED') }} {{ stats.division }}</div>
+                                    <div class="smaller text-warning" style="font-size: 0.7rem;">{{ stats.leaguePoints }} LP</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">WINRATE</div>
+                                    <div class="fw-bold text-success small">{{ stats.winRate }}%</div>
+                                    <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ stats.wins }}W / {{ stats.losses }}L</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if stats.recentMatches %}
+                            <div class="mt-3">
+                                <h6 class="text-white-50 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Recent Matches</h6>
+                                <div class="match-history-list" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                                    {% for match in stats.recentMatches|slice(0, 20) %}
+                                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-dark bg-opacity-50 border-start border-3 border-{{ match.win ? 'success' : 'danger' }} border-white-10">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="https://ddragon.leagueoflegends.com/cdn/14.3.1/img/champion/{{ match.championName }}.png" 
+                                                     class="rounded-circle" style="width: 20px; height: 20px;" alt="{{ match.championName }}">
+                                                <div>
+                                                    <div class="fw-bold" style="font-size: 0.7rem; color: {{ match.win ? '#22c55e' : '#ef4444' }}">{{ match.win ? 'WIN' : 'LOSS' }}</div>
+                                                    <div class="text-white-50" style="font-size: 0.6rem;">{{ match.gameMode|replace({'_': ' '})|slice(0, 15) }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-white" style="font-size: 0.75rem;">{{ match.kills }} / <span class="text-danger" style="font-size: 0.7rem;">{{ match.deaths }}</span> / {{ match.assists }}</div>
+                                                <div class="text-{{ match.kda >= 3 ? 'success' : (match.kda >= 2 ? 'warning' : 'white-50') }}" style="font-size: 0.65rem; font-weight: bold;">
+                                                    {{ match.kda|number_format(2) }} KDA
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <a href="{{ path('app_profile_cv_download', {game: 'lol'}) }}"
+                               class="btn btn-sm btn-outline-info w-100 d-flex align-items-center justify-content-center gap-2 py-2"
+                               style="font-size: 0.75rem; border-color: rgba(0,170,255,0.3); background: rgba(0,170,255,0.05);">
+                                <i class="bi bi-file-earmark-pdf"></i> Download LoL CV
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3 bg-dark bg-opacity-25 rounded border border-dashed border-white-10">
+                            <p class="text-white-50 smaller mb-0">No LoL stats linked</p>
+                        </div>
+                    {% endif %}
+                </div>
                 {% endif %}
+
+                <!-- Valorant Stats Card -->
+                {% if riotStats.valorant is defined or (app.user and app.user.id == user.id) %}
+                <div class="card card-tc-profile p-4 mb-4" style="border-top: 3px solid #ff4655;">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h3 class="section-title mb-0"><i class="bi bi-crosshair2 text-danger"></i> Valorant</h3>
+                        {% if riotStats.valorant is defined %}
+                            <span class="badge bg-dark border border-white-10 text-white-50 small">{{ riotStats.valorant.riotId }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if app.user and app.user.id == user.id %}
+                        <!-- Valorant Fetch Form -->
+                        <form method="post" action="{{ path('app_profile_riot_fetch') }}" class="mb-3">
+                            <input type="hidden" name="game" value="valorant">
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    <input type="text" name="riot_id" class="form-control form-control-sm text-white" 
+                                           placeholder="Riot ID (Name#Tag)" 
+                                           value="{{ riotStats.valorant.riotId|default('') }}"
+                                           style="background-color: rgba(241, 223, 223, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" required>
+                                </div>
+                                <div class="col-4">
+                                    <select name="region" class="form-control form-control-sm text-white" style="background-color: rgba(241, 223, 223, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" required>
+                                        <option value="EUW" selected>EUW</option>
+                                        <option value="NA">NA</option>
+                                        <option value="AP">AP</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-sm btn-tc-primary w-100 py-1" style="font-size: 0.7rem; background: #ff4655; border-color: #ff4655;">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Update Valorant Stats
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
+
+                    {% if riotStats.valorant is defined %}
+                        {% set stats = riotStats.valorant %}
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="p-2 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">RANK</div>
+                                    <div class="fw-bold text-white small">{{ stats.tier|default('UNRANKED') }} {{ stats.division }}</div>
+                                    <div class="smaller text-warning" style="font-size: 0.7rem;">{{ stats.leaguePoints }} RR</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-dark bg-opacity-50 rounded border border-white-10 text-center">
+                                    <div class="text-white-50 smaller text-uppercase mb-1" style="font-size: 0.6rem;">WINRATE</div>
+                                    <div class="fw-bold text-success small">{{ stats.winRate }}%</div>
+                                    <div class="smaller text-white-50" style="font-size: 0.7rem;">{{ stats.wins }}W / {{ stats.losses }}L</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if stats.recentMatches %}
+                            <div class="mt-3">
+                                <h6 class="text-white-50 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Recent Matches</h6>
+                                <div class="match-history-list" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                                    {% for match in stats.recentMatches|slice(0, 20) %}
+                                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-dark bg-opacity-50 border-start border-3 border-{{ match.win ? 'success' : 'danger' }} border-white-10">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-person-circle text-white-50" style="font-size: 0.8rem;"></i>
+                                                <div>
+                                                    <div class="fw-bold" style="font-size: 0.7rem; color: {{ match.win ? '#22c55e' : '#ef4444' }}">{{ match.win ? 'WIN' : 'LOSS' }}</div>
+                                                    <div class="text-white-50" style="font-size: 0.6rem;">{{ match.agent }} · {{ match.map }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-white" style="font-size: 0.75rem;">{{ match.score }}</div>
+                                                <div class="text-white-50" style="font-size: 0.65rem;">{{ match.kills }} / {{ match.deaths }} / {{ match.assists }}</div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <a href="{{ path('app_profile_cv_download', {game: 'valorant'}) }}"
+                               class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2"
+                               style="font-size: 0.75rem; border-color: rgba(255,70,85,0.3); background: rgba(255,70,85,0.05);">
+                                <i class="bi bi-file-earmark-pdf"></i> Download Valorant CV
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3 bg-dark bg-opacity-25 rounded border border-dashed border-white-10">
+                            <p class="text-white-50 smaller mb-0">No Valorant stats linked</p>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+
+
             </div>
         </div>
     </div>
@@ -637,6 +981,42 @@
                                 <div class="col-12">
                                     <label class="form-label text-white-50 small">Bio</label>
                                     <textarea class="form-control modal-tc-input" name="bio" rows="3">{{ user.bio }}</textarea>
+                                </div>
+
+                                <div class="col-12">
+                                     <label class="form-label text-white-50 small mb-3">Réseaux Sociaux</label>
+                                     <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-twitch"></i></span>
+                                                <input type="text" class="form-control modal-tc-input" name="twitch" value="{{ user.twitch }}" placeholder="Lien Twitch">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-dark border-secondary text-white">K</span>
+                                                <input type="text" class="form-control modal-tc-input" name="kick" value="{{ user.kick }}" placeholder="Lien Kick">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-discord"></i></span>
+                                                <input type="text" class="form-control modal-tc-input" name="discord" value="{{ user.discord }}" placeholder="Lien Discord">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-youtube"></i></span>
+                                                <input type="text" class="form-control modal-tc-input" name="youtube" value="{{ user.youtube }}" placeholder="Lien YouTube">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-link-45deg"></i></span>
+                                                <input type="text" class="form-control modal-tc-input" name="twitter" value="{{ user.twitter }}" placeholder="Autre Lien (Twitter, Portfolio...)">
+                                            </div>
+                                        </div>
+                                     </div>
                                 </div>
 
                                 <!-- Games Selection -->
@@ -798,6 +1178,53 @@
             </div>
         </div>
     {% endif %}
+
+    <div class="modal fade" id="uploadMediaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="background: #0f111a; color: #fff; border: 1px solid rgba(0,255,157,0.2);">
+                <div class="modal-header">
+                    <h5 class="modal-title">Téléverser des médias</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if app.user %}
+                        <form id="mediaUploadForm">
+                            <input type="hidden" name="_token" value="{{ csrf_token('upload_media') }}">
+                            <div class="mb-3">
+                                <label class="form-label">Fichiers</label>
+                                <input class="form-control" type="file" id="mediaFiles" name="mediaFiles[]" multiple accept=".png,.jpg,.jpeg,.mp4,.webm,image/png,image/jpeg,video/mp4,video/webm">
+                                <div class="form-text text-white-50">PNG, JPG, MP4, WebM. 10 fichiers maximum.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Titre</label>
+                                <input class="form-control modal-tc-input" type="text" id="mediaTitle" name="title" maxlength="120" placeholder="Titre (optionnel)">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control modal-tc-input" id="mediaDescription" name="description" rows="2" placeholder="Description (optionnel)"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Visibilité</label>
+                                <select class="form-select modal-tc-input" id="mediaVisibility" name="visibility">
+                                    <option value="public" selected>Public</option>
+                                    <option value="private">Privé</option>
+                                </select>
+                            </div>
+                            <div id="uploadProgressContainer" class="d-none"></div>
+                        </form>
+                    {% else %}
+                        <div class="text-white-50">Connectez-vous pour téléverser des médias.</div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-tc-secondary" data-bs-dismiss="modal">Fermer</button>
+                    {% if app.user %}
+                        <button type="button" id="startUploadBtn" class="btn btn-tc-primary">Envoyer</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modals Loop -->
      {% for rank in competitiveRanks %}
@@ -1004,6 +1431,161 @@
                             levelSelect.appendChild(option);
                         });
                     }
+                });
+            });
+
+            // Friends List Search
+            const friendSearchInput = document.getElementById('friend-search');
+            const friendList = document.getElementById('friend-list');
+            const noFriendsMsg = document.getElementById('no-friends-found');
+
+            if (friendSearchInput && friendList) {
+                friendSearchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const friends = friendList.querySelectorAll('.team-member');
+                    let visibleCount = 0;
+
+                    friends.forEach(friend => {
+                        const pseudo = friend.getAttribute('data-pseudo');
+                        if (pseudo && pseudo.includes(searchTerm)) {
+                            friend.classList.remove('d-none');
+                            friend.classList.add('d-flex');
+                            visibleCount++;
+                        } else {
+                            friend.classList.add('d-none');
+                            friend.classList.remove('d-flex');
+                        }
+                    });
+
+                    if (noFriendsMsg) {
+                        if (visibleCount === 0 && friends.length > 0) {
+                            noFriendsMsg.classList.remove('d-none');
+                        } else {
+                            noFriendsMsg.classList.add('d-none');
+                        }
+                    }
+                });
+            }
+
+            var btn1 = document.getElementById('openUploadModalBtn');
+            var btn2 = document.getElementById('openUploadModalBtn2');
+            var modalEl = document.getElementById('uploadMediaModal');
+            var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+            function openModal(e){ if(e){ e.preventDefault(); } if(modal){ modal.show(); } }
+            if(btn1){ btn1.addEventListener('click', openModal); }
+            if(btn2){ btn2.addEventListener('click', openModal); }
+            var startBtn = document.getElementById('startUploadBtn');
+            var progressContainer = document.getElementById('uploadProgressContainer');
+            function createBar(){ var outer=document.createElement('div'); outer.className='mb-2'; var bar=document.createElement('div'); bar.className='progress'; var inner=document.createElement('div'); inner.className='progress-bar'; inner.style.width='0%'; inner.setAttribute('role','progressbar'); bar.appendChild(inner); outer.appendChild(bar); progressContainer.appendChild(outer); return inner; }
+            function uploadFiles(){
+                var input=document.getElementById('mediaFiles'); if(!input||!input.files||input.files.length===0){return;}
+                progressContainer.innerHTML=''; progressContainer.classList.remove('d-none');
+                var token=document.querySelector('#mediaUploadForm input[name="_token"]').value;
+                var title=document.getElementById('mediaTitle').value||'';
+                var description=document.getElementById('mediaDescription').value||'';
+                var visibility=document.getElementById('mediaVisibility').value||'public';
+                var files=Array.prototype.slice.call(input.files); var bars=files.map(function(){return createBar();});
+                var completed=0; function doneOne(){ completed++; if(completed===files.length){ setTimeout(function(){ if(modal){ modal.hide(); } location.reload(); }, 800); } }
+                files.forEach(function(file, idx){
+                    var formData=new FormData(); 
+                    formData.append('_token', token); 
+                    formData.append('title', title); 
+                    formData.append('description', description); 
+                    formData.append('visibility', visibility); 
+                    formData.append('mediaFiles[]', file);
+                    var xhr=new XMLHttpRequest(); xhr.open('POST', '{{ path("app_profile_media_upload") }}', true);
+                    xhr.upload.onprogress=function(e){ if(e.lengthComputable){ var p=(e.loaded/e.total)*100; bars[idx].style.width=p+'%'; } };
+                    xhr.onreadystatechange=function(){ if(xhr.readyState===4){ if(xhr.status>=200&&xhr.status<300){ bars[idx].style.width='100%'; } doneOne(); } };
+                    xhr.send(formData);
+                });
+            }
+            if(startBtn){ startBtn.addEventListener('click', uploadFiles); }
+
+            // Like Functionality
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const icon = this.querySelector('i');
+                    const countSpan = this.querySelector('.like-count');
+                    
+                    fetch(`/api/media/${id}/like`, { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.action === 'liked') {
+                                icon.classList.remove('bi-heart');
+                                icon.classList.add('bi-heart-fill');
+                            } else {
+                                icon.classList.remove('bi-heart-fill');
+                                icon.classList.add('bi-heart');
+                            }
+                            countSpan.textContent = data.likes;
+                        });
+                });
+            });
+
+            // Comment Toggle
+            document.querySelectorAll('.comment-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const section = document.getElementById(`comments-section-${id}`);
+                    const list = document.getElementById(`comments-list-${id}`);
+                    
+                    section.classList.toggle('d-none');
+                    if (!section.classList.contains('d-none') && list.children.length === 0) {
+                        // Load comments
+                        fetch(`/api/media/${id}/comments`)
+                            .then(r => r.json())
+                            .then(data => {
+                                list.innerHTML = '';
+                                data.comments.forEach(c => {
+                                    const div = document.createElement('div');
+                                    div.className = 'd-flex gap-2 mb-2';
+                                    div.innerHTML = `
+                                        <div class="avatar-small" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden;">
+                                            ${c.userAvatar ? `<img src="${c.userAvatar}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div class="bg-secondary text-white d-flex align-items-center justify-content-center h-100" style="font-size: 0.7rem;">${c.user.charAt(0).toUpperCase()}</div>`}
+                                        </div>
+                                        <div>
+                                            <strong class="text-white d-block" style="font-size: 0.8rem;">${c.user}</strong>
+                                            <p class="text-white-50 mb-0 small">${c.content}</p>
+                                        </div>
+                                    `;
+                                    list.appendChild(div);
+                                });
+                            });
+                    }
+                });
+            });
+
+            // Send Comment
+            document.querySelectorAll('.send-comment-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const input = this.previousElementSibling;
+                    const content = input.value.trim();
+                    if (!content) return;
+                    
+                     fetch(`/api/media/${id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: content })
+                    })
+                    .then(r => r.json())
+                    .then(c => {
+                         const list = document.getElementById(`comments-list-${id}`);
+                         const div = document.createElement('div');
+                        div.className = 'd-flex gap-2 mb-2';
+                        div.innerHTML = `
+                            <div class="avatar-small" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden;">
+                                ${c.userAvatar ? `<img src="${c.userAvatar}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div class="bg-secondary text-white d-flex align-items-center justify-content-center h-100" style="font-size: 0.7rem;">${c.user.charAt(0).toUpperCase()}</div>`}
+                            </div>
+                            <div>
+                                <strong class="text-white d-block" style="font-size: 0.8rem;">${c.user}</strong>
+                                <p class="text-white-50 mb-0 small">${c.content}</p>
+                            </div>
+                        `;
+                        list.appendChild(div);
+                        input.value = '';
+                    });
                 });
             });
         });

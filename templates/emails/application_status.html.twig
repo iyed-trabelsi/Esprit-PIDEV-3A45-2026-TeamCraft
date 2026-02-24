@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if status == 'accepted' %}
+            🎉 Application Accepted — TeamCraft
+        {% else %}
+            Application Status — TeamCraft
+        {% endif %}
+    </title>
+    <style>
+        /* ===== Reset & Base ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0B0C10;
+            color: #C5C6C7;
+            line-height: 1.6;
+        }
+
+        /* ===== Wrapper ===== */
+        .wrapper {
+            max-width: 620px;
+            margin: 40px auto;
+            background-color: #1F2833;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a3a4a;
+            box-shadow: 0 0 40px rgba(102, 252, 241, 0.08);
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: linear-gradient(135deg, #0B0C10 0%, #1F2833 100%);
+            padding: 36px 40px 28px;
+            text-align: center;
+            border-bottom: 2px solid #66FCF1;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: #66FCF1;
+            box-shadow: 0 0 12px #66FCF1;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #66FCF1;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
+        }
+        .logo span {
+            color: #C5C6C7;
+        }
+
+        /* ===== Status Badge ===== */
+        .status-banner {
+            padding: 24px 40px;
+            text-align: center;
+            {% if status == 'accepted' %}
+            background: linear-gradient(135deg, rgba(102, 252, 241, 0.12) 0%, rgba(102, 252, 241, 0.04) 100%);
+            border-bottom: 1px solid rgba(102, 252, 241, 0.2);
+            {% else %}
+            background: linear-gradient(135deg, rgba(255, 80, 80, 0.08) 0%, rgba(255, 80, 80, 0.02) 100%);
+            border-bottom: 1px solid rgba(255, 80, 80, 0.15);
+            {% endif %}
+        }
+        .status-icon {
+            font-size: 52px;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .status-title {
+            font-size: 22px;
+            font-weight: 700;
+            {% if status == 'accepted' %}
+            color: #66FCF1;
+            {% else %}
+            color: #ff7070;
+            {% endif %}
+            letter-spacing: 1px;
+        }
+
+        /* ===== Body ===== */
+        .body {
+            padding: 32px 40px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #C5C6C7;
+            margin-bottom: 20px;
+        }
+        .greeting strong {
+            color: #66FCF1;
+            font-size: 18px;
+        }
+        .message {
+            font-size: 15px;
+            color: #a0a8b0;
+            margin-bottom: 28px;
+            line-height: 1.8;
+        }
+
+        /* ===== Info Card ===== */
+        .info-card {
+            background: #0B0C10;
+            border-radius: 8px;
+            border: 1px solid #2a3a4a;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+        }
+        .info-card-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #66FCF1;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a2530;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6b7a8a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-value {
+            font-size: 14px;
+            color: #C5C6C7;
+            font-weight: 600;
+        }
+
+        /* ===== CTA Button ===== */
+        .cta-container {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 14px 36px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            {% if status == 'accepted' %}
+            background: #66FCF1;
+            color: #0B0C10;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.3);
+            {% else %}
+            background: transparent;
+            color: #66FCF1;
+            border: 2px solid #66FCF1;
+            {% endif %}
+        }
+
+        /* ===== Divider ===== */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #2a3a4a, transparent);
+            margin: 24px 0;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            background: #0B0C10;
+            padding: 24px 40px;
+            text-align: center;
+            border-top: 1px solid #1a2530;
+        }
+        .footer p {
+            font-size: 12px;
+            color: #4a5568;
+            line-height: 1.8;
+        }
+        .footer a {
+            color: #66FCF1;
+            text-decoration: none;
+        }
+        .footer .tagline {
+            font-size: 11px;
+            color: #2a3a4a;
+            margin-top: 8px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+
+        {# ===== Header with logo ===== #}
+        <div class="header">
+            <div class="logo">TEAM<span>CRAFT</span></div>
+        </div>
+
+        {# ===== Status Banner ===== #}
+        <div class="status-banner">
+            {% if status == 'accepted' %}
+                <span class="status-icon">🎉</span>
+                <div class="status-title">Application Accepted!</div>
+            {% else %}
+                <span class="status-icon">😔</span>
+                <div class="status-title">Application Not Selected</div>
+            {% endif %}
+        </div>
+
+        {# ===== Email Body ===== #}
+        <div class="body">
+
+            <p class="greeting">
+                Hello <strong>{{ playerName }}</strong>,
+            </p>
+
+            {% if status == 'accepted' %}
+                <p class="message">
+                    Congratulations! Your application to join <strong style="color: #66FCF1;">{{ teamName }}</strong> has been <strong style="color: #66FCF1;">accepted</strong>. 
+                    You are now part of the team. Get ready to play and push your limits!
+                </p>
+            {% else %}
+                <p class="message">
+                    Thank you for your interest in joining <strong style="color: #C5C6C7;">{{ teamName }}</strong>. 
+                    After reviewing your application, the team has unfortunately not selected you this time.
+                    Don't be discouraged — many other teams are looking for players like you!
+                </p>
+            {% endif %}
+
+            {# ===== Application Summary ===== #}
+            <div class="info-card">
+                <div class="info-card-title">📋 Application Details</div>
+                <div class="info-row">
+                    <span class="info-label">Team</span>
+                    <span class="info-value">{{ teamName }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Offer</span>
+                    <span class="info-value">{{ offerTitle }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Game</span>
+                    <span class="info-value">{{ game }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Position / Role</span>
+                    <span class="info-value">{{ role }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value" style="color: {% if status == 'accepted' %}#66FCF1{% else %}#ff7070{% endif %};">
+                        {% if status == 'accepted' %}✅ Accepted{% else %}❌ Declined{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {# ===== Call to Action Button ===== #}
+            <div class="cta-container">
+                {% if status == 'accepted' %}
+                    <a href="{{ teamUrl }}" class="cta-button">
+                        🏆 View Team Page
+                    </a>
+                {% else %}
+                    <a href="{{ offersUrl }}" class="cta-button">
+                        🔍 Explore Other Offers
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="divider"></div>
+
+            <p style="font-size: 13px; color: #6b7a8a; text-align: center;">
+                {% if status == 'accepted' %}
+                    Welcome to the team! Log in to TeamCraft to access your team space.
+                {% else %}
+                    Keep applying — your ideal team is waiting for you on TeamCraft.
+                {% endif %}
+            </p>
+
+        </div>
+
+        {# ===== Footer ===== #}
+        <div class="footer">
+            <p>
+                This email was sent automatically by <a href="#">TeamCraft</a>.<br>
+                Please do not reply to this email.
+            </p>
+            <p class="tagline">© {{ "now"|date("Y") }} TeamCraft — Forge Your Legacy</p>
+        </div>
+
+    </div>
+</body>
+</html>

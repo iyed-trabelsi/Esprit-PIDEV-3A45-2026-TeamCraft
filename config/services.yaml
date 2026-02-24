@@ -6,7 +6,27 @@
 parameters:
     team_logos_directory: '%kernel.project_dir%/public/uploads/teams'
     uploads_post_dir: '%kernel.project_dir%/public/uploads/posts'
+    uploads_comment_dir: '%kernel.project_dir%/public/uploads/comments'
+    perspective_api_key: '%env(default::PERSPECTIVE_API_KEY)%'
+    # Local AI image moderation (Python CLIP script). Override with PYTHON_PATH env (e.g. C:\...\python.exe or path to venv).
+    python_path: 'python'
+    ai_moderation_python_path: '%env(default:python_path:PYTHON_PATH)%'
+    ai_moderation_script_path: '%kernel.project_dir%/ai_moderation/ai_detector.py'
+    # Si true (défaut) : quand le script Python échoue, l'image n'est pas enregistrée. Si false : l'image est acceptée quand la modération est indisponible (pour débloquer sans Python).
+    moderation_required_default: '1'
+    ai_moderation_required: '%env(bool:default:moderation_required_default:AI_MODERATION_REQUIRED)%'
+    
+    # OpenRouter API Key for Smart Writing Assistant
+    openrouter_api_key: '%env(default::OPENROUTER_API_KEY)%'
+    
+    # Hugging Face API Key for Image Generation
+    huggingface_api_key: '%env(default::HUGGINGFACE_API_KEY)%'
+    uploads_rubrique_dir: '%kernel.project_dir%/public/uploads/rubriques'
+    
+    # Google Gemini API Key for AI Scheduling
+    gemini_api_key: '%env(default::GEMINI_API_KEY)%'
     openai_api_key: '%env(default::OPENAI_API_KEY)%'
+    ai_service_url: '%env(default::AI_SERVICE_URL)%'
 
 services:
     # default configuration for services in *this* file
@@ -23,11 +43,52 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # Injection explicite de la clé OpenAI pour ContentModeratorService
+    # Injection explicite de la clé Perspective API pour ContentModeratorService
     App\Service\ContentModeratorService:
         arguments:
-            $apiKey: '%openai_api_key%'
+            $apiKey: '%perspective_api_key%'
+
+    # Local AI image moderation (no external APIs)
+    App\Service\ImageModerationService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $pythonPath: '%ai_moderation_python_path%'
+            $scriptPath: '%ai_moderation_script_path%'
+            $moderationRequired: '%ai_moderation_required%'
+
+    # Smart Writing Assistant (OpenRouter)
+    App\Service\SmartWritingService:
+        arguments:
+            $apiKey: '%openrouter_api_key%'
+
+    # Image Generation (Hugging Face)
+    App\Service\ImageGenerationService:
+        arguments:
+            $huggingfaceApiKey: '%huggingface_api_key%'
+            $uploadsRubriqueDir: '%uploads_rubrique_dir%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    
+
+    # AI Smart Scheduling (Google Gemini)
+    App\Service\AiSchedulingService:
+        arguments:
+            $apiKey: '%gemini_api_key%'
+
+    # Injection de la clé Steam API pour SteamService
+    App\Service\SteamService:
+        arguments:
+            $steamApiKey: '%env(STEAM_API_KEY)%'
+
+    App\Service\RiotApiService:
+        arguments:
+            $httpClient: '@riot.client'
+            $riotApiKey: '%env(RIOT_API_KEY)%'
+            $riotApiRateLimit: '%env(int:RIOT_API_RATE_LIMIT)%'
+
+    App\Service\PdfCvService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones

@@ -2,6 +2,23 @@
 
 {% block title %}Manage Team - {{ team.name }}{% endblock %}
 
+{% block stylesheets %}
+<style>
+    /* Add Place SUB-MODAL Styling */
+    .calendar-modal-content {
+        background: rgba(13, 13, 27, 0.96) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/premium.css') }}">
+{% endblock %}
+
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
@@ -15,14 +32,22 @@
                       <path d="M13.43 12.18c-.027-.378-.073-.75-.138-1.113l-.007-.038a4.507 4.507 0 0 0-.276-1.026l.006-.033a3.507 3.507 0 0 0-.308-.72l.006-.035a2.508 2.508 0 0 0-.29-.53l.004-.025a1.505 1.505 0 0 0-.374-.75h.001l-.002-.002a2.495 2.495 0 0 0-.002 4.28 2.477 2.477 0 0 0 1.396-.008Z"/>
                     </svg>
                 </div>
-                <h1 class="h3 fw-bold text-white mb-0">Manage My Team</h1>
+                <h1 class="h3 fw-bold text-white mb-0">{{ isOwner ? 'Manage My Team' : (canManage ? 'Manage Team' : 'View Team') }}</h1>
              </div>
-             <a href="{{ path('app_teams') }}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                </svg>
-                Return
-             </a>
+             <div class="d-flex gap-2">
+                 <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3" data-bs-toggle="modal" data-bs-target="#teamChatModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-dots-fill" viewBox="0 0 16 16">
+                      <path d="M16 8c0 3.866-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.584.296-1.925.864-4.181 1.234-.2.032-.352-.176-.273-.362.354-.836.674-1.95.77-2.966C.744 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7zM5 8a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                    Team Chat
+                 </button>
+                 <a href="{{ path('app_teams') }}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                    </svg>
+                    Return
+                 </a>
+             </div>
         </div>
 
         <div class="row g-4">
@@ -53,6 +78,7 @@
                             </div>
                         </div>
                         
+                        {% if isOwner %}
                         <div class="d-flex gap-2">
                             <a href="{{ path('team_edit', {'id': team.id}) }}" class="btn btn-success flex-grow-1 fw-bold" style="font-size: 0.9rem;">Edit Team</a>
                             
@@ -61,10 +87,12 @@
                                 <button type="submit" class="btn btn-danger w-100 fw-bold" style="font-size: 0.9rem;">Delete Team</button>
                             </form>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Recruitment Dashboard -->
+                {% if canManage %}
                 <div class="card bg-dark border-0 shadow mb-3" style="background-color: #16161a !important;">
                      <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
                         <div class="d-flex align-items-center gap-2">
@@ -78,17 +106,20 @@
                               <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4 1 1 1H1zm11-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
                               <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
                             </svg>
-                            View All Applications
+                            Manage Recruitments
                         </a>
                     </div>
                 </div>
+                {% endif %}
 
-                <!-- Team Events -->
+
+                 <!-- Team Events & offers -->
+                {% if canManage %}
                 <div class="card bg-dark border-0 shadow mb-3" style="background-color: #16161a !important;">
                      <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
                         <div class="d-flex align-items-center gap-2">
                              <span class="d-inline-block bg-primary rounded-1" style="width: 8px; height: 8px;"></span>
-                             <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Team Events</h5>
+                             <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Team Events & offers</h5>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -108,6 +139,7 @@
                         </a>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Team Offers -->
                 <div class="card bg-dark border-0 shadow" style="background-color: #16161a !important;">
@@ -141,7 +173,6 @@
                     <div class="card-header border-bottom border-secondary border-opacity-25 bg-transparent py-3">
                          <div class="d-flex align-items-center gap-2">
                              <h5 class="card-title text-white mb-0 fs-6 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Team Roster</h5>
-                             <span class="text-secondary small ms-1">| 5 / 7 Members</span>
                          </div>
                     </div>
                     <div class="card-body p-0">
@@ -151,7 +182,7 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="position-relative">
                                             {% if member.profilePicture %}
-                                                <img src="{{ asset('uploads/avatars/' ~ member.profilePicture) }}" class="rounded-circle" width="45" height="45" alt="{{ member.pseudo }}">
+                                                <img src="{{ asset(member.profilePicture) }}" class="rounded-circle" width="45" height="45" alt="{{ member.pseudo }}" style="object-fit: cover;">
                                             {% else %}
                                                 <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 45px; height: 45px;">
                                                     {{ member.pseudo|first|upper }}
@@ -163,6 +194,8 @@
                                             <div class="text-white fw-bold">{{ member.pseudo }} 
                                                 {% if member == team.owner %}
                                                     <span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">OWNER</span>
+                                                {% elseif team.isCoOwner(member) %}
+                                                    <span class="badge bg-info text-dark ms-1" style="font-size: 0.6rem;">CO-OWNER</span>
                                                 {% endif %}
                                             </div>
                                             <div class="text-secondary small">{{ member.playerProfile.role|default('Member') }}</div>
@@ -174,13 +207,40 @@
                                             {{ member.playerProfile.status|default('Offline') }}
                                         </span>
                                         
-                                        {% if app.user == team.owner and member != team.owner %}
-                                            <form method="post" action="{{ path('team_remove_member', {id: team.id, userId: member.id}) }}" onsubmit="return confirm('Remove this member?');">
+                                        {% if isOwner and member != team.owner %}
+                                            {% if team.isCoOwner(member) %}
+                                                <form method="post" action="{{ path('team_demote_co_owner', {id: team.id, userId: member.id}) }}" class="d-inline" onsubmit="return confirm('Demote this member?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('demote_co_owner_' ~ member.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-link text-warning p-0 ms-2" title="Demote to Member">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-circle" viewBox="0 0 16 16">
+                                                          <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v5.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V4.5z"/>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <form method="post" action="{{ path('team_promote_co_owner', {id: team.id, userId: member.id}) }}" class="d-inline" onsubmit="return confirm('Promote to Co-Owner?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('promote_co_owner_' ~ member.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-link text-success p-0 ms-2" title="Promote to Co-Owner">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-circle" viewBox="0 0 16 16">
+                                                          <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V11.5z"/>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {% if canManage and member != team.owner %}
+                                            {% if not team.isCoOwner(member) or isOwner %}
+                                            <form method="post" action="{{ path('team_remove_member', {id: team.id, userId: member.id}) }}" class="d-inline" onsubmit="return confirm('Remove this member?');">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('remove_member_' ~ member.id) }}">
                                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0 ms-2" title="Remove Member">
-                                                    <i class="bi bi-x-circle"></i>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                      <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                                    </svg>
                                                 </button>
                                             </form>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                 </div>
@@ -244,7 +304,7 @@
                           <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a.5.5 0 0 1-.258 0L0 6.85v5.65z"/>
                         </svg>
                     </div>
-                    <h2 class="h3 fw-bold text-white mb-0">Manage My Offers</h2>
+                    <h2 class="h3 fw-bold text-white mb-0">{{ isOwner ? 'Manage My Offers' : 'Team Offers' }}</h2>
                 </div>
             </div>
             
@@ -271,7 +331,28 @@
                                             <h5 class="card-subtitle text-white-50 fw-bold mb-1" style="font-size: 1rem;">{{ o.team.name }}</h5>
                                             <p class="card-text text-white-50 small mb-0">{{ o.game }} • <span class="text-info">{{ o.role }}</span> • <span class="badge {{ o.game|lower == 'cs2' ? 'bg-success' : 'bg-primary' }}">{{ o.rank }}</span></p>
                                         </div>
-                                        <small class="text-muted">{{ o.dateCreation|date('d M Y') }}</small>
+                                        <div>
+                                            {% set statusMap = {
+                                                'ACTIVE': {'color': 'success', 'label': 'Active'},
+                                                'PAUSED': {'color': 'warning', 'label': 'Paused'},
+                                                'EXPIRED': {'color': 'danger', 'label': 'Expired'},
+                                                'CLOSED': {'color': 'secondary', 'label': 'Closed'},
+                                                'DRAFT': {'color': 'info', 'label': 'Draft'},
+                                                'ARCHIVED': {'color': 'dark', 'label': 'Archived'}
+                                            } %}
+                                            {% set statusInfo = statusMap[o.status|upper]|default({'color': 'secondary', 'label': o.status}) %}
+                                            <span class="badge bg-{{ statusInfo.color }} text-uppercase mb-2" style="font-size: 0.7rem;">{{ statusInfo.label }}</span>
+                                            
+                                            {% if o.isPremium %}
+                                                <br>
+                                                <span class="badge {{ o.isFeatured ? 'bg-warning text-dark' : 'bg-info text-white' }} p-1 px-2 border-0 mb-1" style="font-size: 0.6rem;">
+                                                    {{ o.isFeatured ? '🔥 FEATURED' : '⭐ SPONSORED' }} 
+                                                    ({{ o.remainingPremiumDays }}d left)
+                                                </span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ o.dateCreation|date('d M Y') }}</small>
+                                        </div>
                                     </div>
                                     
                                     <p class="card-text text-light flex-grow-1">{{ o.description }}</p>
@@ -290,6 +371,78 @@
                                             <a href="{{ path('offer_edit', {'id': o.id}) }}" class="btn btn-sm btn-primary px-3 fw-bold">
                                                 <i class="bi bi-pencil me-1"></i> Modify
                                             </a>
+
+                                            {% if o.offerType == 'FREE' %}
+                                                <div class="dropdown d-inline-block">
+                                                    <button class="btn btn-sm btn-warning px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="bi bi-lightning-fill me-1"></i> Upgrade
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-dark bg-dark-deep border-light-subtle shadow-lg">
+                                                        <li>
+                                                            <form action="{{ path('offer_upgrade', {'id': o.id, 'type': 'FEATURED'}) }}" method="POST">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('upgrade_offer_' ~ o.id) }}">
+                                                                <button type="submit" class="dropdown-item py-2">
+                                                                    <span class="text-warning"><i class="bi bi-fire me-2"></i>Featured (7 days)</span>
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ path('offer_upgrade', {'id': o.id, 'type': 'SPONSORED'}) }}" method="POST">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('upgrade_offer_' ~ o.id) }}">
+                                                                <button type="submit" class="dropdown-item py-2">
+                                                                    <span class="text-info"><i class="bi bi-star-fill me-2"></i>Sponsored (30 days)</span>
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Statistics Section -->
+                                    {% set stats = offerStats[o.id] is defined ? offerStats[o.id] : {'views': 0, 'applications': 0, 'conversionRate': 0} %}
+                                    <div class="row g-3 mt-3 mb-4">
+                                        <!-- Views Card -->
+                                        <div class="col-md-4">
+                                            <div class="card bg-dark border border-primary border-opacity-25 h-100">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                                        <i class="bi bi-eye-fill text-primary" style="font-size: 1.25rem;"></i>
+                                                        <h6 class="mb-0 text-white fw-bold">Views</h6>
+                                                    </div>
+                                                    <div class="h2 text-white fw-bold mb-0">{{ stats.views }}</div>
+                                                    <small class="text-muted">Total views</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Applications Card -->
+                                        <div class="col-md-4">
+                                            <div class="card bg-dark border border-success border-opacity-25 h-100">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                                        <i class="bi bi-envelope-fill text-success" style="font-size: 1.25rem;"></i>
+                                                        <h6 class="mb-0 text-white fw-bold">Applications</h6>
+                                                    </div>
+                                                    <div class="h2 text-white fw-bold mb-0">{{ stats.applications }}</div>
+                                                    <small class="text-muted">Total applications</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Conversion Rate Card -->
+                                        <div class="col-md-4">
+                                            <div class="card bg-dark border border-warning border-opacity-25 h-100">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                                        <i class="bi bi-percent text-warning" style="font-size: 1.25rem;"></i>
+                                                        <h6 class="mb-0 text-white fw-bold">Conversion</h6>
+                                                    </div>
+                                                    <div class="h2 text-white fw-bold mb-0">{{ stats.conversionRate }}%</div>
+                                                    <small class="text-muted">Views to applications</small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     
@@ -377,58 +530,228 @@
                     {% for message in app.flashes('error') %}
                         <div class="alert alert-danger">{{ message }}</div>
                     {% endfor %}
-                    <form method="POST" action="{{ path('app_front_event_create') }}">
+                    {{ form_start(eventForm, { action: path('app_front_event_create'), attr: { novalidate: 'novalidate', enctype: 'multipart/form-data' } }) }}
                         <input type="hidden" name="redirect_route" value="team_manage">
                         <input type="hidden" name="redirect_params" value="{{ {'id': team.id}|json_encode }}">
                         
+                        <!-- AI Suggestion Area -->
+                        <div class="mb-4">
+                            <button type="button" id="ai-generate-btn-front" class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius: 8px; border-width: 2px;">
+                                <i class="bi bi-magic me-2"></i>Suggérer le moment optimal avec l'IA
+                            </button>
+                            <!-- Hidden button for details, appears after generation -->
+                            <button type="button" id="ai-details-btn-front" class="btn btn-sm text-info w-100 mt-2 d-none d-flex align-items-center justify-content-center gap-1" style="background: transparent; border: none; text-decoration: underline;" data-bs-toggle="modal" data-bs-target="#aiDetailsModalFront">
+                                <i class="bi bi-info-circle"></i> Voir les détails de la génération
+                            </button>
+                        </div>
+
+                        <!-- AI Details Modal (Rich Report) - placed at end of body for proper z-index -->
+                        <div class="modal fade" id="aiDetailsModalFront" tabindex="-1" aria-labelledby="aiDetailsModalFrontLabel" aria-hidden="true" style="z-index: 1070;">
+                            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                                <div class="modal-content border-0" style="background: #0d1117; border-radius: 16px; overflow: hidden;">
+
+                                    <!-- Header with gradient -->
+                                    <div class="modal-header border-0 p-0">
+                                        <div class="w-100 p-4" style="background: linear-gradient(135deg, #0d2137 0%, #0a3d62 50%, #1a1a2e 100%); border-bottom: 1px solid rgba(0, 212, 255, 0.2);">
+                                            <div class="d-flex align-items-center gap-3 mb-2">
+                                                <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,212,255,0.15);display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,212,255,0.3);">
+                                                    <i class="bi bi-robot text-info fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="modal-title mb-0 text-white fw-bold" id="aiDetailsModalFrontLabel">Rapport d'Analyse IA</h5>
+                                                    <small class="text-info opacity-75">Gemini 2.5 Flash · Analyse stratégique</small>
+                                                </div>
+                                                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <!-- Executive Summary -->
+                                            <div class="mt-3 p-3 rounded-3" style="background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.15);">
+                                                <p id="ai-summary-text-front" class="mb-0 text-white-75 fst-italic" style="font-size: 0.95rem; line-height: 1.6;"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-body p-4" style="background: #0d1117;">
+
+                                        <!-- Stat Cards Row -->
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-4">
+                                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2);">
+                                                    <div class="fw-bold text-info fs-4 mb-1" id="ai-confidence-front">—</div>
+                                                    <small class="text-white-50">Confiance IA</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(40,167,69,0.07); border: 1px solid rgba(40,167,69,0.2);">
+                                                    <div class="fw-bold text-success fs-5 mb-1" id="ai-event-type-badge-front">—</div>
+                                                    <small class="text-white-50">Type suggéré</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="p-3 rounded-3 text-center h-100" style="background: rgba(255,193,7,0.07); border: 1px solid rgba(255,193,7,0.2);">
+                                                    <div class="fw-bold text-warning fs-5 mb-1" id="ai-event-name-badge-front" style="font-size: 0.8rem !important;"></div>
+                                                    <small class="text-white-50">Nom proposé</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section: Data Insights -->
+                                        <div class="mb-4">
+                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#00d4ff,#0077ff);"></div>
+                                                <h6 class="mb-0 text-white fw-semibold">📊 Analyse des données historiques</h6>
+                                            </div>
+                                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                                <p id="ai-insights-text-front" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section: Time Rationale -->
+                                        <div class="mb-4">
+                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#00ff87,#00d4ff);"></div>
+                                                <h6 class="mb-0 text-white fw-semibold">🕐 Justification du créneau horaire</h6>
+                                            </div>
+                                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                                <p id="ai-time-text-front" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section: Type Rationale -->
+                                        <div class="mb-3">
+                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                <div style="width:6px;height:22px;border-radius:3px;background:linear-gradient(to bottom,#ffd700,#ff8c00);"></div>
+                                                <h6 class="mb-0 text-white fw-semibold">🏆 Justification du type d'événement</h6>
+                                            </div>
+                                            <div class="p-3 rounded-3" style="background:#111827; border: 1px solid rgba(255,255,255,0.07);">
+                                                <p id="ai-type-text-front" class="mb-0 text-white-75" style="line-height: 1.75; font-size: 0.9rem;"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer border-0" style="background: #0d1117; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 1rem 1.5rem;">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label for="nomEvenement" class="form-label text-white-50">Event Name</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" id="nomEvenement" name="evenement[nomEvenement]" placeholder="Tournament Name">
+                            {{ form_label(eventForm.nomEvenement, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(eventForm.nomEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25', 'placeholder': 'Tournament Name'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(eventForm.nomEvenement) }}</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="typeEvenement" class="form-label text-white-50">Event Type</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-25" id="typeEvenement" name="evenement[typeEvenement]" placeholder="e.g., Tournament, Scrim, Practice">
+                            {{ form_label(eventForm.typeEvenement, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(eventForm.typeEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25', 'placeholder': 'e.g., Tournament, Scrim, Practice'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(eventForm.typeEvenement) }}</div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="dateDebut" class="form-label text-white-50">Start Date</label>
-                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-25" id="dateDebut" name="evenement[dateDebut]">
+                                {{ form_label(eventForm.dateDebut, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(eventForm.dateDebut, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.dateDebut) }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="dateFin" class="form-label text-white-50">End Date</label>
-                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-25" id="dateFin" name="evenement[dateFin]">
+                                {{ form_label(eventForm.dateFin, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(eventForm.dateFin, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.dateFin) }}</div>
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="status" class="form-label text-white-50">Status</label>
-                                <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="status" name="evenement[status]">
-                                    <option value="" selected disabled>Select Status</option>
-                                    <option value="open">Open</option>
-                                    <option value="closed">Closed</option>
-                                </select>
+                                {{ form_label(eventForm.status, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(eventForm.status, {'attr': {'class': 'form-select bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.status) }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="place" class="form-label text-white-50">Place</label>
-                                <select class="form-select bg-dark text-white border-secondary border-opacity-25" id="place" name="evenement[place]">
-                                    <option value="" selected disabled>Select Place</option>
-                                    {% if places is defined %}
-                                        {% for p in places %}
-                                            <option value="{{ p.id }}">{{ p.nomPlace }} ({{ p.capaciteMax }} capacity)</option>
-                                        {% endfor %}
-                                    {% endif %}
-                                </select>
+                                {{ form_label(eventForm.place, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                <div class="d-flex gap-2 align-items-center">
+                                    {{ form_widget(eventForm.place, {'attr': {'class': 'form-select bg-dark text-white border-secondary border-opacity-25'}}) }}
+                                    <button type="button" class="btn btn-outline-success btn-sm" style="white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#addPlaceModal">
+                                        <i class="bi bi-plus-lg"></i> Add Place
+                                    </button>
+                                </div>
+                                <div class="text-danger small mt-1">{{ form_errors(eventForm.place) }}</div>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(eventForm.imageFile, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(eventForm.imageFile, {'attr': {'class': 'form-control bg-dark text-white border-secondary border-opacity-25'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(eventForm.imageFile) }}</div>
                         </div>
                         
                         <div class="text-end mt-4">
                             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary fw-bold px-4">Create Event</button>
                         </div>
-                    </form>
+                    {{ form_end(eventForm) }}
+
+                    <script>
+                    // Prevent z-index issues caused by nested modals by moving to body
+                    (function() {
+                        const modal = document.getElementById('aiDetailsModalFront');
+                        if (modal) document.body.appendChild(modal);
+                    })();
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const btnFront = document.getElementById('ai-generate-btn-front');
+                        if (btnFront) {
+                            btnFront.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const originalText = btnFront.innerHTML;
+                                btnFront.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyse historique en cours...';
+                                btnFront.disabled = true;
+
+                                fetch('/api/events/ai-generate')
+                                    .then(res => res.json())
+                                    .then(response => {
+                                        if (response.success && response.data) {
+                                            const data = response.data;
+
+                                            // Fill the form fields
+                                            const nomInput   = document.querySelector('#createEventModal [id$="_nomEvenement"]');
+                                            const typeInput  = document.querySelector('#createEventModal [id$="_typeEvenement"]');
+                                            const debutInput = document.querySelector('#createEventModal [id$="_dateDebut"]');
+                                            const finInput   = document.querySelector('#createEventModal [id$="_dateFin"]');
+                                            if (data.nomEvenement  && nomInput)   nomInput.value   = data.nomEvenement;
+                                            if (data.typeEvenement && typeInput)  typeInput.value  = data.typeEvenement;
+                                            if (data.dateDebut     && debutInput) debutInput.value = data.dateDebut;
+                                            if (data.dateFin       && finInput)   finInput.value   = data.dateFin;
+
+                                            // Populate rich modal fields
+                                            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+                                            set('ai-summary-text-front',      data.reasoning      || "Analyse complète disponible ci-dessous.");
+                                            set('ai-confidence-front',        data.confidence_score ? data.confidence_score + '%' : '—');
+                                            set('ai-event-type-badge-front',  data.typeEvenement  || '—');
+                                            set('ai-event-name-badge-front',  data.nomEvenement   || '—');
+                                            set('ai-insights-text-front',     data.data_insights  || data.reasoning || '');
+                                            set('ai-time-text-front',         data.time_rationale || '');
+                                            set('ai-type-text-front',         data.type_rationale || '');
+
+                                            // Show "Voir détails" link and open modal
+                                            const detailsBtn = document.getElementById('ai-details-btn-front');
+                                            if (detailsBtn) detailsBtn.classList.remove('d-none');
+
+                                            const modalElement = document.getElementById('aiDetailsModalFront');
+                                            if (modalElement) {
+                                                const aiModal = new bootstrap.Modal(modalElement);
+                                                aiModal.show();
+                                            }
+                                        }
+                                    })
+                                    .catch(err => console.error("AI Fetch Error: ", err))
+                                    .finally(() => {
+                                        btnFront.innerHTML = originalText;
+                                        btnFront.disabled = false;
+                                    });
+                            });
+                        }
+                    });
+                    </script>
                 </div>
             </div>
         </div>
@@ -495,11 +818,11 @@
                             {{ form_errors(offerForm.rank) }}
                         </div>
 
-                        <!-- Dates -->
+                        <!-- Validity Period -->
                         <div class="col-12">
-                            {{ form_label(offerForm.dateExpiration, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
-                            {{ form_widget(offerForm.dateExpiration) }}
-                            {{ form_errors(offerForm.dateExpiration) }}
+                            {{ form_label(offerForm.validityPeriod, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                            {{ form_widget(offerForm.validityPeriod) }}
+                            {{ form_errors(offerForm.validityPeriod) }}
                         </div>
 
                         <!-- Description & Poster -->
@@ -525,9 +848,64 @@
             </div>
         </div>
     </div>
+
+    {# Add Place Modal (Sub-modal) #}
+    <div class="modal fade" id="addPlaceModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content calendar-modal-content text-white" style="background: var(--tc-bg-card, #1a1a2e); color: var(--tc-text, #fff);">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">📍 Ajouter un Lieu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPlaceForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">Nom du Lieu</label>
+                            <input type="text" id="place_nom" name="nomPlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
+                            <div class="text-danger small mt-1 place-error" id="error-nomPlace"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Type du Lieu</label>
+                            <input type="text" id="place_type" name="typePlace" class="form-control bg-dark text-white border-secondary" required minlength="3">
+                            <div class="text-danger small mt-1 place-error" id="error-typePlace"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Capacité Maximum</label>
+                            <input type="number" id="place_capacite" name="capaciteMax" class="form-control bg-dark text-white border-secondary" required min="1" max="50000">
+                            <div class="text-danger small mt-1 place-error" id="error-capaciteMax"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white text-info"><i class="bi bi-hand-index"></i> Recherchez, cliquez sur la carte, ou utilisez votre position</label>
+                            <div class="mb-2">
+                                <button type="button" id="btnCurrentLocation" class="btn btn-sm btn-outline-info rounded-pill fw-bold">
+                                    <i class="bi bi-geo"></i> Utiliser ma position actuelle
+                                </button>
+                            </div>
+                            <!-- Note the z-index fix to prevent search dropdown from being hidden in modal -->
+                            <div id="placeMap" style="height: 300px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); z-index: 1;"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Adresse générée par la carte</label>
+                            <input type="text" id="place_adresse" name="adresse" class="form-control bg-dark text-white border-secondary" readonly placeholder="L'adresse apparaîtra ici...">
+                            <div class="text-danger small mt-1 place-error" id="error-adresse"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top border-secondary border-opacity-25 bg-black bg-opacity-25">
+                    <button type="button" class="btn btn-secondary border-0 px-4 fw-bold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-success px-4 fw-bold" id="btnSubmitPlace">
+                        <span id="placeSubmitText">Enregistrer le Lieu</span>
+                        <div class="spinner-border spinner-border-sm d-none" id="placeSubmitLoader" role="status"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const gameSelect = document.getElementById('gameSelect');
@@ -594,6 +972,502 @@
         if (gameSelect.value) {
             handleGameChange(gameSelect.value);
         }
+
+        // --- LEAFLET JS FOR "ADD PLACE" SUB-MODAL ---
+        let placeMap = null;
+        let placeMarker = null;
+        const addPlaceModalEl = document.getElementById('addPlaceModal');
+        const addressInput = document.getElementById('place_adresse');
+        const saveBtn = document.getElementById('btnSubmitPlace');
+
+        function updateLocation(lat, lng) {
+            if (placeMarker) {
+                placeMarker.setLatLng([lat, lng]);
+            } else {
+                placeMarker = L.marker([lat, lng]).addTo(placeMap);
+            }
+
+            addressInput.value = "Recherche d'adresse en cours...";
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+                headers: { 'Accept-Language': 'fr' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    addressInput.value = data.display_name;
+                } else {
+                    addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                }
+            })
+            .catch(err => {
+                console.error("Geocoding failed", err);
+                addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            });
+        }
+
+        addPlaceModalEl.addEventListener('hidden.bs.modal', function () {
+            const createEventModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('createEventModal'));
+            createEventModal.show();
+        });
+
+        addPlaceModalEl.addEventListener('shown.bs.modal', function () {
+            // Initialize map only once
+            if (!placeMap) {
+                // Default center
+                placeMap = L.map('placeMap').setView([36.8065, 10.1815], 10);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(placeMap);
+
+                // Add Search Control (Leaflet Geocoder plugin)
+                var geocoder = L.Control.geocoder({
+                    defaultMarkGeocode: false,
+                    placeholder: "Rechercher un lieu...",
+                    errorMessage: "Adresse non trouvée."
+                })
+                .on('markgeocode', function(e) {
+                    var latlng = e.geocode.center;
+                    
+                    // Auto-center & Zoom on search result
+                    placeMap.setView(latlng, 16); 
+                    
+                    if (placeMarker) {
+                        placeMarker.setLatLng(latlng);
+                    } else {
+                        placeMarker = L.marker(latlng).addTo(placeMap);
+                    }
+                    
+                    // For direct search result, use the Geocoder returned name
+                    const resolvedAddress = e.geocode.name || Object.values(e.geocode.properties.address || {}).join(', ');
+                    addressInput.value = resolvedAddress;
+                })
+                .addTo(placeMap);
+
+                // Map click handler
+                placeMap.on('click', function(e) {
+                    updateLocation(e.latlng.lat, e.latlng.lng);
+                });
+
+                // Use My Location handler
+                document.getElementById('btnCurrentLocation').addEventListener('click', function() {
+                    if ("geolocation" in navigator) {
+                        const btn = document.getElementById('btnCurrentLocation');
+                        const originalHTML = btn.innerHTML;
+                        
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Localisation...';
+                        btn.disabled = true;
+
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            
+                            // Auto-center & Zoom on Current Location
+                            placeMap.setView([lat, lng], 16); 
+                            updateLocation(lat, lng);
+
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                        }, function(error) {
+                            alert("Erreur de localisation. Veuillez autoriser l'accès à votre position.");
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                        }, {
+                            timeout: 10000,
+                            enableHighAccuracy: true
+                        });
+                    } else {
+                        alert("La géolocalisation n'est pas supportée par votre navigateur.");
+                    }
+                });
+            }
+            
+            // Very important: Fix Leaflet gray boxes inside Bootstrap Modal
+            setTimeout(() => { placeMap.invalidateSize(); }, 200);
+        });
+
+        // AJAX Form Submission
+        saveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            document.querySelectorAll('.place-error').forEach(el => el.innerText = '');
+            
+            const payload = {
+                nomPlace: document.getElementById('place_nom').value,
+                typePlace: document.getElementById('place_type').value,
+                capaciteMax: document.getElementById('place_capacite').value,
+                adresse: addressInput.value
+            };
+
+            const btnText = document.getElementById('placeSubmitText');
+            const loader = document.getElementById('placeSubmitLoader');
+            
+            btnText.classList.add('d-none');
+            loader.classList.remove('d-none');
+            saveBtn.disabled = true;
+
+            fetch('/api/place/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success: Hide sub-modal
+                    const modal = bootstrap.Modal.getInstance(addPlaceModalEl);
+                    modal.hide();
+                    
+                    // Update the Place dropdown in Create Event Modal
+                    const placeSelect = document.querySelector('select[name*="[place]"]');
+                    if (placeSelect) {
+                        const newOption = new Option(data.place.nomPlace, data.place.id, true, true);
+                        placeSelect.add(newOption);
+                    }
+                    
+                    alert(data.message);
+                } else {
+                    // Display Validation Errors directly under inputs
+                    for (const [field, msg] of Object.entries(data.errors)) {
+                        const errEl = document.getElementById('error-' + field);
+                        if (errEl) errEl.innerText = msg;
+                    }
+                }
+            })
+            .catch(err => {
+                alert("Erreur système lors de l'ajout.");
+                console.error(err);
+            })
+            .finally(() => {
+                btnText.classList.remove('d-none');
+                loader.classList.add('d-none');
+                saveBtn.disabled = false;
+            });
+        });
     });
 </script>
+   
+
+<!-- Team Chat Modal -->
+<style>
+    .chat-modal-content {
+        background-color: #0A0C10; /* Fond principal profond */
+        border: 1px solid rgba(74, 158, 255, 0.2); /* Bordure subtile glow */
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .chat-header {
+        background: linear-gradient(90deg, #1A1D23 0%, #0A0C10 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px 20px;
+    }
+    .chat-body {
+        background-color: #16181C; /* Fond zone messages */
+        background-image: radial-gradient(#1A1D23 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+    .chat-footer {
+        background-color: #0A0C10;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px;
+    }
+    
+    /* Messages */
+    .msg-bubble {
+        border-radius: 18px;
+        padding: 12px 18px;
+        position: relative;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        transition: all 0.2s ease;
+        animation: msgPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes msgPop { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    
+    .msg-bubble.no-animation {
+        animation: none;
+    }
+
+    .msg-owner {
+        background: linear-gradient(135deg, rgba(42, 128, 241, 0.15), rgba(42, 128, 241, 0.05));
+        border: 1px solid rgba(42, 128, 241, 0.5);
+        color: #F0F4FA;
+        box-shadow: 0 4px 15px rgba(42, 128, 241, 0.1);
+        border-bottom-right-radius: 4px;
+    }
+    .msg-co-owner {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(46, 204, 113, 0.05));
+        border: 1px solid rgba(46, 204, 113, 0.5);
+        color: #F0F4FA;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.1);
+        border-bottom-right-radius: 4px;
+    }
+    .msg-member {
+        background-color: #2D313A;
+        border: 1px solid #3A3F4B;
+        color: #E2E8F0;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .avatar-ring {
+        transition: transform 0.2s;
+    }
+    .avatar-ring:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Scrollbar */
+    #chatMessages::-webkit-scrollbar { width: 6px; }
+    #chatMessages::-webkit-scrollbar-track { background: #0A0C10; }
+    #chatMessages::-webkit-scrollbar-thumb { background: #3A3F4B; border-radius: 10px; }
+    #chatMessages::-webkit-scrollbar-thumb:hover { background: #4A9EFF; }
+
+    /* Input */
+    .chat-input {
+        background-color: #1A1D23;
+        border: 1px solid #3A3F4B;
+        color: white;
+        border-radius: 20px;
+        padding-left: 15px;
+    }
+    .chat-input:focus {
+        background-color: #1A1D23;
+        color: white;
+        border-color: #4A9EFF;
+        box-shadow: 0 0 0 0.2rem rgba(74, 158, 255, 0.25);
+    }
+</style>
+
+<div class="modal fade" id="teamChatModal" tabindex="-1" aria-labelledby="teamChatModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content chat-modal-content">
+      <!-- Header -->
+      <div class="chat-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+             <div class="bg-dark bg-opacity-50 p-2 rounded-circle border border-secondary border-opacity-25">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#4A9EFF" class="bi bi-controller" viewBox="0 0 16 16">
+                  <path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0zm2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0zm-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1v-1z"/>
+                  <path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.39c.655-.079 1.35-.117 2.043-.117.72 0 1.443.041 2.12.126a.5.5 0 0 1 .622-.399l1.932.518a.5.5 0 0 1 .306.729c.14.09.266.19.373.297.408.408.78 1.05 1.095 1.772.32.733.599 1.591.805 2.466.156.655.24 1.378.167 2.013a.75.75 0 0 1-.743.653c-.315 0-.624-.056-.908-.135a.5.5 0 0 0-.634.295c-.268.627-.72 1.165-1.275 1.488-.098.058-.201.111-.309.158a.5.5 0 0 1-.504-.926c.047-.02.09-.043.132-.068.397-.23.719-.575.922-1.026a.5.5 0 0 0-.25-.632c-.584-.23-1.127-.518-1.595-.918a.5.5 0 0 0-.638.014c-.958.747-2.063 1.159-3.254 1.159-1.192 0-2.296-.412-3.255-1.159a.5.5 0 0 0-.638-.014c-.468.4-1.01.688-1.595.918a.5.5 0 0 0-.25.632c.203.45.525.795.922 1.026.042.025.085.048.132.068a.5.5 0 0 1-.504.926c-.108-.047-.21-.1-.309-.158-.555-.323-1.007-.86-1.275-1.488a.5.5 0 0 0-.634-.294c-.284.079-.593.135-.908.135a.75.75 0 0 1-.743-.653c-.073-.635.011-1.358.167-2.013.206-.875.486-1.733.805-2.466.315-.722.687-1.364 1.095-1.772a2.34 2.34 0 0 1 .373-.297a.5.5 0 0 1 .306-.729zM4.567 2.924a.428.428 0 0 0-.395.293L2.23 3.737a.356.356 0 0 0-.236.425c.015.064.04.137.079.215.114.228.283.527.508.868.441.67.939 1.135 1.258 1.282A.5.5 0 0 1 4 6.726v-.004a.5.5 0 0 1 .28-.466c.211-.1.442-.066.621.057a.5.5 0 0 0 .583-.09c.353-.353.793-.45 1.11-.27a.5.5 0 0 0 .692-.162c.114-.191.246-.37.391-.532A.5.5 0 0 0 7.394 4.5a3.89 3.89 0 0 1-1.286-.465.5.5 0 0 0-.266-.113 2.504 2.504 0 0 0-1.275.002zm9.203 0a2.504 2.504 0 0 0-1.275-.002.5.5 0 0 0-.266.113 3.894 3.894 0 0 1-1.286.465.5.5 0 0 0-.293.593c.145.162.277.341.391.532a.5.5 0 0 0 .692.162c.317-.18.757-.083 1.11.27a.5.5 0 0 0 .583.09c.179-.123.41-.157.621-.057a.5.5 0 0 1 .281.466v.004a.5.5 0 0 1 .169.217c.319-.147.817-.612 1.258-1.282.225-.34.394-.64.508-.868.039-.078.064-.151.079-.215a.356.356 0 0 0-.236-.425l-1.942-.52a.428.428 0 0 0-.395-.293z"/>
+                </svg>
+             </div>
+             <div>
+                <h5 class="modal-title fw-bold text-white mb-0" id="teamChatModalLabel" style="font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">TEAM CHAT</h5>
+                <div class="d-flex align-items-center gap-1 mt-1">
+                    <span class="d-inline-block rounded-circle bg-success" style="width: 6px; height: 6px;"></span>
+                    <span class="text-muted small" style="font-size: 0.7rem;">LIVE</span>
+                </div>
+             </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white opacity-50 hover-opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body chat-body p-0">
+        <div id="chatMessages" class="p-4 d-flex flex-column gap-3" style="height: 450px; overflow-y: auto;">
+             <!-- Messages will be loaded here via AJAX -->
+             <div class="text-center text-muted mt-5 d-flex flex-column align-items-center">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <span>Accessing secure channel...</span>
+             </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer chat-footer justify-content-start">
+        <form id="chatForm" class="d-flex gap-2 w-100 align-items-center">
+            <!-- File Upload Trigger -->
+            <input type="file" id="chatImageInput" accept="image/*" class="d-none">
+            <button type="button" class="btn btn-link text-secondary p-0 me-1 hover-text-white" id="chatUploadBtn" title="Upload Image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-paperclip" viewBox="0 0 16 16">
+                  <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5aa.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/>
+                </svg>
+            </button>
+            
+            <div class="flex-grow-1 position-relative">
+                <input type="text" id="chatInput" class="form-control chat-input" placeholder="Type your message..." autocomplete="off">
+                <!-- Emoji Icon (Visual) -->
+                <button type="button" class="btn btn-link text-secondary p-0 position-absolute end-0 top-50 translate-middle-y me-2 hover-text-white" style="text-decoration: none;">
+                    😊
+                </button>
+            </div>
+            <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center" style="width: 45px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2A80F1, #9147FF); border: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="white" class="bi bi-send-fill" viewBox="0 0 16 16">
+                  <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                </svg>
+            </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessagesContainer = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatImageInput = document.getElementById('chatImageInput');
+        const chatUploadBtn = document.getElementById('chatUploadBtn');
+        const teamChatModal = document.getElementById('teamChatModal');
+        let chatPollInterval;
+
+        // Trigger file input
+        chatUploadBtn.addEventListener('click', () => chatImageInput.click());
+        
+        // Change icon style when file selected
+        chatImageInput.addEventListener('change', () => {
+            if (chatImageInput.files.length > 0) {
+                chatUploadBtn.classList.remove('text-secondary');
+                chatUploadBtn.classList.add('text-primary');
+            } else {
+                chatUploadBtn.classList.add('text-secondary');
+                chatUploadBtn.classList.remove('text-primary');
+            }
+        });
+
+        let existingMessageIds = new Set();
+
+        function loadMessages() {
+            fetch("{{ path('team_chat_list', {id: team.id}) }}")
+                .then(response => response.json())
+                .then(data => {
+                    const newMessageIds = new Set();
+                    
+                    if (data.length === 0) {
+                        chatMessagesContainer.innerHTML = `
+                            <div class="text-center text-muted mt-5 opacity-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-chat-square-dots mb-3" viewBox="0 0 16 16">
+                                  <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2.5a2 2 0 0 0-1.6.8L8 14.333 6.1 11.8a2 2 0 0 0-1.6-.8H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.5l3.5 4.667L11.5 12H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                                  <path d="M5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                </svg>
+                                <p>No messages yet.<br>Start the conversation!</p>
+                            </div>`;
+                        existingMessageIds.clear();
+                        return;
+                    }
+
+                    // Only clear and rebuild if message count changed
+                    const shouldRebuild = chatMessagesContainer.children.length !== data.length;
+                    
+                    if (shouldRebuild) {
+                        chatMessagesContainer.innerHTML = '';
+                    }
+
+                    let lastSenderId = null;
+
+                    data.forEach((msg, index) => {
+                        const messageId = msg.id || `${msg.senderId}-${msg.createdAt}`;
+                        newMessageIds.add(messageId);
+                        const isNewMessage = !existingMessageIds.has(messageId);
+                        
+                        if (!shouldRebuild && !isNewMessage) {
+                            return; // Skip existing messages if not rebuilding
+                        }
+
+                        const isMe = msg.isMe;
+                        let bubbleClass = 'msg-member';
+                        let textColor = 'text-white';
+                        let borderColor = '#9CA3AF'; // Default gray
+                        
+                        if (msg.role === 'owner') {
+                            bubbleClass = 'msg-owner';
+                            borderColor = '#FFD700'; // Gold
+                        } else if (msg.role === 'co_owner') {
+                            bubbleClass = 'msg-co-owner';
+                            borderColor = '#2ECC71'; // Green
+                        }
+
+                        // Alignment based on isMe only
+                        const alignClass = isMe ? 'align-self-end text-end' : 'align-self-start text-start';
+                        const flexDir = isMe ? 'flex-row-reverse' : 'flex-row';
+                        
+                        // Avatar generation (initials or generic)
+                        const initial = msg.sender.charAt(0).toUpperCase();
+                        // You could pass avatar URL in the controller if available, for now using placeholder
+                        
+                        const showHeader = lastSenderId !== msg.senderId;
+                        
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `d-flex w-100 mb-1 ${flexDir}`;
+                        msgDiv.dataset.messageId = messageId;
+                        
+                        let contentHtml = `
+                            <div style="max-width: 80%;">
+                                ${showHeader ? `
+                                    <div class="mb-1 small d-flex align-items-center gap-2 ${isMe ? 'justify-content-end' : 'justify-content-start'}">
+                                        ${msg.role === 'owner' ? '<span class="badge rounded-pill bg-warning text-dark fw-bold d-flex align-items-center gap-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">👑 OWNER</span>' : ''}
+                                        ${msg.role === 'co_owner' ? '<span class="badge rounded-pill bg-info text-dark fw-bold d-flex align-items-center gap-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">⚡ CO-OWNER</span>' : ''}
+                                        <span class="fw-bold fs-7 text-white opacity-75">${msg.sender}</span>
+                                        <span class="text-muted" style="font-size: 0.65rem;">${msg.createdAt}</span>
+                                    </div>
+                                ` : ''}
+                                <div class="msg-bubble ${bubbleClass} text-start ${isNewMessage ? '' : 'no-animation'}">
+                                    ${msg.image ? `<div class="mb-2"><img src="${msg.image}" class="img-fluid rounded" style="max-height: 200px; object-fit: cover;"></div>` : ''}
+                                    ${msg.content}
+                                </div>
+                            </div>
+                        `;
+
+                        msgDiv.innerHTML = contentHtml;
+                        chatMessagesContainer.appendChild(msgDiv);
+                        
+                        lastSenderId = msg.senderId;
+                    });
+                    
+                    existingMessageIds = newMessageIds;
+                    
+                    // Auto scroll to bottom
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                })
+                .catch(err => console.error('Error fetching chat messages:', err));
+        }
+
+        teamChatModal.addEventListener('shown.bs.modal', () => {
+            loadMessages();
+            chatPollInterval = setInterval(loadMessages, 3000); // Poll every 3 seconds
+        });
+
+        teamChatModal.addEventListener('hidden.bs.modal', () => {
+            clearInterval(chatPollInterval);
+        });
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const content = chatInput.value.trim();
+            const imageFile = chatImageInput.files[0];
+
+            if (!content && !imageFile) return;
+
+            const formData = new FormData();
+            formData.append('content', content);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            // Send message
+            fetch("{{ path('team_chat_send', {id: team.id}) }}", {
+                method: 'POST',
+                // No headers for FormData, browser sets multipart/form-data boundary
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    chatInput.value = '';
+                    chatImageInput.value = ''; // Reset file input
+                    chatUploadBtn.classList.add('text-secondary');
+                    chatUploadBtn.classList.remove('text-primary');
+                    loadMessages(); // Refresh immediately
+                }
+            })
+            .catch(err => console.error('Error sending message:', err));
+        });
+    });
+</script>
+
 {% endblock %}

@@ -37,6 +37,16 @@ class RubriqueType extends AbstractType
                 'choices' => array_combine($options['topics'], $options['topics']),
                 'placeholder' => 'Sélectionner un sujet ou créer un nouveau',
                 'attr' => ['class' => 'form-select bg-black text-white border-secondary mb-2'],
+            ])
+            ->add('image', \Symfony\Component\Form\Extension\Core\Type\FileType::class, [
+                'label' => 'Image de la rubrique (optionnel)',
+                'mapped' => false,
+                'required' => false,
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'form-control bg-black text-white border-secondary'
+                ],
+                'help' => 'Vous pouvez uploader une image ou utiliser le bouton "Générer avec IA" ci-dessous'
             ]);
 
         // Lors de la soumission : si un sujet existant est choisi, on l’utilise (liste OU input, pas les deux)

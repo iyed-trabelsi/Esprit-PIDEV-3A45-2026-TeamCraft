@@ -2,6 +2,11 @@
 
 {% block title %}Offres de recrutement - TEAMCRAFT{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/premium.css') }}">
+{% endblock %}
+
 {% block body %}
     {% include 'frontoffice/partials/_navbar.html.twig' %}
 
@@ -101,6 +106,50 @@ document.addEventListener('DOMContentLoaded', function() {
     filterForm.addEventListener('submit', (e) => {
         e.preventDefault();
         updateFilters();
+    });
+
+    // Favorite toggle functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.favorite-btn')) {
+            e.preventDefault();
+            const btn = e.target.closest('.favorite-btn');
+            const offerId = btn.dataset.offerId;
+            const icon = btn.querySelector('i');
+            const isFavorited = icon.classList.contains('bi-heart-fill');
+            
+            const url = isFavorited 
+                ? `/offres/${offerId}/unfavorite`
+                : `/offres/${offerId}/favorite`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Toggle icon
+                    if (isFavorited) {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    } else {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    }
+                } else {
+                    if (data.message === 'You must be logged in') {
+                        window.location.href = '/login';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
     });
 });
 </script>

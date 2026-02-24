@@ -117,6 +117,124 @@
         {% endblock %}
     </div>
 
+    {# Chart: Répartition des Posts #}
+    <div class="row g-4 mb-5 mt-2">
+        <div class="col-12">
+            <div class="card-tc p-4" style="background: var(--tc-bg-input);">
+                <h2 class="h5 mb-4 font-display">Répartition des Posts</h2>
+                <div class="row align-items-center">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <div style="height: 300px; width: 100%; max-width: 400px;">
+                            <canvas id="postsTypeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                         <div class="d-flex flex-column gap-3 justify-content-center h-100">
+                            {% set totalPosts = 0 %}
+                            {% for stat in postsByType %}
+                                {% set totalPosts = totalPosts + stat.count %}
+                            {% endfor %}
+
+                            {% for stat in postsByType %}
+                                {% set percent = totalPosts > 0 ? (stat.count / totalPosts * 100)|round(1) : 0 %}
+                                <div class="p-3 rounded-3 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between" style="background: rgba(255, 255, 255, 0.05);">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="rounded-circle" style="width: 12px; height: 12px; background-color: {% if stat.type == 'discussion' %}#0ea5e9{% elseif stat.type == 'question' %}#22c55e{% elseif stat.type == 'annonce' %}#d946ef{% else %}#94a3b8{% endif %}; box-shadow: 0 0 10px {% if stat.type == 'discussion' %}#0ea5e9{% elseif stat.type == 'question' %}#22c55e{% elseif stat.type == 'annonce' %}#d946ef{% else %}#94a3b8{% endif %};"></span>
+                                        <span class="text-white fw-bold text-capitalize">{{ stat.type }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-white small fw-bold" style="font-size: 0.8rem; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);">{{ percent }}%</span>
+                                        <div class="badge bg-dark border border-secondary text-white rounded-pill px-3">{{ stat.count }}</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-muted">Aucune donnée de post disponible.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if reports is defined and reports|length > 0 %}
+        <div class="mt-5 mb-4">
+            <h3 class="h5 fw-bold mb-3 text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Signalements en attente</h3>
+            <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input); border: 1px solid #b45309;">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                        <thead class="custom-table-header" style="background: rgba(245, 158, 11, 0.1);">
+                            <tr>
+                                <th class="border-0 px-4 py-3 text-warning">Post</th>
+                                <th class="border-0 px-4 py-3 text-warning">Auteur Post</th>
+                                <th class="border-0 px-4 py-3 text-warning">Signalé par</th>
+                                <th class="border-0 px-4 py-3 text-warning">Détails Signalement</th>
+                                <th class="border-0 px-4 py-3 text-warning">Date</th>
+                                <th class="border-0 px-4 py-3 text-end text-warning">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-input-match">
+                            {% for report in reports %}
+                                <tr>
+                                    <td class="px-4 py-3 fw-semibold bg-input-match">
+                                        <a href="{{ path('app_forum_post_show', {id: report.post.id}) }}" class="text-white text-decoration-none" target="_blank">{{ report.post.titre }} <i class="bi bi-box-arrow-up-right small text-muted ms-1"></i></a>
+                                    </td>
+                                    <td class="px-4 py-3 bg-input-match">
+                                        <span class="fw-bold">{{ report.post.auteur.pseudo|default(report.post.auteur.username) }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 bg-input-match">{{ report.reporter.pseudo|default(report.reporter.username) }}</td>
+                                    <td class="px-4 py-3 bg-input-match">
+                                        <span class="badge bg-warning text-dark">{{ report.motif }}</span>
+                                        {% if report.description %}
+                                            <div class="mt-1 small text-white-50 p-2 rounded" style="background: rgba(0,0,0,0.2); border-left: 2px solid var(--tc-warning);">
+                                                {{ report.description }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 bg-input-match">{{ report.dateSignalement|date('d/m/Y H:i') }}</td>
+                                    <td class="px-4 py-3 text-end bg-input-match">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <form method="post" action="{{ path('admin_user_ban', { id: report.post.auteur.id }) }}" onsubmit="return confirm('{{ report.post.auteur.isBanned ? 'Lever le bannissement ?' : 'Bannir cet utilisateur ?' }}');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('ban_user_' ~ report.post.auteur.id) }}">
+                                                <button type="submit" class="btn btn-sm {{ report.post.auteur.isBanned ? 'btn-success' : 'btn-outline-danger' }}" title="{{ report.post.auteur.isBanned ? 'Débannir' : 'Bannir l\'auteur' }}">
+                                                    <i class="bi {{ report.post.auteur.isBanned ? 'bi-person-check' : 'bi-person-x' }}"></i>
+                                                    {{ report.post.auteur.isBanned ? 'Débannir' : 'Bannir' }}
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('admin_report_dismiss', { id: report.id }) }}" onsubmit="return confirm('Ignorer ce signalement ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('dismiss_report_' ~ report.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Ignorer/Traiter">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('admin_post_delete', { id: report.post.id }) }}" onsubmit="return confirm('Supprimer ce post ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('admin_post_delete_' ~ report.post.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Supprimer le post">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+
+                                            {% if report.post.image %}
+                                                <form method="post" action="{{ path('admin_post_delete_image', { id: report.post.id }) }}" onsubmit="return confirm('Supprimer uniquement l\'image ?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_post_delete_image_' ~ report.post.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-warning" title="Supprimer l'image">
+                                                        <i class="bi bi-card-image"></i> <i class="bi bi-x"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('posts-search-form');
@@ -189,6 +307,68 @@
             }
 
             attachListeners();
+        });
+    </script>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <!-- Chart.js UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('postsTypeChart');
+            if (ctx) {
+                const rawData = {{ postsByType|json_encode|raw }};
+                const labels = rawData.map(item => item.type.charAt(0).toUpperCase() + item.type.slice(1));
+                const data = rawData.map(item => item.count);
+                
+                const colorMap = {
+                    'discussion': '#0ea5e9',
+                    'question': '#22c55e',
+                    'annonce': '#d946ef'
+                };
+                const backgroundColors = rawData.map(item => colorMap[item.type] || '#94a3b8');
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderColor: '#1e293b',
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.chart._metasets[context.datasetIndex].total;
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                        return ' ' + context.label + ': ' + value + ' (' + percentage + ')';
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%',
+                    }
+                });
+            }
         });
     </script>
 {% endblock %}
