@@ -1,0 +1,24 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Mot de passe oublié{% endblock %}
+
+{% block body %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card bg-dark text-white shadow-lg p-4" style="width: 100%; max-width: 450px; border: 1px solid #333;">
+        <h2 class="text-center mb-4">Récupération</h2>
+        <p class="text-muted small text-center">Saisissez votre email pour recevoir un lien de réinitialisation.</p>
+
+        {{ form_start(requestForm) }}
+            <div class="mb-3">
+                {{ form_label(requestForm.email, 'Votre adresse email', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(requestForm.email, {'attr': {'class': 'form-control bg-secondary text-white border-0', 'placeholder': 'exemple@gmail.com'}}) }}
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold">Envoyer l'email</button>
+        {{ form_end(requestForm) }}
+        
+        <div class="text-center mt-3">
+            <a href="{{ path('app_login') }}" class="text-decoration-none small text-primary">Retour à la connexion</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

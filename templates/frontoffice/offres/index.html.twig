@@ -1,0 +1,323 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Offres de recrutement - TEAMCRAFT{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/premium.css') }}">
+    <style>
+        /* Event-style cards for offers */
+        .offer-image-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .offer-banner {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: block;
+            background: rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .offer-banner:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
+        }
+        
+        #offer-search::placeholder {
+            color: white !important;
+            opacity: 0.7;
+        }
+        .btn-tc-outline {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .btn-tc-outline:hover, .btn-tc-outline:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .dropdown-menu-dark .dropdown-item.active {
+            background-color: var(--tc-cyan, #0dcaf0);
+            color: #000;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h1 class="h2 fw-bold mb-0 discovery-section-title">
+                {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                Offres
+            </h1>
+        </div>
+
+        {# Live Search and Filter Section #}
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mb-4">
+            <div class="d-flex justify-content-end align-items-center gap-3 w-100 flex-wrap">
+                <!-- Sort by Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="sortDropdownBtn">
+                        <i class="bi bi-sort-down"></i>
+                        <span id="currentSortLabel">Date (Plus récent)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-sort-option" href="#" data-sort="date_desc">Date (Plus récent)</a></li>
+                        <li><a class="dropdown-item js-sort-option" href="#" data-sort="date_asc">Date (Plus ancien)</a></li>
+                        <li><a class="dropdown-item js-sort-option" href="#" data-sort="name_asc">Nom (A-Z)</a></li>
+                        <li><a class="dropdown-item js-sort-option" href="#" data-sort="name_desc">Nom (Z-A)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Filter by Game Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="gameFilterDropdownBtn">
+                        <i class="bi bi-controller"></i>
+                        <span id="currentGameLabel">Tous les jeux</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-game-option" href="#" data-game="all">Tous les jeux</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="valorant">VALORANT</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="league of legends">LEAGUE OF LEGENDS</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="cs2">CS2</a></li>
+                        <li><a class="dropdown-item js-game-option" href="#" data-game="overwatch 2">OVERWATCH 2</a></li>
+                    </ul>
+                </div>
+
+                <!-- Filter by Rank Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="rankFilterDropdownBtn">
+                        <i class="bi bi-trophy"></i>
+                        <span id="currentRankLabel">Tous les rangs</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-rank-option" href="#" data-rank="all">Tous les rangs</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-rank-option" href="#" data-rank="gold">GOLD</a></li>
+                        <li><a class="dropdown-item js-rank-option" href="#" data-rank="platinum">PLATINUM</a></li>
+                        <li><a class="dropdown-item js-rank-option" href="#" data-rank="diamond">DIAMOND</a></li>
+                        <li><a class="dropdown-item js-rank-option" href="#" data-rank="master">MASTER</a></li>
+                    </ul>
+                </div>
+
+                <!-- Search Input -->
+                <div class="position-relative">
+                    <input type="text" id="offer-search" class="form-control form-control-sm text-white ps-5" placeholder="Rechercher une offre..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            #offer-search::placeholder {
+                color: white !important;
+                opacity: 0.7;
+            }
+            .btn-tc-outline {
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.2);
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            .btn-tc-outline:hover, .btn-tc-outline:focus {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            .dropdown-menu-dark .dropdown-item.active {
+                background-color: var(--tc-cyan, #0dcaf0);
+                color: #000;
+            }
+        </style>
+
+        <div class="row g-4" id="offer-list">
+            {% include 'frontoffice/offres/_offer_cards.html.twig' %}
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const offerList = document.getElementById('offer-list');
+    const searchInput = document.getElementById('offer-search');
+    
+    let debounceTimer;
+    let currentFilters = {
+        search: '',
+        game: 'all',
+        rank: 'all',
+        sort: 'date_desc'
+    };
+
+    const updateFilters = () => {
+        const params = new URLSearchParams();
+        
+        if (currentFilters.search) params.set('search', currentFilters.search);
+        if (currentFilters.game && currentFilters.game !== 'all') params.set('game', currentFilters.game);
+        if (currentFilters.rank && currentFilters.rank !== 'all') params.set('rank', currentFilters.rank);
+        if (currentFilters.sort && currentFilters.sort !== 'date_desc') params.set('sort', currentFilters.sort);
+        
+        offerList.style.opacity = '0.5';
+        
+        fetch(`${window.location.pathname}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            offerList.innerHTML = html;
+            offerList.style.opacity = '1';
+            window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+        })
+        .catch(error => {
+            console.error('Error fetching offers:', error);
+            offerList.style.opacity = '1';
+        });
+    };
+
+    // Search input
+    searchInput.addEventListener('input', () => {
+        currentFilters.search = searchInput.value;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updateFilters, 300);
+    });
+
+    // Sort dropdown
+    document.querySelectorAll('.js-sort-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentFilters.sort = e.target.dataset.sort;
+            document.getElementById('currentSortLabel').textContent = e.target.textContent;
+            
+            // Update active state
+            document.querySelectorAll('.js-sort-option').forEach(opt => opt.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            updateFilters();
+        });
+    });
+
+    // Game filter dropdown
+    document.querySelectorAll('.js-game-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentFilters.game = e.target.dataset.game;
+            document.getElementById('currentGameLabel').textContent = e.target.textContent;
+            
+            // Update active state
+            document.querySelectorAll('.js-game-option').forEach(opt => opt.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            updateFilters();
+        });
+    });
+
+    // Rank filter dropdown
+    document.querySelectorAll('.js-rank-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentFilters.rank = e.target.dataset.rank;
+            document.getElementById('currentRankLabel').textContent = e.target.textContent;
+            
+            // Update active state
+            document.querySelectorAll('.js-rank-option').forEach(opt => opt.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            updateFilters();
+        });
+    });
+
+    // Initialize from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('search')) {
+        currentFilters.search = urlParams.get('search');
+        searchInput.value = currentFilters.search;
+    }
+    if (urlParams.get('game')) {
+        currentFilters.game = urlParams.get('game');
+        const gameOption = document.querySelector(`[data-game="${currentFilters.game}"]`);
+        if (gameOption) {
+            document.getElementById('currentGameLabel').textContent = gameOption.textContent;
+            document.querySelectorAll('.js-game-option').forEach(opt => opt.classList.remove('active'));
+            gameOption.classList.add('active');
+        }
+    }
+    if (urlParams.get('rank')) {
+        currentFilters.rank = urlParams.get('rank');
+        const rankOption = document.querySelector(`[data-rank="${currentFilters.rank}"]`);
+        if (rankOption) {
+            document.getElementById('currentRankLabel').textContent = rankOption.textContent;
+            document.querySelectorAll('.js-rank-option').forEach(opt => opt.classList.remove('active'));
+            rankOption.classList.add('active');
+        }
+    }
+
+    // Favorite toggle functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.favorite-btn')) {
+            e.preventDefault();
+            const btn = e.target.closest('.favorite-btn');
+            const offerId = btn.dataset.offerId;
+            const icon = btn.querySelector('i');
+            const isFavorited = icon.classList.contains('bi-heart-fill');
+            
+            const url = isFavorited 
+                ? `/offres/${offerId}/unfavorite`
+                : `/offres/${offerId}/favorite`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Toggle icon
+                    if (isFavorited) {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    } else {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    }
+                } else {
+                    if (data.message === 'You must be logged in') {
+                        window.location.href = '/login';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

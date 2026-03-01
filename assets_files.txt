@@ -1,0 +1,8 @@
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\app.js
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\bootstrap.js
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\controllers.json
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\controllers\hello_controller.js
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\styles\app.css
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\vendor\installed.php
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\vendor\@hotwired\stimulus\stimulus.index.js
+C:\Users\PC\Desktop\TeamCraft-main\TeamCraft-main\assets\vendor\@hotwired\turbo\turbo.index.js

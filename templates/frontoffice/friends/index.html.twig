@@ -1,0 +1,278 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}My Friends - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        <h1 class="h2 fw-bold mb-4 text-white">Friends & Requests</h1>
+
+        <ul class="nav nav-tabs mb-4" id="friendsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="friends-tab" data-bs-toggle="tab" data-bs-target="#friends" type="button" role="tab">
+                    My Friends ({{ friends|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
+                    Received Requests
+                    {% if pendingReceived|length > 0 %}
+                        <span class="badge bg-danger ms-2">{{ pendingReceived|length }}</span>
+                    {% endif %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab">
+                    Sent Requests ({{ pendingSent|length }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="friendsTabContent">
+            <!-- Friend List -->
+            <div class="tab-pane fade show active" id="friends" role="tabpanel">
+                <div class="row g-3">
+                    {% for fr in friends %}
+                        {% set friend = (fr.sender == app.user) ? fr.receiver : fr.sender %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="discovery-card h-100">
+                                <div class="card-body d-flex align-items-center gap-3 p-3">
+                                    <a href="{{ path('app_profile_show', {id: friend.id}) }}" class="text-decoration-none">
+                                        <div class="discovery-avatar" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                            {% if friend.profilePicture %}
+                                                <img src="{{ asset(friend.profilePicture) }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;" alt="{{ friend.pseudo }}">
+                                            {% else %}
+                                                {{ friend.pseudo|first|upper }}
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                    <div>
+                                        <h5 class="discovery-card-title mb-1">
+                                            <a href="{{ path('app_profile_show', {id: friend.id}) }}" class="text-decoration-none text-white">{{ friend.pseudo }}</a>
+                                        </h5>
+                                        <small class="discovery-card-subtitle">Since {{ fr.createdAt|date('d M Y') }}</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        {# Chat or View Profile #}
+                                        <a href="{{ path('app_profile_show', {id: friend.id}) }}" class="btn btn-sm btn-tc-outline"><i class="bi bi-person"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12 text-center text-white-50">You have no friends yet. Go add some!</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Received Requests -->
+            <div class="tab-pane fade" id="received" role="tabpanel">
+                <div class="row g-3">
+                    {% for req in pendingReceived %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="discovery-card h-100">
+                                <div class="card-body d-flex align-items-center gap-3 p-3">
+                                    <a href="{{ path('app_profile_show', {id: req.sender.id}) }}" class="text-decoration-none">
+                                        <div class="discovery-avatar" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                            {% if req.sender.profilePicture %}
+                                                <img src="{{ asset(req.sender.profilePicture) }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;" alt="{{ req.sender.pseudo }}">
+                                            {% else %}
+                                                {{ req.sender.pseudo|first|upper }}
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                    <div>
+                                        <h5 class="discovery-card-title mb-1">
+                                            <a href="{{ path('app_profile_show', {id: req.sender.id}) }}" class="text-decoration-none text-white">{{ req.sender.pseudo }}</a>
+                                        </h5>
+                                        <small class="discovery-card-subtitle">Sent {{ req.createdAt|date('d M Y') }}</small>
+                                    </div>
+                                    <div class="ms-auto d-flex gap-2">
+                                        <button class="btn btn-sm btn-success js-req-action" data-id="{{ req.id }}" data-action="accept"><i class="bi bi-check"></i></button>
+                                        <button class="btn btn-sm btn-danger js-req-action" data-id="{{ req.id }}" data-action="decline"><i class="bi bi-x"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12 text-center text-white-50">No pending requests.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Sent Requests -->
+            <div class="tab-pane fade" id="sent" role="tabpanel">
+                <div class="row g-3">
+                    {% for req in pendingSent %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="discovery-card h-100">
+                                <div class="card-body d-flex align-items-center gap-3 p-3">
+                                    <a href="{{ path('app_profile_show', {id: req.receiver.id}) }}" class="text-decoration-none">
+                                        <div class="discovery-avatar" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                            {% if req.receiver.profilePicture %}
+                                                <img src="{{ asset(req.receiver.profilePicture) }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;" alt="{{ req.receiver.pseudo }}">
+                                            {% else %}
+                                                {{ req.receiver.pseudo|first|upper }}
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                    <div>
+                                        <h5 class="discovery-card-title mb-1">
+                                            <a href="{{ path('app_profile_show', {id: req.receiver.id}) }}" class="text-decoration-none text-white">{{ req.receiver.pseudo }}</a>
+                                        </h5>
+                                        <small class="discovery-card-subtitle">Sent {{ req.createdAt|date('d M Y') }}</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <button class="btn btn-sm btn-tc-outline js-req-action" data-id="{{ req.id }}" data-action="cancel">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12 text-center text-white-50">No sent requests.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Actions (Accept/Decline/Cancel)
+    document.querySelectorAll('.js-req-action').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const action = this.dataset.action;
+            const card = this.closest('.col-md-6');
+            const originalContent = this.innerHTML;
+            
+            // Show loading state
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            this.disabled = true;
+
+            fetch(`/friend/action/${id}/${action}`, { method: 'POST' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.status === 'updated' || data.status === 'removed') {
+                        if (action === 'accept' && data.friend) {
+                            // Add friend to My Friends tab dynamically
+                            addFriendToList(data.friend);
+                        }
+                        card.remove();
+                        // Update badge counts
+                        updateBadge();
+                        updateReceivedRequestsBadge();
+                    } else if (data.error) {
+                        alert(data.error);
+                        // Reset button on error
+                        this.innerHTML = originalContent;
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    // Reset button on error
+                    this.innerHTML = originalContent;
+                    this.disabled = false;
+                });
+        });
+    });
+
+    function addFriendToList(friend) {
+        const friendsContainer = document.querySelector('#friends .row');
+        if (!friendsContainer) return;
+        
+        const friendCard = document.createElement('div');
+        friendCard.className = 'col-md-6 col-lg-4';
+        friendCard.innerHTML = `
+            <div class="discovery-card h-100">
+                <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <a href="/profile/${friend.id}" class="text-decoration-none">
+                        <div class="discovery-avatar" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            ${friend.profilePicture ? 
+                                `<img src="/uploads/${friend.profilePicture}" class="w-100 h-100 rounded-circle" style="object-fit: cover;" alt="${friend.pseudo}">` :
+                                friend.pseudo.charAt(0).toUpperCase()
+                            }
+                        </div>
+                    </a>
+                    <div>
+                        <h5 class="discovery-card-title mb-1">
+                            <a href="/profile/${friend.id}" class="text-decoration-none text-white">${friend.pseudo}</a>
+                        </h5>
+                        <small class="discovery-card-subtitle">Since ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
+                    </div>
+                    <div class="ms-auto">
+                        <a href="/profile/${friend.id}" class="btn btn-sm btn-tc-outline"><i class="bi bi-person"></i></a>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to beginning of friends list with animation
+        friendsContainer.insertBefore(friendCard, friendsContainer.firstChild);
+        
+        // Switch to friends tab
+        const friendsTab = document.getElementById('friends-tab');
+        if (friendsTab) {
+            const tab = new bootstrap.Tab(friendsTab);
+            tab.show();
+        }
+    }
+
+    function updateReceivedRequestsBadge() {
+        const receivedTab = document.getElementById('received-tab');
+        if (!receivedTab) return;
+        
+        // Count remaining requests in the received tab
+        const remainingCards = document.querySelectorAll('#received .col-md-6').length;
+        const noRequestsMessage = document.querySelector('#received .text-center');
+        
+        // Find or create badge
+        let badge = receivedTab.querySelector('.badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'badge bg-danger ms-2';
+            receivedTab.appendChild(badge);
+        }
+        
+        if (remainingCards > 0 || (noRequestsMessage && noRequestsMessage.textContent.includes('No pending requests'))) {
+            // If there are cards or "No requests" message, update badge
+            if (remainingCards > 0) {
+                badge.textContent = remainingCards;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function updateBadge() {
+        fetch("{{ path('app_friend_count') }}")
+            .then(res => res.json())
+            .then(data => {
+               // Logic to update navbar badge if present
+               const badge = document.getElementById('nav-friend-badge');
+               if (badge) {
+                   if (data.count > 0) {
+                       badge.innerText = data.count;
+                       badge.style.display = 'inline-block';
+                   } else {
+                       badge.style.display = 'none';
+                   }
+               }
+            });
+    }
+});
+</script>
+{% endblock %}

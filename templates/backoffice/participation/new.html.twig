@@ -1,0 +1,22 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Créer une participation{% endblock %}
+{% block admin_subheading %}Ajouter une nouvelle participation.{% endblock %}
+
+{% block admin_content %}
+    <div class="mb-4">
+        <a href="{{ path('admin_events') }}" class="btn btn-sm btn-tc-outline d-inline-flex align-items-center">
+            <i class="bi bi-arrow-left me-2"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card-tc p-4 p-md-5 mx-auto" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; max-width: 900px; backdrop-filter: blur(10px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+        <div class="mb-4 border-bottom border-secondary pb-3">
+            <h2 class="h5 text-info mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle-fill"></i> Nouvelle Participation
+            </h2>
+        </div>
+        {{ include('backoffice/participation/_form.html.twig') }}
+    </div>
+{% endblock %}
+

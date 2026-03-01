@@ -1,0 +1,23 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block body %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card bg-dark text-white shadow-lg p-4" style="width: 100%; max-width: 450px; border: 1px solid #333;">
+        <h2 class="text-center mb-4">Nouveau mot de passe</h2>
+
+        {% for flash_error in app.flashes('reset_password_error') %}
+            <div class="alert alert-danger">{{ flash_error }}</div>
+        {% endfor %}
+
+        {{ form_start(resetForm) }}
+            <div class="mb-3">
+                {{ form_row(resetForm.plainPassword, {
+                    'label': 'Nouveau mot de passe',
+                    'attr': {'class': 'form-control bg-secondary text-white border-0'}
+                }) }}
+            </div>
+            <button type="submit" class="btn btn-success w-100 fw-bold">Mettre à jour le mot de passe</button>
+        {{ form_end(resetForm) }}
+    </div>
+</div>
+{% endblock %}

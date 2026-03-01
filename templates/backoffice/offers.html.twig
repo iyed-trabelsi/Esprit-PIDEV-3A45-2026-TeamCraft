@@ -1,0 +1,244 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des offres{% endblock %}
+{% block admin_subheading %}Liste de toutes les offres de recrutement avec leur jeu et statut.{% endblock %}
+
+{% block admin_content %}
+    <style>
+        .nav-tabs .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link:hover {
+            color: var(--tc-primary) !important;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--tc-primary) !important;
+            border-bottom: 3px solid var(--tc-primary) !important;
+            background: transparent !important;
+        }
+    </style>
+    {# Tab Navigation #}
+    <ul class="nav nav-tabs mb-4" id="offersTabs" role="tablist" style="border-bottom: 2px solid var(--tc-border);">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-content" type="button" role="tab" aria-controls="list-content" aria-selected="true" style="color: var(--tc-text); border: none; font-weight: 600; padding: 0.75rem 1.5rem;">
+                <i class="bi bi-list-ul me-2"></i>Liste des offres
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats-content" type="button" role="tab" aria-controls="stats-content" aria-selected="false" style="color: var(--tc-text); border: none; font-weight: 600; padding: 0.75rem 1.5rem;">
+                <i class="bi bi-bar-chart-fill me-2"></i>Statistiques
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="offersTabContent">
+        {# LIST TAB #}
+        <div class="tab-pane fade show active" id="list-content" role="tabpanel" aria-labelledby="list-tab">
+
+    <div class="discovery-filter-container mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-tc-outline text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                    <i class="bi bi-funnel me-1"></i> Filtrer
+                </button>
+                <button class="btn btn-tc-primary text-uppercase fw-bold" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                    <i class="bi bi-plus-lg me-1"></i> Nouvelle offre
+                </button>
+            </div>
+
+            <div class="discovery-search-wrapper" style="min-width: 300px;">
+                <i class="bi bi-search discovery-search-icon"></i>
+                <input type="search" class="form-control discovery-search-input" placeholder="Recherche par titre, équipe ou jeu">
+            </div>
+        </div>
+    </div>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Titre</th>
+                        <th class="border-0 px-4 py-3">Équipe / Structure</th>
+                        <th class="border-0 px-4 py-3">Jeu</th>
+                        <th class="border-0 px-4 py-3">Statut</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for offer in offers %}
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">{{ offer.title }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ offer.team.name }}</td>
+                            <td class="px-4 py-3 bg-input-match">{{ offer.game }}</td>
+                            <td class="px-4 py-3 bg-input-match">
+                                {% if offer.dateExpiration > date() %}
+                                    <span class="badge-status badge-online">Active</span>
+                                {% else %}
+                                    <span class="badge-status bg-secondary">Expirée</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-end bg-input-match">
+
+
+                                <a href="{{ path('app_offres_show', {'id': offer.id}) }}" class="action-btn view d-inline-block" title="Consulter">
+                                    <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                </a>
+                                <form method="post" action="{{ path('offer_delete', {'id': offer.id}) }}" onsubmit="return confirm('Are you sure you want to delete this offer?');" class="d-inline-block">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_offer_' ~ offer.id) }}">
+                                    <input type="hidden" name="redirect" value="admin">
+                                    <button type="submit" class="action-btn delete border-0 bg-transparent" title="Supprimer">
+                                        <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">Affichage de {{ offers|length }} sur {{ totalOffers }} offres</span>
+        <nav aria-label="Pagination offres">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_offers', {page: currentPage - 1}) }}">Précédent</a>
+                </li>
+                
+                {% for i in 1..maxPages %}
+                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_offers', {page: i}) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                
+                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_offers', {page: currentPage + 1}) }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+        </div>{# End list-content #}
+
+        {# STATISTICS TAB #}
+        <div class="tab-pane fade" id="stats-content" role="tabpanel" aria-labelledby="stats-tab">
+            <div class="row g-4">
+                {# Summary Cards #}
+                <div class="col-md-4">
+                    <div class="card-tc p-4 text-center" style="border-left: 4px solid #22c55e;">
+                        <div class="small text-muted text-uppercase mb-2 fw-bold">Acceptées</div>
+                        <div class="h2 text-white fw-bold mb-0">{{ stats.accepted }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-tc p-4 text-center" style="border-left: 4px solid #ef4444;">
+                        <div class="small text-muted text-uppercase mb-2 fw-bold">Refusées</div>
+                        <div class="h2 text-white fw-bold mb-0">{{ stats.refused }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-tc p-4 text-center" style="border-left: 4px solid #f59e0b;">
+                        <div class="small text-muted text-uppercase mb-2 fw-bold">En attente</div>
+                        <div class="h2 text-white fw-bold mb-0">{{ stats.pending }}</div>
+                    </div>
+                </div>
+
+                {# Donut Chart #}
+                <div class="col-lg-6">
+                    <div class="card-tc p-4">
+                        <h5 class="text-white fw-bold mb-4">Répartition des candidatures</h5>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="statusDonutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {# Bar Chart #}
+                <div class="col-lg-6">
+                    <div class="card-tc p-4">
+                        <h5 class="text-white fw-bold mb-4">Statistiques par statut</h5>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="statusBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>{# End stats-content #}
+    </div>{# End tab-content #}
+
+    {# Chart.js Library #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Donut Chart
+        const donutCtx = document.getElementById('statusDonutChart');
+        if (donutCtx) {
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Acceptées', 'Refusées', 'En attente'],
+                    datasets: [{
+                        data: [{{ stats.accepted }}, {{ stats.refused }}, {{ stats.pending }}],
+                        backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#fff',
+                                padding: 20,
+                                font: { size: 13, weight: '600' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Bar Chart
+        const barCtx = document.getElementById('statusBarChart');
+        if (barCtx) {
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Acceptées', 'Refusées', 'En attente'],
+                    datasets: [{
+                        label: 'Nombre de candidatures',
+                        data: [{{ stats.accepted }}, {{ stats.refused }}, {{ stats.pending }}],
+                        backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { 
+                                color: '#9ca3af',
+                                stepSize: 1
+                            },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff', font: { weight: '600' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}
+
+

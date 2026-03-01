@@ -1,0 +1,13 @@
+<div style="background-color: #1a1a1a; padding: 20px; font-family: sans-serif; color: #ffffff; text-align: center;">
+    <h1 style="color: #007bff;">TeamCraft</h1>
+    <h2>Réinitialisation de mot de passe</h2>
+    <p>Bonjour,</p>
+    <p>Vous avez demandé un changement de mot de passe. Cliquez sur le bouton ci-dessous pour continuer :</p>
+    <div style="margin: 30px 0;">
+        <a href="{{ url('app_reset_password', {token: resetToken.token}) }}" 
+           style="background-color: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Changer mon mot de passe
+        </a>
+    </div>
+    <p style="font-size: 12px; color: #888;">Ce lien expirera dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.</p>
+</div>

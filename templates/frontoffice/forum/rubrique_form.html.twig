@@ -1,0 +1,284 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}{{ is_edit ? 'Modifier' : 'Nouvelle rubrique' }} - Forum TEAMCRAFT{% endblock %}
+
+{% block flash_messages %}
+    {{ parent() }}
+    {% if toxic_error is defined and toxic_error %}
+        <div class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 border-0 alert-warning-custom" role="alert" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; font-weight: 600; font-size: 1.05rem; padding: 1.25rem 3rem 1.25rem 1.5rem; border-left: 5px solid #b45309; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+            {{ toxic_error|raw }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1 d-flex flex-column justify-content-center">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_forum') }}" class="text-secondary text-decoration-none">Forum</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ is_edit ? 'Modifier' : 'Nouvelle rubrique' }}</li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card bg-dark border-0 shadow-lg text-white" style="border-radius: 1rem; background: #1a1a1a;">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-5">
+                            <h1 class="h2 fw-bold mb-2 text-white">{{ is_edit ? 'Modifier la rubrique' : 'Nouvelle rubrique' }}</h1>
+                            <p class="text-white-50">{{ is_edit ? 'Modifiez les informations de la rubrique' : 'Créez une rubrique pour organiser les discussions du forum' }}</p>
+                        </div>
+                        {% if existingRubrique is defined and existingRubrique %}
+                            <div class="alert alert-warning border-0 d-flex align-items-center mb-4" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="alert-heading fw-bold mb-1">Rubrique existante</h6>
+                                    <p class="mb-0">Une rubrique avec ce nom existe déjà. 
+                                        <a href="{{ path('app_forum_rubrique_show', { id: existingRubrique.id }) }}" class="fw-bold text-dark text-decoration-underline">Accéder à la rubrique</a>
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {{ form_start(form) }}
+                            <div class="mb-4">
+                                {{ form_label(form.nomRubrique, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.nomRubrique, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.nomRubrique) }}
+                            </div>
+                            <div class="mb-4">
+                                {{ form_label(form.description, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control bg-black text-white border-secondary'}}) }}
+                                {{ form_errors(form.description) }}
+                            </div>
+                            <div class="mb-4">
+                                {{ form_label(form.topicSelect, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.topicSelect) }}
+                                {{ form_errors(form.topicSelect) }}
+                            </div>
+
+                            <div class="mb-5" id="topic-input-container">
+                                {{ form_label(form.topic, 'Nouveau sujet (ou sujet sélectionné)', {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                {{ form_widget(form.topic, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'placeholder': 'Entrez le nom du sujet...'}}) }}
+                                {{ form_errors(form.topic) }}
+                            </div>
+
+                            <div class="mb-4">
+                                {{ form_label(form.image, null, {'label_attr': {'class': 'form-label text-white-50'}}) }}
+                                <div class="input-group mb-2">
+                                    {{ form_widget(form.image, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'id': 'rubrique_image_upload'}}) }}
+                                    <button type="button" id="btn-generate-ai-image" class="btn btn-tc-outline d-flex align-items-center gap-2" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                        <i class="bi bi-stars"></i>
+                                        <span id="generate-btn-text">Générer avec IA</span>
+                                        <span id="generate-loader" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    </button>
+                                </div>
+                                <small class="text-white-50 d-block mb-3">{{ form_help(form.image) }}</small>
+                                <!-- Image Preview & AI Controls -->
+                                <div id="image-preview-container" class="{{ (is_edit and rubrique.image) ? 'mt-3' : 'd-none mt-3' }}">
+                                    <div class="position-relative">
+                                        <img id="image-preview" src="{{ (is_edit and rubrique.image) ? asset('uploads/rubriques/' ~ rubrique.image) : '' }}" alt="Preview" class="img-fluid rounded w-100" style="max-height: 300px; border: 2px solid var(--tc-cyan); object-fit: cover;">
+                                        <div class="position-absolute top-0 end-0 p-2 d-flex gap-2">
+                                            <button type="button" id="btn-delete-image" class="btn btn-danger btn-sm shadow-sm" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2 mt-2">
+                                        <button type="button" id="btn-regenerate-ai" class="btn btn-tc-outline btn-sm d-flex align-items-center gap-2">
+                                            <i class="bi bi-arrow-clockwise"></i> Regenerate
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-2" id="btn-keep-image">
+                                            <i class="bi bi-check-lg"></i> Keep this logo
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="generated-image-filename" name="generated_image_filename" value="">
+                                    <input type="hidden" id="delete-current-image" name="delete_current_image" value="0">
+                                </div>
+                                {{ form_errors(form.image) }}
+                            </div>
+
+                            <div class="d-grid gap-3 d-md-flex justify-content-md-between align-items-center">
+                                <a href="{{ is_edit ? path('app_forum_rubrique_show', { id: rubrique.id }) : path('app_forum') }}" class="btn btn-outline-danger px-4">Cancel</a>
+                                <button type="submit" class="btn btn-success px-5 fw-bold">{{ is_edit ? 'Enregistrer' : 'Créer la rubrique' }}</button>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const topicSelect = document.getElementById('rubrique_topicSelect');
+            const topicInput = document.getElementById('rubrique_topic');
+            const topicInputContainer = document.getElementById('topic-input-container');
+
+            function toggleInput() {
+                if (topicSelect.value) {
+                    topicInput.value = '';
+                    topicInput.removeAttribute('required');
+                    topicInputContainer.style.display = 'none';
+                } else {
+                    topicInputContainer.style.display = 'block';
+                    topicInput.focus();
+                }
+            }
+
+            if (topicInput.value) {
+                let found = false;
+                for(let i=0; i<topicSelect.options.length; i++) {
+                    if (topicSelect.options[i].value === topicInput.value) {
+                        topicSelect.selectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    topicSelect.value = ''; 
+                }
+            }
+            toggleInput();
+
+            topicSelect.addEventListener('change', toggleInput);
+            
+            topicInput.addEventListener('input', function() {
+                topicSelect.value = ''; 
+                for(let i=0; i<topicSelect.options.length; i++) {
+                    if (topicSelect.options[i].value === topicInput.value) {
+                        topicSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            });
+
+            // AI Image Generation and Preview Logic
+            const btnGenerateAI = document.getElementById('btn-generate-ai-image');
+            const btnRegenerateAI = document.getElementById('btn-regenerate-ai');
+            const btnDeleteImage = document.getElementById('btn-delete-image');
+            const btnKeepImage = document.getElementById('btn-keep-image');
+            
+            const generateLoader = document.getElementById('generate-loader');
+            const generateBtnText = document.getElementById('generate-btn-text');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const generatedImageFilename = document.getElementById('generated-image-filename');
+            const imageUploadInput = document.getElementById('rubrique_image_upload');
+            const nameInput = document.getElementById('rubrique_nomRubrique');
+            const descriptionInput = document.getElementById('rubrique_description');
+
+            // Initial state for generate button: only hide if preview is actually shown
+            if (!imagePreviewContainer.classList.contains('d-none')) {
+                btnGenerateAI.classList.add('d-none');
+            }
+
+            function clearImage() {
+                imagePreview.src = '';
+                imagePreviewContainer.classList.add('d-none');
+                generatedImageFilename.value = '';
+                imageUploadInput.value = '';
+                document.getElementById('delete-current-image').value = '1';
+                btnGenerateAI.classList.remove('d-none');
+            }
+
+            async function generateImage() {
+                const name = nameInput.value.trim();
+                const description = descriptionInput.value.trim();
+
+                if (!name) {
+                    alert('Veuillez saisir un nom de rubrique avant de générer une image.');
+                    nameInput.focus();
+                    return;
+                }
+
+                // Show loading state
+                generateLoader.classList.remove('d-none');
+                const originalText = generateBtnText.textContent;
+                generateBtnText.textContent = 'Génération...';
+                btnGenerateAI.disabled = true;
+                if (btnRegenerateAI) btnRegenerateAI.disabled = true;
+
+                try {
+                    const response = await fetch('/forum/api/rubrique/generate-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            description: description
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        imagePreview.src = data.url;
+                        imagePreviewContainer.classList.remove('d-none');
+                        generatedImageFilename.value = data.filename;
+                        imageUploadInput.value = '';
+                        document.getElementById('delete-current-image').value = '0';
+                        // Hide main generate button when preview is visible
+                        btnGenerateAI.classList.add('d-none');
+                    } else {
+                        alert('Erreur: ' + (data.error || 'Impossible de générer l\'image'));
+                    }
+                } catch (error) {
+                    console.error('AI Generation Error:', error);
+                    alert('Une erreur est survenue lors de la génération de l\'image.');
+                } finally {
+                    generateLoader.classList.add('d-none');
+                    generateBtnText.textContent = originalText;
+                    btnGenerateAI.disabled = false;
+                    if (btnRegenerateAI) btnRegenerateAI.disabled = false;
+                }
+            }
+
+            if (btnGenerateAI) btnGenerateAI.addEventListener('click', generateImage);
+            if (btnRegenerateAI) btnRegenerateAI.addEventListener('click', generateImage);
+            
+            if (btnDeleteImage) {
+                btnDeleteImage.addEventListener('click', function() {
+                    if (confirm('Voulez-vous supprimer cette image ?')) {
+                        clearImage();
+                    }
+                });
+            }
+
+            if (btnKeepImage) {
+                btnKeepImage.addEventListener('click', function() {
+                    // Visual confirmation
+                    this.innerHTML = '<i class="bi bi-check-all"></i> Image Saved';
+                    this.classList.replace('btn-success', 'btn-primary');
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="bi bi-check-lg"></i> Keep this logo';
+                        this.classList.replace('btn-primary', 'btn-success');
+                    }, 2000);
+                });
+            }
+
+            if (imageUploadInput) {
+                imageUploadInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            imagePreviewContainer.classList.remove('d-none');
+                            generatedImageFilename.value = ''; 
+                            document.getElementById('delete-current-image').value = '0';
+                            btnGenerateAI.classList.add('d-none');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

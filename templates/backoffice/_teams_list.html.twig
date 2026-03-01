@@ -1,0 +1,76 @@
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Équipe</th>
+                        <th class="border-0 px-4 py-3">Jeu</th>
+                        <th class="border-0 px-4 py-3">Niveau</th>
+                        <th class="border-0 px-4 py-3">Statut</th>
+                        <th class="border-0 px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for team in teams %}
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">
+                                {% if team.logo %}
+                                    <img src="{{ asset('uploads/teams/' ~ team.logo) }}" alt="Logo" class="rounded-circle me-2" width="24" height="24">
+                                {% endif %}
+                                {{ team.name }}
+                            </td>
+                            <td class="px-4 py-3 bg-input-match">
+                                {% for game in team.games %}
+                                    <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25">{{ game }}</span>
+                                {% endfor %}
+                            </td>
+                            <td class="px-4 py-3 bg-input-match">Community</td>
+                            <td class="px-4 py-3 bg-input-match">
+                                <span class="badge-status badge-online">Active</span>
+                            </td>
+                            <td class="px-4 py-3 text-end bg-input-match">
+                                <button type="button" class="action-btn view border-0 bg-transparent" title="Consulter" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#teamDetailsModal"
+                                        data-name="{{ team.name }}"
+                                        data-logo="{{ team.logo ? asset('uploads/teams/' ~ team.logo) : asset('images/default-team.png') }}"
+                                        data-games="{{ team.games|join(', ') }}"
+                                        data-owner="{{ team.owner.pseudo|default('Unknown') }}"
+                                        data-created="{{ team.createdAt|date('d M Y') }}">
+                                    <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                </button>
+                                
+                                <form method="post" action="{{ path('team_delete', {'id': team.id, 'redirect': 'admin'}) }}" class="d-inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette équipe ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_team_' ~ team.id) }}">
+                                    <button type="submit" class="action-btn delete border-0 bg-transparent" title="Supprimer">
+                                        <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+        <span class="small text-muted">Affichage de {{ teams|length }} sur {{ totalTeams }} équipes</span>
+        <nav aria-label="Pagination équipes">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_teams', app.request.query.all|merge({page: currentPage - 1})) }}">Précédent</a>
+                </li>
+                
+                {% for i in 1..maxPages %}
+                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('admin_teams', app.request.query.all|merge({page: i})) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                
+                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('admin_teams', app.request.query.all|merge({page: currentPage + 1})) }}">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+    </div>

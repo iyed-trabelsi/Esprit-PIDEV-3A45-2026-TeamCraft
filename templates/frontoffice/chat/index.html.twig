@@ -1,0 +1,686 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Chat{% if recipient is defined %} with {{ recipient.pseudo }}{% endif %} - TEAMCRAFT{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <style>
+        /* Custom Scrollbar */
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 3px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+
+        /* Message Bubbles */
+        .message-bubble {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .message-bubble:hover {
+            transform: translateY(-1px);
+        }
+        .message-sent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message-received {
+            background: #2d3748; /* Dark grey */
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Chat Layout */
+        .chat-container {
+            height: calc(100vh - 160px); /* Adjust based on navbar/footer */
+            min-height: 500px;
+        }
+        .card-chat {
+            background: #1a202c; /* Very dark blue/grey */
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        .chat-header {
+            background: #1a202c;
+            border-bottom: 1px solid #2d3748;
+            padding: 15px 20px;
+        }
+        .chat-input-area {
+            background: #1a202c;
+            border-top: 1px solid #2d3748;
+            padding: 20px;
+        }
+        .form-control-chat {
+            background: #2d3748;
+            border: 1px solid transparent;
+            color: white;
+            border-radius: 20px;
+            padding-left: 20px;
+        }
+        .form-control-chat:focus {
+            background: #2d3748;
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+        .btn-send {
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .contact-list-item {
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .contact-list-item:hover {
+            background: #2d3748;
+        }
+        /* Time stamp font */
+        .msg-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        /* Kebab menu styling */
+        .message-bubble .dropdown {
+            opacity: 1; /* Always visible */
+        }
+        .message-bubble .dropdown button {
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            padding: 2px 6px !important;
+            transition: background 0.2s;
+        }
+        .message-bubble .dropdown button:hover {
+            background: rgba(0,0,0,0.5);
+        }
+    </style>
+
+    <section class="container py-4 flex-grow-1">
+        <div class="row chat-container">
+            <!-- Sidebar / Contacts (Hidden on small screens if focus is chat?? Maybe keep simple) -->
+            <div class="col-md-4 col-lg-3 d-none d-md-block h-100">
+                 <div class="card-chat h-100 d-flex flex-column">
+                     <div class="chat-header">
+                         <h5 class="mb-0 text-white fw-bold">Conversations</h5>
+                     </div>
+                     <div class="list-group list-group-flush chat-scroll overflow-auto flex-grow-1 px-2 py-2">
+                         <a href="{{ path('app_profile') }}" class="contact-list-item list-group-item bg-transparent text-white-50 border-0 rounded mb-1">
+                             <div class="d-flex align-items-center gap-3">
+                                 <div class="d-flex align-items-center justify-content-center bg-secondary rounded-circle" style="width: 40px; height: 40px;">
+                                     <i class="bi bi-arrow-left"></i>
+                                 </div>
+                                 <span class="fw-medium">Back to Profile</span>
+                             </div>
+                         </a>
+                         
+                        {# Friend List #}
+                        {% if friends is defined and friends|length > 0 %}
+                            <small class="text-white-50 px-3 py-2 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">FRIENDS</small>
+                            {% for friend in friends %}
+                                <a href="{{ path('app_chat_conversation', {'id': friend.id}) }}" class="contact-list-item list-group-item bg-transparent {{ recipient is defined and recipient.id == friend.id ? 'active bg-primary bg-opacity-25' : 'text-white-50' }} border-0 rounded mb-1 px-3 py-2">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="position-relative">
+                                            {% if friend.profilePicture %}
+                                                <img src="{{ asset(friend.profilePicture) }}" alt="{{ friend.pseudo }}" class="rounded-circle border border-dark" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="d-flex align-items-center justify-content-center bg-dark rounded-circle text-white fw-bold border border-secondary" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                                    {{ friend.pseudo|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                            <span class="position-absolute bottom-0 end-0 p-1 bg-{{ friend.isActive ? 'success' : 'secondary' }} border border-dark rounded-circle">
+                                                <span class="visually-hidden">Status</span>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-column text-truncate">
+                                            <span class="fw-medium text-white {{ recipient is defined and recipient.id == friend.id ? 'text-white' : '' }} text-truncate" style="max-width: 140px;">{{ friend.pseudo }}</span>
+                                            <small class="{{ recipient is defined and recipient.id == friend.id ? 'text-white-50' : 'text-secondary' }}" style="font-size: 0.75rem;">
+                                               {{ friend.isActive ? 'Online' : 'Offline' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                             <div class="text-white-50 small p-3 text-center mt-4">
+                                 <i class="bi bi-people mb-2 d-block h4 opacity-50"></i>
+                                 No friends yet. <br>
+                                 <a href="{{ path('app_profile') }}" class="text-info text-decoration-none">Add friends</a> to start chatting.
+                             </div>
+                        {% endif %}
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Chat Window -->
+            <!-- Chat Window -->
+            <div class="col-md-8 col-lg-9 h-100">
+                <div class="card-chat h-100 d-flex flex-column">
+                    {% if recipient is defined %}
+                        <!-- Header -->
+                        <div class="chat-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                 <div class="rounded-circle bg-dark border border-secondary d-flex align-items-center justify-content-center text-white overflow-hidden" style="width: 45px; height: 45px;">
+                                     {% if recipient.profilePicture %}
+                                         <img src="{{ recipient.profilePicture }}" class="w-100 h-100" style="object-fit: cover;">
+                                     {% else %}
+                                         <span class="fs-5">{{ recipient.pseudo|first|upper }}</span>
+                                     {% endif %}
+                                 </div>
+                                 <div>
+                                     <h5 class="mb-0 text-white fw-bold">{{ recipient.pseudo }}</h5>
+                                     <small class="text-success"><i class="bi bi-circle-fill" style="font-size: 8px;"></i> Online</small>
+                                 </div>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-link text-white-50" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark">
+                                    <li><a class="dropdown-item" href="{{ path('app_profile_show', {id: recipient.id}) }}">View Profile</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Messages -->
+                        <div class="card-body chat-scroll overflow-auto d-flex flex-column gap-3 p-4" id="chat-messages" style="background: #171923;">
+                            {% for msg in messages %}
+                                <div class="d-flex w-100 {{ msg.sender == app.user ? 'justify-content-end' : 'justify-content-start' }}" id="msg-container-{{ msg.id }}">
+                                    <div class="message-bubble {{ msg.sender == app.user ? 'message-sent' : 'message-received' }} text-start">
+                                        <span class="msg-time {{ msg.sender == app.user ? 'text-end text-white-50' : 'text-start text-white-50' }}">
+                                            {{ msg.sender == app.user ? 'You' : msg.sender.pseudo }} • {{ msg.createdAt|date('H:i') }}
+                                        </span>
+                                        
+                                        {# Display attachment if present #}
+                                        {% if msg.attachment %}
+                                            <div class="d-flex align-items-start gap-2">
+                                                <div class="flex-grow-1">
+                                                    {% if msg.attachmentType == 'image' %}
+                                                        <div class="mb-2">
+                                                            <img src="{{ msg.attachment }}" alt="{{ msg.content }}" class="img-fluid rounded" style="max-width: 300px; max-height: 300px; cursor: pointer;" onclick="window.open(this.src, '_blank')">
+                                                        </div>
+                                                        <small class="text-white-50">{{ msg.content }}</small>
+                                                    {% elseif msg.attachmentType == 'video' %}
+                                                        <div class="mb-2">
+                                                            <video controls class="rounded" style="max-width: 300px;">
+                                                                <source src="{{ msg.attachment }}" type="video/mp4">
+                                                            </video>
+                                                        </div>
+                                                        <small class="text-white-50">{{ msg.content }}</small>
+                                                    {% else %}
+                                                        <a href="{{ msg.attachment }}" target="_blank" class="text-white d-flex align-items-center gap-2 text-decoration-none">
+                                                            <i class="bi bi-file-earmark-{{ msg.attachmentType == 'pdf' ? 'pdf' : 'text' }} fs-4"></i>
+                                                            <span>{{ msg.content }}</span>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                {# Delete button for attachments (only for sender) #}
+                                                {% if msg.sender == app.user %}
+                                                    <div class="dropdown">
+                                                         <button class="btn btn-sm btn-link text-white-50 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="line-height: 1;">
+                                                             <i class="bi bi-three-dots-vertical" style="font-size: 0.9rem;"></i>
+                                                         </button>
+                                                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="min-width: 120px;">
+                                                             <li><a class="dropdown-item delete-msg-btn small text-danger" href="#" data-id="{{ msg.id }}"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                                                         </ul>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            {# Message content with inline kebab menu #}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="msg-content flex-grow-1" id="msg-content-{{ msg.id }}">{{ msg.content }}</span>
+                                                
+                                                {% if msg.sender == app.user %}
+                                                    <div class="dropdown">
+                                                         <button class="btn btn-sm btn-link text-white-50 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="line-height: 1;">
+                                                             <i class="bi bi-three-dots-vertical" style="font-size: 0.9rem;"></i>
+                                                         </button>
+                                                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="min-width: 120px;">
+                                                             <li><a class="dropdown-item edit-msg-btn small" href="#" data-id="{{ msg.id }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                                                             <li><a class="dropdown-item delete-msg-btn small text-danger" href="#" data-id="{{ msg.id }}"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                                                         </ul>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-white-50 mt-auto mb-auto">
+                                    <div class="mb-3"><i class="bi bi-chat-square-heart display-4 opacity-50"></i></div>
+                                    <p>No messages yet. Say hello!</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Input -->
+                        <div class="chat-input-area position-relative">
+                            <!-- Emoji Picker -->
+                            <div id="emoji-picker" class="position-absolute bg-dark border border-secondary rounded-3 p-3 shadow-lg" style="bottom: 70px; left: 10px; display: none; width: 350px; z-index: 1050;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-white-50 fw-bold">SELECT EMOJI</small>
+                                    <button type="button" id="close-emoji-picker" class="btn-close btn-close-white btn-sm" aria-label="Close"></button>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1 p-2 rounded" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.3);">
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😀">😀</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😃">😃</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😄">😄</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😁">😁</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😆">😆</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😅">😅</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤣">🤣</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😂">😂</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🙂">🙂</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😉">😉</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😊">😊</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😇">😇</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🥰">🥰</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😍">😍</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤩">🤩</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😘">😘</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😗">😗</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😚">😚</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😙">😙</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🥲">🥲</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😋">😋</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😛">😛</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😜">😜</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤪">🤪</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😝">😝</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤑">🤑</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤗">🤗</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤭">🤭</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤫">🤫</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤔">🤔</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😐">😐</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😑">😑</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😶">😶</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😏">😏</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😒">😒</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🙄">🙄</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😬">😬</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😮‍💨">😮‍💨</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😤">😤</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😠">😠</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😡">😡</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤬">🤬</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😈">😈</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👿">👿</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💀">💀</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="☠️">☠️</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💩">💩</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤡">🤡</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👹">👹</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👺">👺</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👻">👻</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👽">👽</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤖">🤖</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😺">😺</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😸">😸</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😹">😹</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😻">😻</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😼">😼</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😽">😽</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🙀">🙀</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😿">😿</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="😾">😾</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="❤️">❤️</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🧡">🧡</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💛">💛</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💚">💚</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💙">💙</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💜">💜</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🖤">🖤</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤍">🤍</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤎">🤎</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💔">💔</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="❤️‍🔥">❤️‍🔥</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💯">💯</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💢">💢</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💥">💥</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💫">💫</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💦">💦</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💨">💨</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🔥">🔥</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="⭐">⭐</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🌟">🌟</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="✨">✨</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="⚡">⚡</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👍">👍</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👎">👎</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👊">👊</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="✊">✊</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤛">🤛</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤜">🤜</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤞">🤞</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="✌️">✌️</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤟">🤟</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤘">🤘</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👌">👌</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤌">🤌</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤏">🤏</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👈">👈</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👉">👉</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👆">👆</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👇">👇</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="☝️">☝️</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="✋">✋</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤚">🤚</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🖐️">🖐️</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🖖">🖖</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="👋">👋</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🤙">🤙</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="💪">💪</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🎮">🎮</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🕹️">🕹️</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🎯">🎯</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🏆">🏆</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🥇">🥇</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🥈">🥈</button>
+                                    <button type="button" class="btn btn-sm emoji-btn" data-emoji="🥉">🥉</button>
+                                </div>
+                            </div>
+                            
+                            <form id="chat-form" class="d-flex gap-3 align-items-center">
+                                <input type="file" id="file-input" class="d-none" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                                <button type="button" id="emoji-btn" class="btn btn-link text-white-50 p-0"><i class="bi bi-emoji-smile fs-5"></i></button>
+                                <button type="button" id="file-upload-btn" class="btn btn-link text-white-50 p-0"><i class="bi bi-paperclip fs-5"></i></button>
+                                <input type="text" id="chat-input" class="form-control form-control-chat" placeholder="Type your message..." autocomplete="off">
+                                <button type="submit" class="btn btn-send shadow">
+                                    <i class="bi bi-send-fill text-white small"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center p-5">
+                            <i class="bi bi-chat-square-text text-white-50 display-1 mb-4 opacity-50"></i>
+                            <h3 class="text-white fw-bold mb-3">Welcome to TeamCraft Chat</h3>
+                            <p class="text-white-50 mb-0">Select a friend from the list on the left to start a conversation.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Friend search functionality
+    const searchInput = document.getElementById('friend-search');
+    const friendItems = document.querySelectorAll('.contact-list-item');
+
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+
+            friendItems.forEach(item => {
+                const name = item.querySelector('.fw-medium').textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    {% if recipient is defined %}
+    const chatBox = document.getElementById('chat-messages');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('chat-input');
+    const recipientId = {{ recipient.id }};
+
+    // Send Message
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const content = input.value.trim();
+            if (!content) return;
+
+            // ... (rest of the send message logic)
+            fetch(`/chat/send/${recipientId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Add message to chat
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'd-flex w-100 justify-content-end';
+                    msgDiv.id = `msg-container-${data.message.id}`;
+                    msgDiv.innerHTML = `
+                        <div class="message-bubble message-sent text-start">
+                            <span class="msg-time text-end text-white-50">You • ${data.message.createdAt}</span>
+                             <div class="d-flex align-items-center gap-2">
+                                <span class="msg-content flex-grow-1" id="msg-content-${data.message.id}">${data.message.content}</span>
+                                <div class="dropdown">
+                                     <button class="btn btn-sm btn-link text-white-50 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="line-height: 1;">
+                                         <i class="bi bi-three-dots-vertical" style="font-size: 0.9rem;"></i>
+                                     </button>
+                                     <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="min-width: 120px;">
+                                         <li><a class="dropdown-item edit-msg-btn small" href="#" data-id="${data.message.id}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                                         <li><a class="dropdown-item delete-msg-btn small text-danger" href="#" data-id="${data.message.id}"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    chatBox.appendChild(msgDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    input.value = '';
+                }
+            });
+        });
+    }
+
+    // ... (rest of the JS code for attachments, emoji, etc.)
+    // File Upload Handling
+    const fileInput = document.getElementById('file-input');
+    const fileBtn = document.getElementById('file-upload-btn');
+
+    if (fileBtn && fileInput) {
+        fileBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch(`/chat/upload/${recipientId}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Create message element logic (simplified for brevity, should match existing)
+                         const msgDiv = document.createElement('div');
+                        msgDiv.className = 'd-flex w-100 justify-content-end';
+                        msgDiv.id = `msg-container-${data.message.id}`;
+                        
+                        let attachmentHtml = '';
+                        if (data.message.attachmentType === 'image') {
+                            attachmentHtml = `<div class="mb-2"><img src="${data.message.attachment}" class="img-fluid rounded" style="max-width: 300px; cursor: pointer;" onclick="window.open(this.src, '_blank')"></div><small class="text-white-50">${data.message.content}</small>`;
+                        } else if (data.message.attachmentType === 'video') {
+                             attachmentHtml = `<div class="mb-2"><video controls class="rounded" style="max-width: 300px;"><source src="${data.message.attachment}" type="video/mp4"></video></div><small class="text-white-50">${data.message.content}</small>`;
+                        } else {
+                            attachmentHtml = `<a href="${data.message.attachment}" target="_blank" class="text-white d-flex align-items-center gap-2 text-decoration-none"><i class="bi bi-file-earmark-text fs-4"></i><span>${data.message.content}</span></a>`;
+                        }
+
+                        msgDiv.innerHTML = `
+                            <div class="message-bubble message-sent text-start">
+                                <span class="msg-time text-end text-white-50">You • ${data.message.createdAt}</span>
+                                <div class="d-flex align-items-start gap-2">
+                                    <div class="flex-grow-1">${attachmentHtml}</div>
+                                     <div class="dropdown">
+                                         <button class="btn btn-sm btn-link text-white-50 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="line-height: 1;">
+                                             <i class="bi bi-three-dots-vertical" style="font-size: 0.9rem;"></i>
+                                         </button>
+                                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="min-width: 120px;">
+                                             <li><a class="dropdown-item delete-msg-btn small text-danger" href="#" data-id="${data.message.id}"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                                         </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        chatBox.appendChild(msgDiv);
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                        this.value = ''; // Reset input
+                    } else {
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    }
+
+    // Emoji Picker Handling
+    const emojiBtn = document.getElementById('emoji-btn');
+    const emojiPicker = document.getElementById('emoji-picker');
+    const closeEmojiPicker = document.getElementById('close-emoji-picker');
+    const chatInput = document.getElementById('chat-input');
+
+    if (emojiBtn && emojiPicker && closeEmojiPicker) {
+        // Toggle emoji picker
+        emojiBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Close button
+        closeEmojiPicker.addEventListener('click', function() {
+            emojiPicker.style.display = 'none';
+        });
+
+        // Close emoji picker when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+                emojiPicker.style.display = 'none';
+            }
+        });
+
+        // Insert emoji into input
+        document.querySelectorAll('.emoji-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const emoji = this.dataset.emoji;
+                if (chatInput) { // Ensure chatInput exists
+                    const cursorPos = chatInput.selectionStart;
+                    const textBefore = chatInput.value.substring(0, cursorPos);
+                    const textAfter = chatInput.value.substring(cursorPos);
+                    
+                    chatInput.value = textBefore + emoji + textAfter;
+                    chatInput.focus();
+                    
+                    // Set cursor position after emoji
+                    const newPos = cursorPos + emoji.length;
+                    chatInput.setSelectionRange(newPos, newPos);
+                }
+            });
+        });
+    }
+
+    // Message Actions (Edit/Delete) - Delegate from chatBox
+    if (chatBox) {
+        chatBox.addEventListener('click', function(e) {
+            // Edit
+            if (e.target.closest('.edit-msg-btn')) {
+                e.preventDefault();
+                const btn = e.target.closest('.edit-msg-btn');
+                const msgId = btn.dataset.id;
+                const contentSpan = document.getElementById(`msg-content-${msgId}`);
+                const currentContent = contentSpan.innerText;
+                
+                const newContent = prompt('Edit message:', currentContent);
+                if (newContent !== null && newContent.trim() !== '' && newContent !== currentContent) {
+                    fetch('/chat/edit/' + msgId, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ content: newContent })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            contentSpan.innerText = newContent;
+                        }
+                    });
+                }
+            }
+            
+            // Delete
+            if (e.target.closest('.delete-msg-btn')) {
+                e.preventDefault();
+                if (confirm('Delete this message?')) {
+                    const btn = e.target.closest('.delete-msg-btn');
+                    const msgId = btn.dataset.id;
+                    
+                    fetch('/chat/delete/' + msgId, {
+                        method: 'DELETE'
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const container = document.getElementById(`msg-container-${msgId}`);
+                            container.remove();
+                        }
+                    });
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

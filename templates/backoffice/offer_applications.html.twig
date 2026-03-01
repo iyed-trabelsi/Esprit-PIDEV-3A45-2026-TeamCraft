@@ -1,0 +1,61 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Candidatures - {{ offer.title }}{% endblock %}
+{% block admin_subheading %}{{ offer.team.name }} - {{ offer.game }}{% endblock %}
+
+{% block admin_content %}
+    <div class="mb-4">
+        <a href="{{ path('admin_offers') }}" class="btn btn-sm btn-tc-outline">
+            <i class="bi bi-arrow-left me-1"></i> Retour aux offres
+        </a>
+    </div>
+
+    <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th class="border-0 px-4 py-3">Joueur</th>
+                        <th class="border-0 px-4 py-3">Message</th>
+                        <th class="border-0 px-4 py-3">Date</th>
+                        <th class="border-0 px-4 py-3">Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-input-match">
+                    {% for app in applications %}
+                        <tr>
+                            <td class="px-4 py-3 fw-semibold bg-input-match">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        {{ app.user.pseudo|first|upper }}
+                                    </div>
+                                    {{ app.user.pseudo }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 bg-input-match text-muted small">
+                                {% set msg = app.message|default('Pas de message') %}
+                                {{ msg|slice(0, 50) }}{{ msg|length > 50 ? '...' : '' }}
+                            </td>
+                            <td class="px-4 py-3 bg-input-match">{{ app.createdAt|date('d/m/Y H:i') }}</td>
+                            <td class="px-4 py-3 bg-input-match">
+                                {% if app.status == 'accepted' %}
+                                    <span class="badge bg-success">Acceptée</span>
+                                {% elseif app.status == 'refused' %}
+                                    <span class="badge bg-danger">Refusée</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">En attente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-5 text-center text-muted bg-input-match">
+                                Aucune candidature pour cette offre.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

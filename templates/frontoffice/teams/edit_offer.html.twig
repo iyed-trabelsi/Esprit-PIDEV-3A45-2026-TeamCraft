@@ -1,0 +1,62 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Edit Offer - {{ offer.team.name }}{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <div class="container py-5 flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+             <h1 class="h3 fw-bold text-white mb-0">Edit Offer</h1>
+             <a href="{{ path('team_manage', {'id': offer.team.id}) }}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Return
+             </a>
+        </div>
+
+        <div class="card bg-dark border-secondary border-opacity-25" style="background-color: #1a1a1f;">
+            <div class="card-body p-4 text-white">
+                {{ form_start(form) }}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            {{ form_row(form.title) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(form.game) }}
+                        </div>
+                         <div class="col-md-6">
+                            {{ form_row(form.role) }}
+                        </div>
+                        <div class="col-md-6">
+                             {{ form_row(form.rank) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(form.nbPlayerRecruited) }}
+                        </div>
+                         <div class="col-md-6">
+                             {{ form_row(form.validityPeriod) }}
+                        </div>
+                        <div class="col-12">
+                             {{ form_row(form.description) }}
+                        </div>
+                        <div class="col-12">
+                             {{ form_row(form.poster) }}
+                             {% if offer.poster %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Current Poster:</small><br>
+                                    <img src="{{ asset('uploads/offers/' ~ offer.poster) }}" alt="Current Poster" style="max-height: 100px; border-radius: 5px;">
+                                </div>
+                             {% endif %}
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary fw-bold px-4 mt-4">Update Offer</button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

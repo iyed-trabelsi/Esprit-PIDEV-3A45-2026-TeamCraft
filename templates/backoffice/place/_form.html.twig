@@ -1,0 +1,47 @@
+{{ form_start(form, { attr: { novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
+    {{ form_errors(form) }}
+    <div class="admin-form-widgets">
+        <div class="mb-4">
+            {{ form_label(form.nomPlace, 'Nom du lieu', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-geo"></i></span>
+                {{ form_widget(form.nomPlace, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Stade Olympique de Radès'} }) }}
+            </div>
+            {{ form_errors(form.nomPlace) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.typePlace, 'Type de lieu', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-building"></i></span>
+                {{ form_widget(form.typePlace, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Stade, Café Gaming, Parc, etc.'} }) }}
+            </div>
+            {{ form_errors(form.typePlace) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.adresse, 'Adresse', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-map"></i></span>
+                {{ form_widget(form.adresse, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: Avenue de la Liberté, Tunis'} }) }}
+            </div>
+            {{ form_errors(form.adresse) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.capaciteMax, 'Capacité maximale', { 'label_attr': {'class': 'form-label fw-bold'} }) }}
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-people"></i></span>
+                {{ form_widget(form.capaciteMax, { 'attr': {'class': 'form-control', 'placeholder': 'Ex: 100'} }) }}
+            </div>
+            {{ form_errors(form.capaciteMax) }}
+        </div>
+    </div>
+    
+    <div class="mt-4 pt-2">
+        <button type="submit" class="btn btn-tc-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-check-circle"></i>
+            <span>{{ button_label|default('Enregistrer le lieu') }}</span>
+        </button>
+    </div>
+{{ form_end(form) }}

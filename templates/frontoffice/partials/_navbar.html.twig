@@ -1,0 +1,117 @@
+{% set navbarData = get_navbar_data() %}
+<nav class="navbar navbar-expand-lg navbar-dark py-3 bg-dark">
+    <div class="container flex-wrap">
+        <a class="navbar-brand d-flex align-items-center" href="{{ path('app_home') }}">
+            <img src="{{ asset('images/logo.png') }}" alt="TEAMCRAFT" height="40" class="d-inline-block align-text-top">
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse navbar-tc" id="navbarNav">
+            <ul class="navbar-nav gap-3 mx-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_home') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_players') }}">Players</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_teams') }}">Teams</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_forum') }}">Forum</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_offres') }}">Offres</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('app_events') }}">Events</a></li>
+            </ul>
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                {% if app.user %}
+                    <!-- User Dropdown Menu -->
+                    <div class="dropdown">
+                        <button class="btn btn-link text-white p-0 d-flex align-items-center gap-2 user-menu-trigger" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">
+                            {% if app.user.profilePicture %}
+                                <img src="{{ asset(app.user.profilePicture) }}" class="rounded-circle" width="36" height="36" alt="{{ app.user.pseudo }}" style="object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.2);">
+                            {% else %}
+                                <div class="rounded-circle bg-gradient d-flex align-items-center justify-content-center text-white fw-bold" style="width: 36px; height: 36px; background: linear-gradient(135deg, #0ea5e9, #7c3aed); border: 2px solid rgba(255, 255, 255, 0.2);">
+                                    {{ app.user.pseudo|first|upper }}
+                                </div>
+                            {% endif %}
+                            <span class="d-none d-md-inline small text-white-50">{{ app.user.pseudo }}</span>
+                            <i class="bi bi-chevron-down small"></i>
+                        </button>
+                        
+                        <ul class="dropdown-menu dropdown-menu-end user-dropdown-menu" aria-labelledby="userMenuDropdown">
+                            <!-- Header -->
+                            <li class="user-dropdown-header">
+                                <div class="d-flex align-items-center gap-3 px-3 py-3">
+                                    {% if app.user.profilePicture %}
+                                        <img src="{{ asset(app.user.profilePicture) }}" class="rounded-circle" width="40" height="40" alt="{{ app.user.pseudo }}" style="object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-gradient d-flex align-items-center justify-content-center text-white fw-bold" style="width: 40px; height: 40px; background: linear-gradient(135deg, #0ea5e9, #7c3aed);">
+                                            {{ app.user.pseudo|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold text-white">{{ app.user.pseudo }}</div>
+                                        <div class="small text-muted">{{ app.user.email }}</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- Main Menu Items -->
+                            <li>
+                                <a class="dropdown-item user-dropdown-item" href="{{ path('app_profile') }}">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>Profil</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item user-dropdown-item position-relative" href="{{ path('app_friend_list') }}">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>Amis</span>
+                                    {% if navbarData.friendRequestsCount > 0 %}
+                                        <span class="position-absolute top-50 translate-middle-y badge rounded-pill bg-danger" style="right: 70px; font-size: 0.65rem;">{{ navbarData.friendRequestsCount }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item user-dropdown-item" href="{{ path('app_my_favorites') }}">
+                                    <i class="bi bi-heart-fill"></i>
+                                    <span>Favorites</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item user-dropdown-item position-relative" href="#">
+                                    <i class="bi bi-bell-fill"></i>
+                                    <span>Notifications</span>
+                                    {% if navbarData.notificationsCount > 0 %}
+                                        <span class="position-absolute top-50 translate-middle-y badge rounded-pill bg-danger" style="right: 70px; font-size: 0.65rem;">{{ navbarData.notificationsCount }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            
+                            {% if is_granted('ROLE_ADMIN') %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item user-dropdown-item" href="{{ path('admin_dashboard') }}">
+                                    <i class="bi bi-speedometer2"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item user-dropdown-item text-danger" href="{{ path('app_logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Déconnexion</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a class="nav-link text-white" href="{{ path('app_login') }}">Log in</a>
+                    <a class="btn btn-tc-primary" href="{{ path('app_register') }}">Register</a>
+                {% endif %}
+                <button id="bgToggle" class="bg-toggle-btn" title="Toggle Background Animation">
+                    <span id="bgToggleIcon" class="bg-toggle-icon icon-pause"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+

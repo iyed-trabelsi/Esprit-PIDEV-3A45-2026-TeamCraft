@@ -1,0 +1,374 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Gestion des posts{% endblock %}
+{% block admin_subheading %}Liste de tous les posts du forum avec rubrique, auteur et statut.{% endblock %}
+
+{% block admin_content %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    <div class="discovery-filter-container mb-4">
+        <form method="get" action="{{ path('admin_posts') }}" class="d-flex flex-wrap justify-content-between align-items-center gap-3" id="posts-search-form">
+            <input type="hidden" name="page" value="1">
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="dropdown">
+                    <button class="btn btn-tc-outline dropdown-toggle text-uppercase fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px; padding: 0.6rem 1.25rem; font-size: 0.85rem;">
+                        <i class="bi bi-sort-down me-1"></i>
+                        {% if sort == 'date_asc' %}Date (anciennes)
+                        {% elseif sort == 'title_asc' %}Titre (A → Z)
+                        {% elseif sort == 'title_desc' %}Titre (Z → A)
+                        {% else %}Dernières publications{% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item filter-link" href="{{ path('admin_posts', {q: q, sort: 'date_desc'}) }}" data-sort="date_desc">Date (récentes d'abord)</a></li>
+                        <li><a class="dropdown-item filter-link" href="{{ path('admin_posts', {q: q, sort: 'date_asc'}) }}" data-sort="date_asc">Date (anciennes d'abord)</a></li>
+                        <li><a class="dropdown-item filter-link" href="{{ path('admin_posts', {q: q, sort: 'title_asc'}) }}" data-sort="title_asc">Titre (A → Z)</a></li>
+                        <li><a class="dropdown-item filter-link" href="{{ path('admin_posts', {q: q, sort: 'title_desc'}) }}" data-sort="title_desc">Titre (Z → A)</a></li>
+                    </ul>
+                </div>
+                <input type="hidden" name="sort" id="sort-value-posts" value="{{ sort|default('date_desc') }}">
+            </div>
+
+            <div class="discovery-search-wrapper" style="min-width: 300px;">
+                <i class="bi bi-search discovery-search-icon"></i>
+                <input type="search" name="q" class="form-control discovery-search-input" placeholder="Rechercher par titre ou contenu…" value="{{ q|default('') }}">
+            </div>
+        </form>
+    </div>
+    <div id="posts-list-container">
+        {% block posts_list %}
+        <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input);">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                    <thead class="custom-table-header">
+                        <tr>
+                            <th class="border-0 px-4 py-3">Titre</th>
+                            <th class="border-0 px-4 py-3">Rubrique</th>
+                            <th class="border-0 px-4 py-3">Auteur</th>
+                            <th class="border-0 px-4 py-3">Date</th>
+                            <th class="border-0 px-4 py-3">Statut</th>
+                            <th class="border-0 px-4 py-3 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-input-match">
+                        {% for post in posts %}
+                            <tr>
+                                <td class="px-4 py-3 fw-semibold bg-input-match">{{ post.titre }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ post.rubrique ? post.rubrique.nomRubrique : '—' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ post.auteur ? post.auteur.pseudo : '—' }}</td>
+                                <td class="px-4 py-3 bg-input-match">{{ post.dateCreation ? post.dateCreation|date('d/m/Y') : '—' }}</td>
+                                <td class="px-4 py-3 bg-input-match">
+                                    <form method="post" action="{{ path('admin_post_statut', { id: post.id }) }}" class="d-inline-block" id="statut-form-{{ post.id }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin_post_statut_' ~ post.id) }}">
+                                        <input type="hidden" name="page" value="{{ currentPage }}">
+                                        <input type="hidden" name="q" value="{{ q|default('') }}">
+                                        <input type="hidden" name="sort" value="{{ sort|default('date_desc') }}">
+                                        <select name="statut" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; min-width: 110px; font-size: 0.85rem;" onchange="this.form.submit()">
+                                            <option value="published" {{ post.statut == 'published' ? 'selected' : '' }}>Publié</option>
+                                            <option value="archived" {{ post.statut == 'archived' ? 'selected' : '' }}>Archivé</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td class="px-4 py-3 text-end bg-input-match">
+                                    <a href="{{ path('app_forum_post_show', { id: post.id }) }}" class="action-btn view d-inline-block" title="Voir">
+                                        <img src="{{ asset('images/icons/crud-view.png') }}" alt="View">
+                                    </a>
+                                    <form method="post" action="{{ path('admin_post_delete', { id: post.id }) }}" onsubmit="return confirm('Supprimer ce post ?');" class="d-inline-block">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin_post_delete_' ~ post.id) }}">
+                                        <button type="submit" class="action-btn delete border-0 bg-transparent" title="Supprimer">
+                                            <img src="{{ asset('images/icons/crud-delete.png') }}" alt="Delete">
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-4 text-center text-white-50">Aucun post.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-3">
+            <span class="small text-muted">Affichage de {{ posts|length }} sur {{ total }} posts</span>
+            <nav aria-label="Pagination posts">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                        <a class="page-link" href="{{ path('admin_posts', { page: currentPage - 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Précédent</a>
+                    </li>
+                    {% for i in 1..maxPages %}
+                        <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                            <a class="page-link" href="{{ path('admin_posts', { page: i, q: q|default(''), sort: sort|default('date_desc') }) }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                        <a class="page-link" href="{{ path('admin_posts', { page: currentPage + 1, q: q|default(''), sort: sort|default('date_desc') }) }}">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endblock %}
+    </div>
+
+    {# Chart: Répartition des Posts #}
+    <div class="row g-4 mb-5 mt-2">
+        <div class="col-12">
+            <div class="card-tc p-4" style="background: var(--tc-bg-input);">
+                <h2 class="h5 mb-4 font-display">Répartition des Posts</h2>
+                <div class="row align-items-center">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <div style="height: 300px; width: 100%; max-width: 400px;">
+                            <canvas id="postsTypeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                         <div class="d-flex flex-column gap-3 justify-content-center h-100">
+                            {% set totalPosts = 0 %}
+                            {% for stat in postsByType %}
+                                {% set totalPosts = totalPosts + stat.count %}
+                            {% endfor %}
+
+                            {% for stat in postsByType %}
+                                {% set percent = totalPosts > 0 ? (stat.count / totalPosts * 100)|round(1) : 0 %}
+                                <div class="p-3 rounded-3 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between" style="background: rgba(255, 255, 255, 0.05);">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="rounded-circle" style="width: 12px; height: 12px; background-color: {% if stat.type == 'discussion' %}#0ea5e9{% elseif stat.type == 'question' %}#22c55e{% elseif stat.type == 'annonce' %}#d946ef{% else %}#94a3b8{% endif %}; box-shadow: 0 0 10px {% if stat.type == 'discussion' %}#0ea5e9{% elseif stat.type == 'question' %}#22c55e{% elseif stat.type == 'annonce' %}#d946ef{% else %}#94a3b8{% endif %};"></span>
+                                        <span class="text-white fw-bold text-capitalize">{{ stat.type }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-white small fw-bold" style="font-size: 0.8rem; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);">{{ percent }}%</span>
+                                        <div class="badge bg-dark border border-secondary text-white rounded-pill px-3">{{ stat.count }}</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-muted">Aucune donnée de post disponible.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if reports is defined and reports|length > 0 %}
+        <div class="mt-5 mb-4">
+            <h3 class="h5 fw-bold mb-3 text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Signalements en attente</h3>
+            <div class="card-tc p-0 overflow-hidden" style="background: var(--tc-bg-input); border: 1px solid #b45309;">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 text-white bg-input-match" style="font-size: 0.9rem;">
+                        <thead class="custom-table-header" style="background: rgba(245, 158, 11, 0.1);">
+                            <tr>
+                                <th class="border-0 px-4 py-3 text-warning">Post</th>
+                                <th class="border-0 px-4 py-3 text-warning">Auteur Post</th>
+                                <th class="border-0 px-4 py-3 text-warning">Signalé par</th>
+                                <th class="border-0 px-4 py-3 text-warning">Détails Signalement</th>
+                                <th class="border-0 px-4 py-3 text-warning">Date</th>
+                                <th class="border-0 px-4 py-3 text-end text-warning">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-input-match">
+                            {% for report in reports %}
+                                <tr>
+                                    <td class="px-4 py-3 fw-semibold bg-input-match">
+                                        <a href="{{ path('app_forum_post_show', {id: report.post.id}) }}" class="text-white text-decoration-none" target="_blank">{{ report.post.titre }} <i class="bi bi-box-arrow-up-right small text-muted ms-1"></i></a>
+                                    </td>
+                                    <td class="px-4 py-3 bg-input-match">
+                                        <span class="fw-bold">{{ report.post.auteur.pseudo|default(report.post.auteur.username) }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 bg-input-match">{{ report.reporter.pseudo|default(report.reporter.username) }}</td>
+                                    <td class="px-4 py-3 bg-input-match">
+                                        <span class="badge bg-warning text-dark">{{ report.motif }}</span>
+                                        {% if report.description %}
+                                            <div class="mt-1 small text-white-50 p-2 rounded" style="background: rgba(0,0,0,0.2); border-left: 2px solid var(--tc-warning);">
+                                                {{ report.description }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 bg-input-match">{{ report.dateSignalement|date('d/m/Y H:i') }}</td>
+                                    <td class="px-4 py-3 text-end bg-input-match">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <form method="post" action="{{ path('admin_user_ban', { id: report.post.auteur.id }) }}" onsubmit="return confirm('{{ report.post.auteur.isBanned ? 'Lever le bannissement ?' : 'Bannir cet utilisateur ?' }}');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('ban_user_' ~ report.post.auteur.id) }}">
+                                                <button type="submit" class="btn btn-sm {{ report.post.auteur.isBanned ? 'btn-success' : 'btn-outline-danger' }}" title="{{ report.post.auteur.isBanned ? 'Débannir' : 'Bannir l\'auteur' }}">
+                                                    <i class="bi {{ report.post.auteur.isBanned ? 'bi-person-check' : 'bi-person-x' }}"></i>
+                                                    {{ report.post.auteur.isBanned ? 'Débannir' : 'Bannir' }}
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('admin_report_dismiss', { id: report.id }) }}" onsubmit="return confirm('Ignorer ce signalement ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('dismiss_report_' ~ report.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Ignorer/Traiter">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('admin_post_delete', { id: report.post.id }) }}" onsubmit="return confirm('Supprimer ce post ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('admin_post_delete_' ~ report.post.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Supprimer le post">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+
+                                            {% if report.post.image %}
+                                                <form method="post" action="{{ path('admin_post_delete_image', { id: report.post.id }) }}" onsubmit="return confirm('Supprimer uniquement l\'image ?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_post_delete_image_' ~ report.post.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-warning" title="Supprimer l'image">
+                                                        <i class="bi bi-card-image"></i> <i class="bi bi-x"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('posts-search-form');
+            const listContainer = document.getElementById('posts-list-container');
+            const input = form.querySelector('input[name="q"]');
+            const sortSelect = form.querySelector('select[name="sort"]');
+            let timeout = null;
+
+            function updateList(url) {
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    listContainer.innerHTML = html;
+                    attachPaginationListeners();
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            function attachListeners() {
+                const paginationLinks = listContainer.querySelectorAll('.pagination a.page-link');
+                paginationLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        updateList(this.href);
+                    });
+                });
+
+                const filterLinks = document.querySelectorAll('.filter-link');
+                filterLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const url = buildUrlWithParams(this.href);
+                        window.history.pushState({}, '', url);
+                        updateList(url);
+                    });
+                });
+            }
+
+            function buildUrlWithParams(baseUri) {
+                const url = new URL(baseUri, window.location.origin);
+                const query = input.value;
+                if (query) url.searchParams.set('q', query);
+                return url.toString();
+            }
+
+            function buildUrl() {
+                const url = new URL(form.action, window.location.origin);
+                const query = input.value;
+                const sortInput = form.querySelector('input[name="sort"]');
+                const sort = sortInput ? sortInput.value : 'date_desc';
+                if (query) url.searchParams.set('q', query);
+                if (sort) url.searchParams.set('sort', sort);
+                return url.toString();
+            }
+
+            if (input) {
+                input.addEventListener('input', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(function() {
+                        form.querySelector('input[name="page"]').value = '1';
+                        const url = buildUrl();
+                        window.history.pushState({}, '', url);
+                        updateList(url);
+                    }, 350);
+                });
+            }
+
+            attachListeners();
+        });
+    </script>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <!-- Chart.js UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('postsTypeChart');
+            if (ctx) {
+                const rawData = {{ postsByType|json_encode|raw }};
+                const labels = rawData.map(item => item.type.charAt(0).toUpperCase() + item.type.slice(1));
+                const data = rawData.map(item => item.count);
+                
+                const colorMap = {
+                    'discussion': '#0ea5e9',
+                    'question': '#22c55e',
+                    'annonce': '#d946ef'
+                };
+                const backgroundColors = rawData.map(item => colorMap[item.type] || '#94a3b8');
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderColor: '#1e293b',
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.chart._metasets[context.datasetIndex].total;
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                        return ' ' + context.label + ': ' + value + ' (' + percentage + ')';
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%',
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

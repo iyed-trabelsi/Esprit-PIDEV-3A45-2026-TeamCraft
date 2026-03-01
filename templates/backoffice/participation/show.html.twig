@@ -1,0 +1,37 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Détails de la participation{% endblock %}
+{% block admin_subheading %}Informations sur la participation.{% endblock %}
+
+{% block admin_content %}
+    <div class="mb-3">
+        <a href="{{ path('admin_events') }}" class="btn btn-sm btn-tc-outline">
+            <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card-tc p-4" style="background: var(--tc-bg-input);">
+        <h3 class="mb-4 text-white">Participation #{{ participation.id }}</h3>
+        
+        <table class="table table-borderless text-white" style="max-width: 600px;">
+            <tbody>
+                <tr>
+                    <th class="text-white-50" style="width: 200px;">Id</th>
+                    <td>{{ participation.id }}</td>
+                </tr>
+                <tr>
+                    <th class="text-white-50">Date d'inscription</th>
+                    <td>{{ participation.dateInscription ? participation.dateInscription|date('Y-m-d H:i:s') : '' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="mt-4 d-flex gap-2">
+            <a href="{{ path('app_participation_edit', {'id': participation.id}) }}" class="btn btn-tc-primary">
+                <i class="bi bi-pencil me-1"></i> Modifier
+            </a>
+            {{ include('backoffice/participation/_delete_form.html.twig') }}
+        </div>
+    </div>
+{% endblock %}
+

@@ -1,0 +1,75 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Upload Music - TEAMCRAFT{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="position-relative flex-grow-1 d-flex align-items-center py-5" style="min-height: calc(100vh - 80px);">
+        <div class="container position-relative z-1">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card card-tc p-4 p-md-5">
+                        <h2 class="text-center fw-bold mb-4 text-white">
+                            <i class="bi bi-music-note-beamed me-2"></i>Upload Music
+                        </h2>
+
+                        {% for message in app.flashes('success') %}
+                            <div class="alert alert-success border-0 shadow-sm mb-4">
+                                <i class="bi bi-check-circle me-2"></i>{{ message }}
+                            </div>
+                        {% endfor %}
+
+                        {% for message in app.flashes('error') %}
+                            <div class="alert alert-danger border-0 shadow-sm mb-4">
+                                <i class="bi bi-exclamation-triangle me-2"></i>{{ message }}
+                            </div>
+                        {% endfor %}
+
+                        {{ form_start(form, {'attr': {'class': 'form-tc', 'enctype': 'multipart/form-data'}}) }}
+                            <div class="mb-3">
+                                {{ form_label(form.title) }}
+                                {{ form_widget(form.title) }}
+                                {{ form_errors(form.title) }}
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Audio File</label>
+                                <div class="input-group">
+                                    {{ form_widget(form.musicFile, {'attr': {'class': 'form-control d-none'}}) }}
+                                    <button type="button" class="btn btn-outline-light w-100" onclick="document.getElementById('music_upload_musicFile').click()">
+                                        <i class="bi bi-folder2-open me-2"></i>Choose a file
+                                    </button>
+                                </div>
+                                <div id="selectedFileName" class="form-text text-white-50 mt-2"></div>
+                                <div class="form-text text-white-50">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Formats: MP3, WAV, OGG | Max 20 MB
+                                </div>
+                                {{ form_errors(form.musicFile) }}
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-tc-primary flex-fill py-3 fw-bold">
+                                    <i class="bi bi-cloud-upload me-2"></i>Upload
+                                </button>
+                                <a href="{{ path('music_library') }}" class="btn btn-outline-light py-3 px-4">
+                                    <i class="bi bi-collection me-2"></i>My Library
+                                </a>
+                            </div>
+                        {{ form_end(form) }}
+
+                        <script>
+                            document.getElementById('music_upload_musicFile').addEventListener('change', function() {
+                                const fileName = this.files[0] ? this.files[0].name : 'No file selected';
+                                document.getElementById('selectedFileName').textContent = 'File: ' + fileName;
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}

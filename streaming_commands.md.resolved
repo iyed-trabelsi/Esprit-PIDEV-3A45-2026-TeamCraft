@@ -1,0 +1,72 @@
+# 🚀 Guide de démarrage pour le Streaming Live
+
+Ce document contient toutes les commandes nécessaires pour relancer complètement la fonctionnalité de streaming en direct, y compris l'accès depuis d'autres appareils comme ton téléphone.
+
+Tu auras besoin d'ouvrir **4 fenêtres de terminal PowerShell** distinctes.
+
+---
+
+## 💻 Terminal 1 : Lancer le projet Symfony
+Ouvre un terminal à la racine de ton projet (`TeamCraft-azizfinal`).
+```powershell
+symfony serve
+```
+*(Ton projet tournera sur `http://127.0.0.1:8000`)*
+
+---
+
+## 📡 Terminal 2 : Lancer le serveur de signalisation (WebRTC)
+Ouvre un nouveau terminal et déplace-toi dans le dossier `signaling-server`.
+```powershell
+cd signaling-server
+node server.js
+```
+*(Le serveur Node.js tournera sur le port `3001`)*
+
+---
+
+## 🌐 Terminal 3 : Créer le tunnel pour le serveur WebRTC (Cloudflare)
+Pour que ton téléphone puisse se connecter au serveur `node.js` et transmettre la vidéo, il faut l'exposer sur internet. Ouvre un troisième terminal.
+
+**Option A (Recommandée - via l'exécutable téléchargé) :**
+```powershell
+C:\Users\PC\Desktop\cloudflared.exe tunnel --url http://localhost:3001
+```
+
+**Option B (via npx, si elle remarche) :**
+```powershell
+npx cloudflared tunnel --url http://localhost:3001
+```
+
+> ⚠️ **ACTION REQUISE ICI :**
+> Dans la console, cherche la ligne qui ressemble à `https://...trycloudflare.com`.
+> Tu **dois** copier cette URL, aller dans ton fichier [.env](file:///c:/Users/PC/Desktop/TeamCraft-azizfinal/TeamCraft-azizfinal/.env) à la racine de ton projet Symfony, et mettre à jour cette ligne :
+> ```env
+> SIGNALING_URL=https://ton-nouvelle-url.trycloudflare.com
+> ```
+> Ensuite, vide le cache Symfony :
+> ```powershell
+> php bin/console cache:clear
+> ```
+
+---
+
+## 🌍 Terminal 4 : Créer le tunnel pour Symfony (ngrok)
+Pour pouvoir ouvrir facilement le site web sur ton téléphone, on utilise ngrok pour exposer le port 8000. Ouvre un quatrième terminal à la racine de ton projet.
+
+```powershell
+npx ngrok http 8000
+```
+
+> Ouvre le lien `https://....ngrok-free.dev` généré par la console sur ton téléphone. N'oublie pas de te connecter à ton compte sur le téléphone avant de pouvoir diffuser !
+
+---
+
+## 🔗 Récapitulatif des liens (depuis le téléphone avec le lien ngrok)
+
+- **Pour Diffuser (l'Organisateur) :**
+  `https://VOTRE_LIEN_NGROK.ngrok-free.dev/teams/{id}/broadcast`
+  *(Remplacez `{id}` par l'id de la team, par exemple `3`)*
+
+- **Pour Regarder (les Spectateurs) :**
+  `https://VOTRE_LIEN_NGROK.ngrok-free.dev/teams/{id}/live`

@@ -1,0 +1,1213 @@
+{% extends 'frontoffice/base.html.twig' %}
+
+{% block title %}Événements - TEAMCRAFT{% endblock %}
+
+{% block flash_messages %}
+    {{ parent() }}
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    /* Scoped styles for event images */
+    .event-card-banner {
+        width: 100%;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: block;
+        background: rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .event-card-banner:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
+    }
+    
+    .event-image-container {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .discovery-avatar {
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .date-label {
+        color: var(--tc-cyan);
+        font-weight: 700;
+    }
+    .status-open {
+        background-color: var(--tc-neon-green) !important;
+        color: #fff !important;
+    }
+    .place-label {
+        color: #ff4444 !important; /* Vivid Red */
+        font-weight: 700 !important;
+        opacity: 1 !important;
+    }
+    /* --- Premium Calendar UI --- */
+    .calendar-modal-content {
+        background: rgba(13, 13, 27, 0.96) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .fc { 
+        color: #e2e8f0 !important; 
+        font-family: inherit;
+    }
+    /* Hierarchy: Muted numbers */
+    .fc-daygrid-day-number {
+        color: #94a3b8 !important; /* Soft Slate Gray */
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        padding: 8px !important;
+        text-decoration: none !important;
+    }
+    /* Grid feel */
+    .fc-theme-standard td, .fc-theme-standard th {
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    }
+    .fc-scrollgrid { border: none !important; }
+
+    /* Day Card Feel */
+    .fc-daygrid-day {
+        background: rgba(255, 255, 255, 0.01);
+        transition: background 0.2s ease;
+    }
+    .fc-daygrid-day:hover {
+        background: rgba(6, 182, 212, 0.04) !important;
+    }
+    /* Weekend Shading */
+    .fc-day-sun, .fc-day-sat {
+        background: rgba(0, 0, 0, 0.15) !important;
+    }
+    /* Today Highlight */
+    .fc-day-today {
+        background: rgba(6, 182, 212, 0.06) !important;
+        outline: 1px solid rgba(6, 182, 212, 0.3) !important;
+        outline-offset: -1px;
+    }
+    .fc-day-today .fc-daygrid-day-number {
+        color: var(--tc-cyan) !important;
+        font-weight: 800 !important;
+    }
+
+    /* Header Design */
+    .fc-toolbar-title {
+        font-size: 1.6rem !important;
+        letter-spacing: 2px !important;
+        color: var(--tc-cyan) !important;
+        text-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        font-weight: 800 !important;
+        text-transform: uppercase;
+    }
+    .fc-button-primary {
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+    .fc-button-primary:hover {
+        background: var(--tc-cyan) !important;
+        color: #000 !important;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+    .fc-button-active {
+        background: var(--tc-cyan) !important;
+        color: #000 !important;
+    }
+
+    /* Event Tags (The Major Upgrade) */
+    .fc-event {
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        margin: 2px 4px !important;
+        border: none !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        animation: eventFadeIn 0.4s ease-out backwards;
+        cursor: pointer !important;
+        transition: transform 0.2s ease, filter 0.2s ease !important;
+    }
+    .fc-event:hover {
+        transform: translateY(-1px) scale(1.02);
+        background: rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.5);
+    }
+    /* List View Fixes (Prevent Whiteout) */
+    .fc-list-event:hover td {
+        background: rgba(6, 182, 212, 0.1) !important;
+    }
+    .fc-list-day-side-text, .fc-list-day-text {
+        color: var(--tc-cyan) !important;
+        font-weight: 800 !important;
+    }
+    .fc-list-day-cushion {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    .fc-list-event-title a {
+        color: #e2e8f0 !important;
+        text-decoration: none !important;
+    }
+    .fc-list-table {
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    .fc-list-event {
+        cursor: pointer !important;
+    }
+    @keyframes eventFadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Ultra-Intense Neon Glow Squares --- */
+    .fc-event-square {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        margin-right: 10px;
+        display: inline-block;
+        flex-shrink: 0;
+        position: relative;
+    }
+    .square-open { 
+        background: #00ff88; /* Even brighter green */
+        box-shadow: 0 0 10px #00ff88, 0 0 20px rgba(0, 255, 136, 0.6), 0 0 30px rgba(0, 255, 136, 0.3) !important; 
+        animation: pulse-green 1s infinite cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .square-closed { 
+        background: #ff0044; /* Even brighter red */
+        box-shadow: 0 0 10px #ff0044, 0 0 20px rgba(255, 0, 68, 0.6), 0 0 30px rgba(255, 0, 68, 0.3) !important; 
+        animation: pulse-red 1s infinite cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .square-over { 
+        background: #94a3b8; 
+        box-shadow: 0 0 6px #94a3b8, 0 0 12px rgba(148, 163, 184, 0.4) !important; 
+        animation: pulse-grey 2.5s infinite ease-in-out; 
+    }
+
+    @keyframes pulse-green {
+        0% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #00ff88, 0 0 15px rgba(0, 255, 136, 0.4); }
+        50% { transform: scale(1.6) rotate(15deg); box-shadow: 0 0 20px #00ff88, 0 0 40px rgba(0, 255, 136, 0.9), 0 0 60px rgba(0, 255, 136, 0.5); }
+        100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #00ff88, 0 0 15px rgba(0, 255, 136, 0.4); }
+    }
+    @keyframes pulse-red {
+        0% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #ff0044, 0 0 15px rgba(255, 0, 68, 0.4); }
+        50% { transform: scale(1.6) rotate(-15deg); box-shadow: 0 0 20px #ff0044, 0 0 40px rgba(255, 0, 68, 0.9), 0 0 60px rgba(255, 0, 68, 0.5); }
+        100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 10px #ff0044, 0 0 15px rgba(255, 0, 68, 0.4); }
+    }
+    @keyframes pulse-grey {
+        0% { opacity: 0.6; transform: scale(1); box-shadow: 0 0 5px #94a3b8; }
+        50% { opacity: 1; transform: scale(1.3); box-shadow: 0 0 15px #94a3b8, 0 0 30px rgba(148, 163, 184, 0.5); }
+        100% { opacity: 0.6; transform: scale(1); box-shadow: 0 0 5px #94a3b8; }
+    }
+
+    /* Premium Tag (Subtle Glass) */
+    .fc-event-tag {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+        width: 100%;
+    }
+
+    /* Participation Life (Cyan Neon Glow) */
+    .event-participating {
+        border: 1px solid rgba(6, 182, 212, 0.5) !important;
+        background: rgba(6, 182, 212, 0.08) !important;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.2) !important;
+    }
+    .fc-event-runner {
+        font-size: 1.1rem;
+        margin-left: 8px;
+        display: inline-block;
+        animation: running-lean 0.8s infinite ease-in-out;
+    }
+    @keyframes running-lean {
+        0%, 100% { transform: translateX(0) rotate(5deg) scale(1); }
+        50% { transform: translateX(3px) rotate(15deg) scale(1.1); }
+    }
+</style>
+<!-- FullCalendar & Leaflet CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+{% endblock %}
+
+{% block body %}
+    {% include 'frontoffice/partials/_navbar.html.twig' %}
+
+    <section class="container py-5 flex-grow-1">
+        {% if app.user %}
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <h1 class="h2 fw-bold mb-0 discovery-section-title">
+                    {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                    Mes Événements
+                </h1>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-info fw-bold" data-bs-toggle="modal" data-bs-target="#calendarModal">
+                        <i class="bi bi-calendar3 me-2"></i>📅 Mon Calendrier
+                    </button>
+                </div>
+            </div>
+
+            {# Live Search and Sort for My Events #}
+            <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mb-4">
+                <div class="d-flex justify-content-end align-items-center gap-3 w-100 flex-wrap">
+                    <!-- Sort by Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="mySortDropdownBtn">
+                            <i class="bi bi-sort-down"></i>
+                            <span id="myCurrentSortLabel">Date (Plus récent)</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item active js-my-sort-option" href="#" data-sort="date_desc">Date (Plus récent)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="date_asc">Date (Plus ancien)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="rating_desc">Mieux noté</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="rating_asc">Moins bien noté</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="name_asc">Nom (A-Z)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="name_desc">Nom (Z-A)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="status_open">Statut (Open first)</a></li>
+                            <li><a class="dropdown-item js-my-sort-option" href="#" data-sort="status_closed">Statut (Closed first)</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="position-relative">
+                        <input type="text" id="my-event-search" class="form-control form-control-sm text-white ps-5" placeholder="Rechercher mes événements..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5" id="my-events-container">
+                {% if myEvents is not empty %}
+                    {% for e in myEvents %}
+                    <div class="col-12 col-sm-6 col-lg-4 my-event-item"
+                         data-name="{{ e.nomEvenement|lower }}"
+                         data-date="{{ e.dateDebut.timestamp }}"
+                         data-status="{{ e.status|lower }}"
+                         data-rating="{{ e.averageRating }}"
+                         data-id="{{ e.id }}">
+                        <div class="discovery-card h-100 d-flex flex-column p-4 text-center" style="border: 2px solid #a855f7;">
+                            {% if e.imageEvenement %}
+                                <div class="event-image-container">
+                                    <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
+                                </div>
+                            {% else %}
+                                <div class="discovery-avatar mx-auto mb-3">
+                                    {{ e.nomEvenement|slice(0, 2)|upper }}
+                                </div>
+                            {% endif %}
+                            <h3 class="discovery-card-title mb-1">{{ e.nomEvenement }}</h3>
+                            <div class="mb-3 d-flex justify-content-center">
+                                <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill" style="background-color: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3);" id="rating-display-my-{{ e.id }}">
+                                    {% if e.reviewCount > 0 %}
+                                        <span class="text-warning fw-bold" style="font-size: 0.95rem;">{{ e.averageRating|number_format(1) }}</span>
+                                        <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));"></i>
+                                        <span class="text-white-50 ms-1" style="font-size: 0.8rem;">({{ e.reviewCount }} avis)</span>
+                                    {% else %}
+                                        <span class="text-white-50 fst-italic" style="font-size: 0.85rem;">Aucun avis</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <p class="discovery-card-subtitle mb-2"><span class="badge {{ e.status == 'open' ? 'status-open' : 'bg-secondary' }}">{{ e.status|upper }}</span> • {{ e.participations|length }} / {{ e.place.capaciteMax }}</p>
+                            <div class="mb-2">
+                                <i class="bi bi-geo-alt-fill place-label" style="font-size: 0.85rem;"></i> 
+                                <span class="place-label" style="font-size: 0.85rem;">Lieu: {{ e.place.nomPlace }}</span>
+                            </div>
+                            <div class="text-white-50 small mb-3">
+                                <div><span class="date-label">Début:</span> {{ e.dateDebut|date('d M Y, H:i') }}</div>
+                                <div><span class="date-label">Fin:</span> {{ e.dateFin|date('d M Y, H:i') }}</div>
+                            </div>
+                            <div class="mt-auto d-flex justify-content-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#editModal{{ e.getId() }}">Modifier</button>
+                                <form method="post" action="{{ path('app_front_event_delete', {'id': e.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ e.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            <div id="my-events-no-results" class="col-12 d-none">
+                <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                    <p class="text-white-50 mb-0">Aucun événement ne correspond à votre recherche.</p>
+                </div>
+            </div>
+            <hr class="mb-5" style="border-color: rgba(255,255,255,0.1);">
+        {% endif %}
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h1 class="h2 fw-bold mb-0 discovery-section-title">
+                {% include 'frontoffice/partials/_icon_people.html.twig' %}
+                Tous les Événements
+            </h1>
+        </div>
+
+        {# Live Search and Filter Section for All Events #}
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mb-4">
+            <div class="d-flex justify-content-end align-items-center gap-3 w-100 flex-wrap">
+                <!-- Sort by Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="allSortDropdownBtn">
+                        <i class="bi bi-sort-down"></i>
+                        <span id="allCurrentSortLabel">Date (Plus récent)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-all-sort-option" href="#" data-sort="date_desc">Date (Plus récent)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="date_asc">Date (Plus ancien)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="rating_desc">Mieux noté</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="rating_asc">Moins bien noté</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="name_asc">Nom (A-Z)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="name_desc">Nom (Z-A)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="status_open">Statut (Open first)</a></li>
+                        <li><a class="dropdown-item js-all-sort-option" href="#" data-sort="status_closed">Statut (Closed first)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Filter by Type Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="typeFilterDropdownBtn">
+                        <i class="bi bi-funnel"></i>
+                        <span id="currentTypeLabel">Tous les types</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-type-option" href="#" data-type="all">Tous les types</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="tournament">Tournament</a></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="scrim">Scrim</a></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="practice">Practice</a></li>
+                        <li><a class="dropdown-item js-type-option" href="#" data-type="competition">Competition</a></li>
+                    </ul>
+                </div>
+
+                <!-- Filter by Status Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-tc-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="statusFilterDropdownBtn">
+                        <i class="bi bi-check-circle"></i>
+                        <span id="currentStatusLabel">Tous statuts</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item active js-status-option" href="#" data-status="all">Tous statuts</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item js-status-option" href="#" data-status="open">Open</a></li>
+                        <li><a class="dropdown-item js-status-option" href="#" data-status="closed">Closed</a></li>
+                        <li><a class="dropdown-item js-status-option" href="#" data-status="over">Over</a></li>
+                    </ul>
+                </div>
+
+                <!-- Search Input -->
+                <div class="position-relative">
+                    <input type="text" id="all-event-search" class="form-control form-control-sm text-white ps-5" placeholder="Rechercher par nom..." style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px; border-radius: 20px;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            #my-event-search::placeholder, #all-event-search::placeholder {
+                color: white !important;
+                opacity: 0.7;
+            }
+            .btn-tc-outline {
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.2);
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            .btn-tc-outline:hover, .btn-tc-outline:focus {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            .dropdown-menu-dark .dropdown-item.active {
+                background-color: var(--tc-cyan, #0dcaf0);
+                color: #000;
+            }
+        </style>
+
+        <div class="row g-4" id="all-events-container">
+            {% for e in events %}
+                <div class="col-12 col-sm-6 col-lg-4 all-event-item"
+                     data-name="{{ e.nomEvenement|lower }}"
+                     data-date="{{ e.dateDebut.timestamp }}"
+                     data-status="{{ e.status|lower }}"
+                     data-type="{{ e.typeEvenement|lower }}"
+                     data-rating="{{ e.averageRating }}"
+                     data-id="{{ e.id }}">
+                    <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
+                        {% if e.imageEvenement %}
+                            <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
+                        {% else %}
+                            <div class="discovery-avatar mx-auto mb-3">
+                                {{ e.nomEvenement|slice(0, 2)|upper }}
+                            </div>
+                        {% endif %}
+                        <h3 class="discovery-card-title mb-1">{{ e.nomEvenement }}</h3>
+                        <div class="mb-3 d-flex justify-content-center">
+                            <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill" style="background-color: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3);" id="rating-display-all-{{ e.id }}">
+                                {% if e.reviewCount > 0 %}
+                                    <span class="text-warning fw-bold" style="font-size: 0.95rem;">{{ e.averageRating|number_format(1) }}</span>
+                                    <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));"></i>
+                                    <span class="text-white-50 ms-1" style="font-size: 0.8rem;">({{ e.reviewCount }} avis)</span>
+                                {% else %}
+                                    <span class="text-white-50 fst-italic" style="font-size: 0.85rem;">Aucun avis</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-white-50 small mb-1">
+                            <span class="badge {{ e.status == 'open' ? 'status-open' : (e.status == 'over' ? 'bg-secondary' : 'bg-danger') }}">{{ e.status|upper }}</span>
+                            <span class="ms-2 fw-bold text-white">{{ e.participations|length }}/{{ e.place.capaciteMax }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <i class="bi bi-geo-alt-fill place-label" style="font-size: 0.85rem;"></i> 
+                            <span class="place-label" style="font-size: 0.85rem;">Lieu: {{ e.place.nomPlace }}</span>
+                        </div>
+                        <div class="text-white-50 small mb-3">
+                            <div><span class="date-label">Début:</span> {{ e.dateDebut|date('d M Y, H:i') }}</div>
+                            <div><span class="date-label">Fin:</span> {{ e.dateFin|date('d M Y, H:i') }}</div>
+                        </div>
+                        
+                        {% set isParticipating = false %}
+                        {% if app.user %}
+                            {% for p in e.participations %}
+                                {% if p.user == app.user %}
+                                    {% set isParticipating = true %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if isParticipating %}
+                            {% if e.status == 'over' %}
+                                <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold mb-2" disabled>Terminé</button>
+                                <button class="btn btn-outline-warning text-decoration-none text-center w-100 fw-bold open-review-modal" data-event-id="{{ e.id }}" data-event-name="{{ e.nomEvenement }}" data-bs-toggle="modal" data-bs-target="#reviewModal">⭐ Laisser un avis</button>
+                            {% else %}
+                                <form method="post" action="{{ path('app_event_cancel_participation', {'id': e.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler votre participation à cet événement ?');" class="mt-auto">
+                                    <button type="submit" class="btn btn-outline-danger w-100 fw-bold">Annuler ma participation</button>
+                                </form>
+                            {% endif %}
+                        {% elseif e.status == 'closed' or e.participations|length >= e.place.capaciteMax %}
+                            <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold" disabled>Complet</button>
+                        {% elseif e.status == 'over' %}
+                            <button class="btn btn-secondary mt-auto text-decoration-none text-center disabled w-100 fw-bold" disabled>Terminé</button>
+                        {% else %}
+                            <a href="{{ path('app_event_participate', {id: e.getId()}) }}" class="btn btn-recruit mt-auto text-decoration-none text-center w-100 fw-bold">Participer</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div id="all-events-no-results" class="col-12 mt-4 pb-4 d-none">
+            <div class="p-5 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                <p class="text-white-50 mb-0">
+                    Aucun événement ne correspond à vos critères de recherche.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">Avis pour <span id="reviewModalEventName" class="text-primary"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Form Section -->
+                    <div class="p-4" style="background-color: rgba(255,255,255,0.02);">
+                        <h6 class="text-center mb-3">Quelle est votre note ?</h6>
+                        <!-- Interactive Stars -->
+                        <div class="d-flex justify-content-center mb-2">
+                            <div id="star-rater" class="position-relative" style="cursor: pointer; width: 190px; height: 40px; transition: transform 0.1s;">
+                                <!-- Background Stars (Empty/Grey) -->
+                                <div class="position-absolute top-0 start-0 d-flex gap-2 text-secondary" style="font-size: 2rem;">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                </div>
+                                <!-- Foreground Stars (Filled/Warning) -->
+                                <div id="star-rater-fill" class="position-absolute top-0 start-0 h-100 overflow-hidden text-warning" style="font-size: 2rem; width: 0%; pointer-events: none;">
+                                    <div class="d-flex gap-2" style="width: 190px;">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center text-warning fw-bold fs-4 mb-4"><span id="review-rating-display">0.0</span> / 5.0</div>
+                        <input type="hidden" id="review-rating-input" value="0">
+                        <input type="hidden" id="review-event-id" value="">
+                        <textarea id="review-message-input" class="form-control form-control-sm bg-black text-white border-secondary mb-3" rows="3" placeholder="Écrivez votre avis ici (optionnel)..." style="resize: none;"></textarea>
+                        <button id="submitReviewBtn" class="btn btn-primary w-100 fw-bold">
+                            <span class="submit-text">Soumettre mon avis</span>
+                            <span class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div id="review-form-alert" class="alert d-none mt-3 p-2 small text-center mb-0"></div>
+                    </div>
+                    
+                    <div class="border-top border-secondary border-opacity-25 my-0"></div>
+                    
+                    <!-- Reviews List Section -->
+                    <div class="p-4 pt-3">
+                        <h6 class="mb-3">Avis de la communauté (<span id="modal-review-count">0</span>)</h6>
+                        <div id="reviews-feed" class="d-flex flex-column gap-3 pe-2" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin;">
+                            <div class="text-center text-secondary small py-3" id="loading-reviews">Chargement des avis...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Edit Modals for My Events #}
+    {% if app.user and myEvents is not empty %}
+        {% for e in myEvents %}
+            <div class="modal fade" id="editModal{{ e.getId() }}" tabindex="-1" aria-labelledby="editModalLabel{{ e.getId() }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content" style="background: var(--tc-bg-card, #1a1a2e); color: var(--tc-text, #fff);">
+                        <div class="modal-header" style="border-color: rgba(255,255,255,0.1);">
+                            <h5 class="modal-title" id="editModalLabel{{ e.getId() }}">Modifier l'événement</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {% if forms[e.getId()] is defined %}
+                                {{ form_start(forms[e.getId()], { attr: { novalidate: 'novalidate', enctype: 'multipart/form-data' } }) }}
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].nomEvenement, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].nomEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].nomEvenement) }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].typeEvenement, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].typeEvenement, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].typeEvenement) }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].dateDebut, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].dateDebut, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].dateDebut) }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].dateFin, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].dateFin, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].dateFin) }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].status, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].status, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].status) }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].place, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].place, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].place) }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form_label(forms[e.getId()].imageFile, null, {'label_attr': {'class': 'text-white'}}) }}
+                                        {{ form_widget(forms[e.getId()].imageFile, {'attr': {'class': 'form-control bg-dark text-white border-secondary'}}) }}
+                                        <div class="text-danger small mt-1">{{ form_errors(forms[e.getId()].imageFile) }}</div>
+                                    </div>
+                                    <div class="modal-footer" style="border-color: rgba(255,255,255,0.1);">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                    </div>
+                                {{ form_end(forms[e.getId()]) }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {# Script to reopen modal if there are validation errors #}
+    {% if edit_event_id is defined %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var editModal = new bootstrap.Modal(document.getElementById('editModal{{ edit_event_id }}'));
+                editModal.show();
+            });
+        </script>
+    {% endif %}
+
+    {# Calendar Modal #}
+    <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content calendar-modal-content text-white">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold">📅 Mon Calendrier d'Événements</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="calendar" style="min-height: 600px;"></div>
+                </div>
+                <div class="modal-footer border-top border-secondary border-opacity-25 bg-black bg-opacity-25">
+                    <div class="d-flex flex-wrap gap-4 small fw-bold">
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="background: linear-gradient(135deg, #10b981, #059669); width: 14px; height: 14px; border-radius: 4px;">&nbsp;</span> 
+                            <span class="text-white-50">OPEN</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="background: linear-gradient(135deg, #f43f5e, #be123c); width: 14px; height: 14px; border-radius: 4px;">&nbsp;</span> 
+                            <span class="text-white-50">CLOSED (FULL)</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="background: #475569; width: 14px; height: 14px; border-radius: 4px;">&nbsp;</span> 
+                            <span class="text-white-50">OVER</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge p-1 me-2" style="border: 1px solid #06b6d4; box-shadow: 0 0 8px rgba(6, 182, 212, 0.5); width: 14px; height: 14px; border-radius: 4px; background: rgba(6, 182, 212, 0.2);">&nbsp;</span>
+                            <span style="animation: running-lean 0.8s infinite ease-in-out; display: inline-block; font-size: 1.2rem;">🏃</span> 
+                            <span class="text-info ms-1">PARTICIPATING</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary border-0 ms-auto px-4 fw-bold" data-bs-dismiss="modal">Ferme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        themeSystem: 'standard',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listMonth'
+        },
+        height: 'auto',
+        events: '/api/my-events/calendar',
+        eventClick: function(info) {
+            if (info.event.url) {
+                // Prevent default browser navigation if needed
+                // For now, let it follow the URL to /events
+            }
+        },
+        eventContent: function(arg) {
+            let runnerHtml = '';
+            if (arg.event.extendedProps.isParticipating) {
+                runnerHtml = '<span class="fc-event-runner">🏃</span>';
+            }
+            
+            // Re-introducing the "Living Square"
+            let status = arg.event.extendedProps.status;
+            let squareHtml = '<span class="fc-event-square square-' + status + '"></span>';
+            
+            let participatingClass = arg.event.extendedProps.isParticipating ? 'event-participating' : '';
+            
+            // Return pill-style content with square inside and runner on the right
+            return {
+                html: '<div class="fc-content d-flex align-items-center w-100 fc-event-tag ' + participatingClass + '">' + 
+                      squareHtml + 
+                      '<span class="fc-event-title text-truncate fw-bold flex-grow-1">' + arg.event.title.replace('★ ', '').replace('🚶 ', '').replace('🏃 ', '') + '</span>' + 
+                      runnerHtml + 
+                      '</div>'
+            };
+        },
+        eventDidMount: function(info) {
+            info.el.style.background = 'none';
+            info.el.style.border = 'none';
+            
+            // Reverted to simple tooltip
+            info.el.title = info.event.title.replace('★ ', '').replace('🏃 ', '').replace('🚶 ', '') + '\n' + 
+                           '📍 Lieu: ' + info.event.extendedProps.place + '\n' + 
+                           '🎮 Type: ' + info.event.extendedProps.type + '\n' +
+                           '📊 Statut: ' + info.event.extendedProps.status.toUpperCase();
+        }
+    });
+
+    // Re-render calendar when modal is shown to fix layout issues
+    var modalEl = document.getElementById('calendarModal');
+    modalEl.addEventListener('shown.bs.modal', function () {
+        calendar.render();
+    });
+
+});
+
+// --- LIVE SEARCH, FILTER & SORT LOGIC ---
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Helper for Sorting ---
+    function sortItemsLogic(items, direction) {
+        return items.sort((a, b) => {
+            const dataA = {
+                date: parseInt(a.getAttribute('data-date') || '0'),
+                id: parseInt(a.getAttribute('data-id') || '0'),
+                name: (a.getAttribute('data-name') || '').toLowerCase(),
+                status: (a.getAttribute('data-status') || '').toLowerCase(),
+                rating: parseFloat(a.getAttribute('data-rating') || '0.0'),
+            };
+            const dataB = {
+                date: parseInt(b.getAttribute('data-date') || '0'),
+                id: parseInt(b.getAttribute('data-id') || '0'),
+                name: (b.getAttribute('data-name') || '').toLowerCase(),
+                status: (b.getAttribute('data-status') || '').toLowerCase(),
+                rating: parseFloat(b.getAttribute('data-rating') || '0.0'),
+            };
+            
+            if (direction === 'name_asc' || direction === 'name_desc') {
+                const comparison = dataA.name.localeCompare(dataB.name);
+                return direction === 'name_asc' ? comparison : -comparison;
+            }
+            if (direction === 'rating_asc') {
+                const cmp = dataA.rating - dataB.rating;
+                return cmp !== 0 ? cmp : (dataB.date - dataA.date); // fallback to date desc
+            }
+            if (direction === 'rating_desc') {
+                const cmp = dataB.rating - dataA.rating;
+                return cmp !== 0 ? cmp : (dataB.date - dataA.date); // fallback to date desc
+            }
+            if (direction === 'status_open' || direction === 'status_closed') {
+                const targetStatus = direction === 'status_open' ? 'open' : 'closed';
+                const aIsTarget = dataA.status === targetStatus ? 1 : 0;
+                const bIsTarget = dataB.status === targetStatus ? 1 : 0;
+                if (aIsTarget !== bIsTarget) {
+                    return bIsTarget - aIsTarget; // 1 comes before 0
+                }
+                // Fallback to date
+                return dataB.date - dataA.date;
+            }
+            if (direction === 'date_asc') {
+                return dataA.date - dataB.date;
+            }
+            // default date_desc
+            return dataB.date - dataA.date;
+        });
+    }
+
+    // --- My Events Logic ---
+    const myEventsContainer = document.getElementById('my-events-container');
+    const myEventsNoResults = document.getElementById('my-events-no-results');
+    const mySearchInput = document.getElementById('my-event-search');
+    const mySortOptions = document.querySelectorAll('.js-my-sort-option');
+    const myCurrentSortLabel = document.getElementById('myCurrentSortLabel');
+    
+    if (myEventsContainer) {
+        let myItems = Array.from(myEventsContainer.querySelectorAll('.my-event-item'));
+        let myCurrentFilter = '';
+        let myCurrentSortDir = 'date_desc';
+
+        function applyMyFilters() {
+            let visibleCount = 0;
+            let visibleItems = [];
+
+            myItems.forEach(item => {
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                const matchesSearch = !myCurrentFilter || name.includes(myCurrentFilter);
+                
+                if (matchesSearch) {
+                    item.style.display = 'block';
+                    visibleItems.push(item);
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                myEventsNoResults.classList.remove('d-none');
+            } else {
+                myEventsNoResults.classList.add('d-none');
+                
+                // Sort visible items
+                const sortedItems = sortItemsLogic(visibleItems, myCurrentSortDir);
+                sortedItems.forEach(item => myEventsContainer.appendChild(item));
+            }
+        }
+
+        if (mySearchInput) {
+            mySearchInput.addEventListener('input', (e) => {
+                myCurrentFilter = e.target.value.toLowerCase().trim();
+                applyMyFilters();
+            });
+        }
+
+        mySortOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                myCurrentSortDir = this.getAttribute('data-sort');
+                
+                mySortOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (myCurrentSortLabel) myCurrentSortLabel.textContent = this.textContent;
+
+                applyMyFilters();
+            });
+        });
+        
+        // Initial sort
+        applyMyFilters();
+    }
+
+    // --- All Events Logic ---
+    const allEventsContainer = document.getElementById('all-events-container');
+    const allEventsNoResults = document.getElementById('all-events-no-results');
+    const allSearchInput = document.getElementById('all-event-search');
+    
+    const allSortOptions = document.querySelectorAll('.js-all-sort-option');
+    const allCurrentSortLabel = document.getElementById('allCurrentSortLabel');
+    
+    const typeOptions = document.querySelectorAll('.js-type-option');
+    const currentTypeLabel = document.getElementById('currentTypeLabel');
+    
+    const statusOptions = document.querySelectorAll('.js-status-option');
+    const currentStatusLabel = document.getElementById('currentStatusLabel');
+
+    if (allEventsContainer) {
+        let allItems = Array.from(allEventsContainer.querySelectorAll('.all-event-item'));
+        let allCurrentFilter = '';
+        let allCurrentType = 'all';
+        let allCurrentStatus = 'all';
+        let allCurrentSortDir = 'date_desc';
+
+        function applyAllFilters() {
+            let visibleCount = 0;
+            let visibleItems = [];
+
+            allItems.forEach(item => {
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                const type = (item.getAttribute('data-type') || '').toLowerCase();
+                const status = (item.getAttribute('data-status') || '').toLowerCase();
+                
+                const matchesSearch = !allCurrentFilter || name.includes(allCurrentFilter);
+                const matchesType = allCurrentType === 'all' || type === allCurrentType;
+                const matchesStatus = allCurrentStatus === 'all' || status === allCurrentStatus;
+                
+                if (matchesSearch && matchesType && matchesStatus) {
+                    item.style.display = 'block';
+                    visibleItems.push(item);
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                allEventsNoResults.classList.remove('d-none');
+            } else {
+                allEventsNoResults.classList.add('d-none');
+                
+                // Sort visible items
+                const sortedItems = sortItemsLogic(visibleItems, allCurrentSortDir);
+                sortedItems.forEach(item => allEventsContainer.appendChild(item));
+            }
+        }
+
+        if (allSearchInput) {
+            allSearchInput.addEventListener('input', (e) => {
+                allCurrentFilter = e.target.value.toLowerCase().trim();
+                applyAllFilters();
+            });
+        }
+
+        allSortOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                allCurrentSortDir = this.getAttribute('data-sort');
+                
+                allSortOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (allCurrentSortLabel) allCurrentSortLabel.textContent = this.textContent;
+
+                applyAllFilters();
+            });
+        });
+
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                allCurrentType = this.getAttribute('data-type');
+                
+                typeOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (currentTypeLabel) currentTypeLabel.textContent = this.textContent;
+
+                applyAllFilters();
+            });
+        });
+
+        statusOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                allCurrentStatus = this.getAttribute('data-status');
+                
+                statusOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                if (currentStatusLabel) currentStatusLabel.textContent = this.textContent;
+
+                applyAllFilters();
+            });
+        });
+        
+        // Initial sort
+        applyAllFilters();
+    }
+
+    // --- Review Modal Logic ---
+    const reviewModalElement = document.getElementById('reviewModal');
+    if (reviewModalElement) {
+        const modalEventName = document.getElementById('reviewModalEventName');
+        const eventIdInput = document.getElementById('review-event-id');
+        const reviewsFeed = document.getElementById('reviews-feed');
+        const modalReviewCount = document.getElementById('modal-review-count');
+        
+        const rater = document.getElementById('star-rater');
+        const raterFill = document.getElementById('star-rater-fill');
+        const ratingDisplay = document.getElementById('review-rating-display');
+        const ratingInput = document.getElementById('review-rating-input');
+        const messageInput = document.getElementById('review-message-input');
+        const submitBtn = document.getElementById('submitReviewBtn');
+        const formAlert = document.getElementById('review-form-alert');
+        
+        let isRatingLocked = false;
+        let currentEventId = null;
+        
+        // Open Modal handler
+        document.querySelectorAll('.open-review-modal').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-event-id');
+                const name = btn.getAttribute('data-event-name');
+                currentEventId = id;
+                
+                modalEventName.textContent = name;
+                eventIdInput.value = id;
+                
+                // Reset form
+                isRatingLocked = false;
+                raterFill.style.width = '0%';
+                ratingDisplay.textContent = '0.0';
+                ratingInput.value = '0';
+                messageInput.value = '';
+                formAlert.classList.add('d-none');
+                submitBtn.disabled = false;
+                
+                // Load existing reviews
+                loadReviews(id);
+            });
+        });
+
+        // Interactive Stars
+        rater.addEventListener('mousemove', (e) => {
+            if (isRatingLocked) return;
+            const rect = rater.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100)); // 0 to 100
+            
+            // Map percentage to 5.0 with 0.2 precision
+            const rawScore = (percentage / 100) * 5;
+            let precisionScore = (Math.round(rawScore * 5) / 5);
+            if (precisionScore < 0.2) precisionScore = 0.2; // Min rating
+            if (precisionScore > 5.0) precisionScore = 5.0; // Max rating
+            
+            raterFill.style.width = `${(precisionScore / 5) * 100}%`;
+            ratingDisplay.textContent = precisionScore.toFixed(1);
+        });
+
+        rater.addEventListener('mouseleave', () => {
+            if (!isRatingLocked) {
+                raterFill.style.width = '0%';
+                ratingDisplay.textContent = '0.0';
+            }
+        });
+
+        rater.addEventListener('click', (e) => {
+            const rect = rater.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+            
+            const rawScore = (percentage / 100) * 5;
+            let precisionScore = (Math.round(rawScore * 5) / 5);
+            if (precisionScore < 0.2) precisionScore = 0.2;
+            if (precisionScore > 5.0) precisionScore = 5.0;
+            
+            ratingInput.value = precisionScore.toFixed(1);
+            raterFill.style.width = `${(precisionScore / 5) * 100}%`;
+            ratingDisplay.textContent = precisionScore.toFixed(1);
+            isRatingLocked = true;
+            
+            // Quick flash
+            rater.style.transform = 'scale(0.95)';
+            setTimeout(() => rater.style.transform = 'scale(1)', 100);
+            formAlert.classList.add('d-none');
+        });
+
+        // Fetch Reviews
+        function loadReviews(eventId) {
+            reviewsFeed.innerHTML = '<div class="text-center text-secondary small py-3"><div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>Chargement des avis...</div>';
+            
+            fetch(`/events/${eventId}/reviews`)
+                .then(res => res.json())
+                .then(data => {
+                    modalReviewCount.textContent = data.reviewCount;
+                    renderReviews(data.reviews);
+                })
+                .catch(err => {
+                    console.error(err);
+                    reviewsFeed.innerHTML = '<div class="text-center text-danger small py-3">Erreur lors du chargement des avis.</div>';
+                });
+        }
+        
+        function renderReviews(reviews) {
+            if (reviews.length === 0) {
+                reviewsFeed.innerHTML = '<div class="text-center text-secondary small py-4 bg-black bg-opacity-25 rounded border border-secondary border-opacity-10">Aucun avis pour le moment.<br>Soyez le premier à partager votre expérience !</div>';
+                return;
+            }
+            
+            let html = '';
+            reviews.forEach(r => {
+                const percentage = (r.rating / 5) * 100;
+                
+                const date = new Date(r.createdAt);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffStr = diffDays > 0 ? `Il y a ${diffDays} jour(s)` : "Aujourd'hui";
+                
+                const avatarStr = r.userAvatar 
+                    ? `<img src="/uploads/profiles/${r.userAvatar}" class="rounded-circle" width="32" height="32" style="object-fit: cover;">`
+                    : `<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 32px; height: 32px; font-weight: bold;">${r.username.charAt(0).toUpperCase()}</div>`;
+                
+                html += `
+                    <div class="p-3 rounded border border-secondary border-opacity-25" style="background-color: rgba(255,255,255,0.03);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                ${avatarStr}
+                                <div>
+                                    <div class="fw-bold fs-6 lh-1">${r.username}</div>
+                                    <div class="text-secondary" style="font-size: 0.75rem;">${diffStr}</div>
+                                </div>
+                            </div>
+                            <div class="position-relative" style="width: 80px; height: 16px;">
+                                <div class="position-absolute top-0 start-0 d-flex gap-1 text-secondary" style="font-size: 0.8rem;">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                </div>
+                                <div class="position-absolute top-0 start-0 h-100 overflow-hidden text-warning" style="font-size: 0.8rem; width: ${percentage}%;">
+                                    <div class="d-flex gap-1" style="width: 80px;">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        ${r.message ? `<p class="mb-0 text-white-50 fs-6" style="word-wrap: break-word;">${r.message}</p>` : ''}
+                    </div>
+                `;
+            });
+            reviewsFeed.innerHTML = html;
+        }
+
+        // Submit Review
+        submitBtn.addEventListener('click', () => {
+            const rating = parseFloat(ratingInput.value);
+            const message = messageInput.value.trim();
+            
+            if (rating < 0.2 || rating > 5.0) {
+                showAlert('danger', 'Veuillez sélectionner une note en cliquant sur les étoiles.');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.submit-text').classList.add('d-none');
+            submitBtn.querySelector('.spinner-border').classList.remove('d-none');
+            
+            fetch(`/events/${currentEventId}/review/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating, message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.submit-text').classList.remove('d-none');
+                submitBtn.querySelector('.spinner-border').classList.add('d-none');
+                
+                if (data.success) {
+                    showAlert('success', data.message);
+                    
+                    // Reload reviews instantly
+                    loadReviews(currentEventId);
+                    
+                    // Update main cards averages live
+                    updateEventCardAverages(currentEventId, data.averageRating, data.reviewCount);
+                    
+                    // Reset inputs
+                    isRatingLocked = false;
+                    raterFill.style.width = '0%';
+                    ratingDisplay.textContent = '0.0';
+                    ratingInput.value = '0';
+                    messageInput.value = '';
+                } else {
+                    showAlert('danger', data.error || 'Erreur lors de la soumission.');
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.submit-text').classList.remove('d-none');
+                submitBtn.querySelector('.spinner-border').classList.add('d-none');
+                showAlert('danger', 'Erreur réseau.');
+                console.error(err);
+            });
+        });
+
+        function showAlert(type, msg) {
+            formAlert.className = `alert alert-${type} mt-3 p-2 small text-center mb-0`;
+            formAlert.textContent = msg;
+            formAlert.classList.remove('d-none');
+        }
+        
+        function updateEventCardAverages(id, avg, count) {
+            const formattedAvg = parseFloat(avg).toFixed(1);
+            const htmlContent = count > 0 
+                ? `<span class="text-warning fw-bold" style="font-size: 0.95rem;">${formattedAvg}</span>
+                   <i class="bi bi-star-fill text-warning" style="font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));"></i>
+                   <span class="text-white-50 ms-1" style="font-size: 0.8rem;">(${count} avis)</span>`
+                : `<span class="text-white-50 fst-italic" style="font-size: 0.85rem;">Aucun avis</span>`;
+            
+            // Update data attributes so sorting still works dynamically
+            document.querySelectorAll(`.my-event-item[data-id="${id}"]`).forEach(el => el.setAttribute('data-rating', avg));
+            document.querySelectorAll(`.all-event-item[data-id="${id}"]`).forEach(el => el.setAttribute('data-rating', avg));
+            
+            const myCard = document.getElementById(`rating-display-my-${id}`);
+            if (myCard) myCard.innerHTML = htmlContent;
+            
+            const allCard = document.getElementById(`rating-display-all-${id}`);
+            if (allCard) allCard.innerHTML = htmlContent;
+        }
+    }
+});
+</script>
+{% endblock %}

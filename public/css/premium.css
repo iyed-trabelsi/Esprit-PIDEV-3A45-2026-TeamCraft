@@ -1,0 +1,31 @@
+/* Premium Offer Styles */
+.featured-border {
+    border: 2px solid #ffca2c !important;
+    box-shadow: 0 0 15px rgba(255, 202, 44, 0.3);
+}
+
+.sponsored-highlight {
+    border: 2px solid #0dcaf0 !important;
+    box-shadow: 0 0 20px rgba(13, 202, 240, 0.4);
+    background: linear-gradient(145deg, #121212, #1a1a1a, #082d35) !important;
+}
+
+.featured-border::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 40px 40px 0;
+    border-color: transparent #ffca2c transparent transparent;
+}
+
+.sponsored-highlight::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 40px 40px 0;
+    border-color: transparent #0dcaf0 transparent transparent;
+}

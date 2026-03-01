@@ -1,0 +1,264 @@
+<style>
+    /* Gemini Chat Widget Styles */
+    #gemini-chat-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1050;
+    }
+
+    .gemini-chat-toggle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--tc-cyan);
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.3s ease, background 0.3s ease;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .gemini-chat-toggle:hover {
+        transform: scale(1.1);
+        background: var(--tc-cyan-hover);
+    }
+
+    .gemini-chat-box {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 350px;
+        height: 500px;
+        background: rgba(26, 26, 31, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--tc-border);
+        border-radius: 1rem;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        border-bottom-right-radius: 0;
+        animation: slideInUp 0.3s ease;
+    }
+
+    @keyframes slideInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .gemini-chat-header {
+        padding: 1rem;
+        background: rgba(14, 165, 233, 0.1);
+        border-bottom: 1px solid var(--tc-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .gemini-chat-header h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--tc-cyan);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .gemini-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .message {
+        max-width: 85%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .message.bot {
+        align-self: flex-start;
+        background: var(--tc-bg-input);
+        color: var(--tc-text);
+        border-bottom-left-radius: 0;
+    }
+
+    .message.user {
+        align-self: flex-end;
+        background: var(--tc-cyan);
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+
+    .gemini-chat-footer {
+        padding: 1rem;
+        border-top: 1px solid var(--tc-border);
+    }
+
+    .gemini-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .gemini-input {
+        background: var(--tc-bg-input) !important;
+        border-color: var(--tc-border) !important;
+        color: white !important;
+        font-size: 0.9rem !important;
+    }
+
+    .gemini-send-btn {
+        background: var(--tc-cyan) !important;
+        border: none !important;
+        color: white !important;
+    }
+
+    /* Loading Animation */
+    .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: 4px 0;
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: var(--tc-text-muted);
+        border-radius: 50%;
+        animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+</style>
+
+<div id="gemini-chat-container">
+    <button class="gemini-chat-toggle" id="chatToggle">
+        <i class="bi bi-robot"></i>
+    </button>
+
+    <div class="gemini-chat-box" id="chatBox">
+        <div class="gemini-chat-header">
+            <h5 class="font-display"><i class="bi bi-cpu"></i> TeamCraft AI</h5>
+            <button type="button" class="btn-close btn-close-white" id="closeChat"></button>
+        </div>
+        
+        <div class="gemini-chat-messages" id="chatMessages">
+            <div class="message bot">
+                Bonjour ! Je suis l'assistant IA de TeamCraft. Comment puis-je vous aider aujourd'hui ?
+            </div>
+        </div>
+
+        <div class="gemini-chat-footer">
+            <form id="geminiChatForm">
+                <div class="gemini-input-group">
+                    <input type="text" class="form-control gemini-input" id="userInput" placeholder="Posez une question..." autocomplete="off">
+                    <button type="submit" class="btn gemini-send-btn">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatToggle = document.getElementById('chatToggle');
+        const closeChat = document.getElementById('closeChat');
+        const chatBox = document.getElementById('chatBox');
+        const chatForm = document.getElementById('geminiChatForm');
+        const userInput = document.getElementById('userInput');
+        const chatMessages = document.getElementById('chatMessages');
+        let chatHistory = [];
+
+        const toggleChat = () => {
+            const isVisible = chatBox.style.display === 'flex';
+            chatBox.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) userInput.focus();
+        };
+
+        chatToggle.addEventListener('click', toggleChat);
+        closeChat.addEventListener('click', () => chatBox.style.display = 'none');
+
+        const appendMessage = (text, role) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Add to local history (limit to last 10 messages for performance)
+            chatHistory.push({ role: role, content: text });
+            if (chatHistory.length > 10) chatHistory.shift();
+        };
+
+        const showTypingIndicator = () => {
+            const indicator = document.createElement('div');
+            indicator.className = 'message bot typing-message';
+            indicator.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            chatMessages.appendChild(indicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return indicator;
+        };
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            userInput.value = '';
+            // Store history BEFORE appending the new user message to send the previous context
+            const currentHistory = [...chatHistory];
+            appendMessage(message, 'user');
+
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        history: currentHistory
+                    })
+                });
+
+                const data = await response.json();
+                typingIndicator.remove();
+
+                if (data.response) {
+                    appendMessage(data.response, 'bot');
+                } else if (data.error) {
+                    appendMessage("Désolé, TeamCraft AI est temporairement indisponible. Réessaie dans quelques instants !", 'bot');
+                }
+            } catch (error) {
+                typingIndicator.remove();
+                appendMessage("Désolé, TeamCraft AI est temporairement indisponible. Réessaie dans quelques instants !", 'bot');
+                console.error('Chat error:', error);
+            }
+        });
+    });
+</script>

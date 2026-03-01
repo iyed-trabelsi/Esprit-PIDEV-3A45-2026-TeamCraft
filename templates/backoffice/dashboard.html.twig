@@ -1,0 +1,170 @@
+{% extends 'backoffice/base.html.twig' %}
+
+{% block admin_heading %}Dashboard Admin{% endblock %}
+{% block admin_subheading %}Supervisez les joueurs, équipes, offres, événements et le forum.{% endblock %}
+
+{% block admin_content %}
+    {# 1. Section statistiques (KPIs) cliquables #}
+    <div class="row g-4 mb-5">
+        {# Total Joueurs -> /admin/players #}
+        <div class="col">
+            <a href="{{ path('admin_players') }}" class="text-decoration-none">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--tc-cyan);">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    {# Modification ici : totalPlayers pour avoir le compte exact des joueurs (6) #}
+                    <h3 class="h3 fw-bold mb-1 text-white">{{ userStats.totalPlayers }}</h3>
+                    <p class="text-white-50 small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Total Joueurs</p>
+                </div>
+            </a>
+        </div>
+
+        {# Équipes -> /admin/teams #}
+        <div class="col">
+            <a href="{{ path('admin_teams') }}" class="text-decoration-none">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3 class="h3 fw-bold mb-1 text-white">{{ teams|length }}</h3>
+                    <p class="text-white-50 small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Équipes</p>
+                </div>
+            </a>
+        </div>
+
+        {# Offres -> /admin/offers #}
+        <div class="col">
+            <a href="{{ path('admin_offers') }}" class="text-decoration-none">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--tc-neon-green);">
+                        <i class="bi bi-briefcase"></i>
+                    </div>
+                    <h3 class="h3 fw-bold mb-1 text-white">{{ offers|length }}</h3>
+                    <p class="text-white-50 small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Offres</p>
+                </div>
+            </a>
+        </div>
+
+        {# Événements -> /admin/events #}
+        <div class="col">
+            <a href="{{ path('admin_events') }}" class="text-decoration-none">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon" style="background: rgba(244, 63, 94, 0.1); color: #f43f5e;">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <h3 class="h3 fw-bold mb-1 text-white">{{ events|length }}</h3>
+                    <p class="text-white-50 small text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.05em;">Événements</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {# 2. Section de répartition rapide #}
+    <div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="card-tc p-4">
+            <h2 class="h5 mb-4 font-display text-uppercase">Répartition par Genre</h2>
+            <canvas id="genderChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-tc p-4">
+            <h2 class="h5 mb-4 font-display text-uppercase">Activité des Comptes</h2>
+            <canvas id="statusChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+</div>
+
+    {# 3. Tableaux (Rubriques, Posts) #}
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card-tc p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h5 mb-0 font-display">Rubriques</h2>
+                    <a href="{{ path('admin_rubriques') }}" class="btn btn-sm btn-outline-info">Voir tout</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm text-white">
+                        <thead>
+                            <tr><th>Nom</th><th>État</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for rubrique in rubriques %}
+                                <tr>
+                                    <td>{{ rubrique.nomRubrique }}</td>
+                                    <td>
+                                        <span class="badge {{ rubrique.etat == 'active' ? 'bg-success' : 'bg-secondary' }}">
+                                            {{ rubrique.etat }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card-tc p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h5 mb-0 font-display">Derniers Posts</h2>
+                    <a href="{{ path('admin_posts') }}" class="btn btn-sm btn-outline-info">Voir tout</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm text-white">
+                        <thead>
+                            <tr><th>Titre</th><th>Statut</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for post in posts %}
+                                <tr>
+                                    <td class="text-truncate" style="max-width: 150px;">{{ post.titre }}</td>
+                                    <td>
+                                        <span class="badge {{ post.statut == 'published' ? 'bg-info' : 'bg-warning' }}">
+                                            {{ post.statut }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Graphique Genre
+    const ctxGender = document.getElementById('genderChart').getContext('2d');
+    new Chart(ctxGender, {
+        type: 'doughnut',
+        data: {
+            labels: ['Hommes', 'Femmes'],
+            datasets: [{
+                data: [{{ userStats.genderDistribution.homme|default(0) }}, {{ userStats.genderDistribution.femme|default(0) }}],
+                backgroundColor: ['#0ea5e3', '#f43f5e'],
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+    });
+
+    // Graphique Statut
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'pie',
+        data: {
+            labels: ['Actifs', 'Inactifs', 'Bannis'],
+            datasets: [{
+                data: [{{ userStats.activeUsers }}, {{ userStats.inactiveUsers }},{{ userStats.bannedUsers }}],
+                backgroundColor: ['#22c55e', '#64748b','#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+    });
+</script>
+
+{% endblock %}
