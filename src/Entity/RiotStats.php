@@ -11,6 +11,7 @@ class RiotStats
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -53,8 +54,9 @@ class RiotStats
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $lastUpdated = null;
 
+    /** @var array<int, mixed> */
     #[ORM\Column(type: 'json', nullable: true)]
-    private ?array $recentMatches = [];
+    private array $recentMatches = [];
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $createdAt = null;
@@ -213,12 +215,18 @@ class RiotStats
         return $this;
     }
 
-    public function getRecentMatches(): ?array
+    /**
+     * @return array<int, mixed>
+     */
+    public function getRecentMatches(): array
     {
         return $this->recentMatches;
     }
 
-    public function setRecentMatches(?array $recentMatches): static
+    /**
+     * @param array<int, mixed> $recentMatches
+     */
+    public function setRecentMatches(array $recentMatches): static
     {
         $this->recentMatches = $recentMatches;
         return $this;

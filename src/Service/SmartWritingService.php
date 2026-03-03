@@ -72,7 +72,7 @@ class SmartWritingService
         foreach ($posts as $index => $post) {
             $formattedText .= "Post " . ($index + 1) . ": " . $post->getTitre() . "\n";
             $formattedText .= "Content: " . strip_tags((string) $post->getContenu()) . "\n";
-            
+
             $comments = $post->getComments();
             if (!$comments->isEmpty()) {
                 $formattedText .= "Comments:\n";
@@ -89,8 +89,8 @@ class SmartWritingService
         }
 
         $prompt = "You are an AI forum analyst.\n\nAnalyze and summarize the following forum discussion using this structure:\n\n" .
-                  "Main Topics Discussed\nKey Arguments\nProposed Solutions\nAreas of Disagreement\nOverall Community Sentiment\nFinal Takeaway\n\n" .
-                  "Discussion:\n" . $formattedText;
+            "Main Topics Discussed\nKey Arguments\nProposed Solutions\nAreas of Disagreement\nOverall Community Sentiment\nFinal Takeaway\n\n" .
+            "Discussion:\n" . $formattedText;
 
         try {
             $response = $this->client->request('POST', self::API_URL, [
@@ -179,7 +179,7 @@ class SmartWritingService
     /**
      * Ask the AI to identify the single best comment on a Post.
      *
-     * Returns an array: ['best_comment_id' => int|null, 'confidence' => float, 'reason' => string]
+     * @return array<string, mixed> ['best_comment_id' => int|null, 'confidence' => float, 'reason' => string]
      */
     public function findBestComment(Post $post): array
     {
@@ -215,20 +215,20 @@ class SmartWritingService
             $response = $this->client->request('POST', self::API_URL, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
-                    'Content-Type'  => 'application/json',
-                    'HTTP-Referer'  => 'https://teamcraft.com',
-                    'X-Title'       => 'TeamCraft Forum',
+                    'Content-Type' => 'application/json',
+                    'HTTP-Referer' => 'https://teamcraft.com',
+                    'X-Title' => 'TeamCraft Forum',
                 ],
                 'json' => [
-                    'model'    => 'openai/gpt-4o-mini',
+                    'model' => 'openai/gpt-4o-mini',
                     'messages' => [
                         [
-                            'role'    => 'system',
+                            'role' => 'system',
                             'content' => 'You are a helpful forum analyst. Always respond with only valid JSON, no markdown code blocks.',
                         ],
                         ['role' => 'user', 'content' => $prompt],
                     ],
-                    'max_tokens'      => 200,
+                    'max_tokens' => 200,
                     'response_format' => ['type' => 'json_object'],
                 ],
             ]);
@@ -245,8 +245,8 @@ class SmartWritingService
 
             return [
                 'best_comment_id' => $decoded['best_comment_id'],
-                'confidence'      => (float) ($decoded['confidence'] ?? 0.0),
-                'reason'          => (string) ($decoded['reason'] ?? ''),
+                'confidence' => (float) ($decoded['confidence'] ?? 0.0),
+                'reason' => (string) ($decoded['reason'] ?? ''),
             ];
 
         } catch (\Throwable $e) {

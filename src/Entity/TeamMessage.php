@@ -12,6 +12,7 @@ class TeamMessage
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -20,7 +21,7 @@ class TeamMessage
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'teamMessages')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $sender = null;
 

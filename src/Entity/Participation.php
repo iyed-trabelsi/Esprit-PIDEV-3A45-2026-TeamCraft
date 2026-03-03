@@ -15,6 +15,7 @@ class Participation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_participation')]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(nullable: true)]
@@ -76,14 +77,14 @@ class Participation
                 ->atPath('dateInscription')
                 ->addViolation();
         } elseif ($this->dateInscription > new \DateTime()) {
-            $context->buildViolation('La date d\'inscription ne peut pas être dans le futur.')
+            $context->buildViolation('La date d\'inscription ne peut pas ??tre dans le futur.')
                 ->atPath('dateInscription')
                 ->addViolation();
         }
 
         // evenement must not be null
         if ($this->evenement === null) {
-            $context->buildViolation('L\'événement est obligatoire.')
+            $context->buildViolation('L\'??v??nement est obligatoire.')
                 ->atPath('evenement')
                 ->addViolation();
         }
@@ -99,7 +100,7 @@ class Participation
         if ($this->evenement !== null && $this->user !== null) {
             foreach ($this->evenement->getParticipations() as $participation) {
                 if ($participation->getUser() === $this->user && $participation !== $this) {
-                    $context->buildViolation('Cet utilisateur participe déjà à cet événement.')
+                    $context->buildViolation('Cet utilisateur participe d??j?? ?? cet ??v??nement.')
                         ->atPath('user')
                         ->addViolation();
                     break;
@@ -110,7 +111,7 @@ class Participation
         // dateInscription must be before the event's start date
         if ($this->dateInscription !== null && $this->evenement !== null && $this->evenement->getDateDebut() !== null) {
             if ($this->dateInscription > $this->evenement->getDateDebut()) {
-                $context->buildViolation('La date d\'inscription ne peut pas être après la date de début de l\'événement.')
+                $context->buildViolation('La date d\'inscription ne peut pas ??tre apr??s la date de d??but de l\'??v??nement.')
                     ->atPath('dateInscription')
                     ->addViolation();
             }

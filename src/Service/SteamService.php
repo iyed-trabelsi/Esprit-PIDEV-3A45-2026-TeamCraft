@@ -29,6 +29,15 @@ class SteamService
     /**
      * Get player summary information
      */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function getPlayerSummary(string $steamId): ?array
     {
         try {
@@ -60,6 +69,15 @@ class SteamService
 
     /**
      * Get CS2 user stats
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
      */
     public function getUserStats(string $steamId): ?array
     {
@@ -97,6 +115,18 @@ class SteamService
 
     /**
      * Parse CS2 stats from Steam API response
+     */
+    /**
+     * @param array<string, mixed> $stats
+     * @return array<string, mixed>
+     */
+    /**
+     * @param array<string, mixed> $stats
+     * @return array<string, mixed>
+     */
+    /**
+     * @param array<string, mixed> $stats
+     * @return array<string, mixed>
      */
     private function parseCS2Stats(array $stats): array
     {
@@ -161,6 +191,15 @@ class SteamService
 
     /**
      * Get complete CS2 profile data
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
      */
     public function getCS2Profile(string $steamId): ?array
     {

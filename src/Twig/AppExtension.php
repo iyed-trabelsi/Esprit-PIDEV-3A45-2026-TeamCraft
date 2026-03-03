@@ -10,8 +10,8 @@ use Twig\TwigFunction;
 
 class AppExtension extends AbstractExtension
 {
-    private $friendRequestRepository;
-    private $security;
+    private FriendRequestRepository $friendRequestRepository;
+    private Security $security;
 
     public function __construct(FriendRequestRepository $friendRequestRepository, Security $security)
     {
@@ -26,6 +26,9 @@ class AppExtension extends AbstractExtension
         ];
     }
 
+    /**
+     * @return array<string, int>
+     */
     public function getNavbarData(): array
     {
         $user = $this->security->getUser();
@@ -74,11 +77,10 @@ class AppExtension extends AbstractExtension
         if ($interval->i > 0) {
             return $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
         }
-        
+
         return 'à l\'instant';
     }
 }
 
 
 
-    

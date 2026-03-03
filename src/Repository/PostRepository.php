@@ -23,23 +23,25 @@ class PostRepository extends ServiceEntityRepository
     public function findByRubrique(Rubrique $rubrique, ?\App\Entity\User $user = null): array
     {
         $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.auteur', 'a') // ✅ EAGER : évite N+1 sur auteur en Twig
+            ->addSelect('a')
             ->andWhere('p.rubrique = :rubrique')
             ->setParameter('rubrique', $rubrique);
 
         // On autorise "published" et "pending_review" pour tout le monde
         // "archived" reste réservé à l'auteur
         $allowedStatuses = ['published', 'pending_review'];
-        
+
         if ($user) {
             $qb->andWhere('p.statut IN (:public_statuses) OR (p.statut = :archived AND p.auteur = :user)')
-               ->setParameter('public_statuses', $allowedStatuses)
-               ->setParameter('archived', 'archived')
-               ->setParameter('user', $user);
+                ->setParameter('public_statuses', $allowedStatuses)
+                ->setParameter('archived', 'archived')
+                ->setParameter('user', $user);
         } else {
             $qb->andWhere('p.statut IN (:public_statuses)')
-               ->setParameter('public_statuses', $allowedStatuses);
+                ->setParameter('public_statuses', $allowedStatuses);
         }
-            
+
         return $qb->orderBy('p.dateCreation', 'DESC')
             ->getQuery()
             ->getResult();
@@ -127,7 +129,7 @@ class PostRepository extends ServiceEntityRepository
 
         if (!empty($likedIdsArr)) {
             $qb->andWhere('p.id NOT IN (:likedIds)')
-               ->setParameter('likedIds', $likedIdsArr);
+                ->setParameter('likedIds', $likedIdsArr);
         }
 
         return $qb->orderBy('p.dateCreation', 'DESC')
@@ -139,6 +141,10 @@ class PostRepository extends ServiceEntityRepository
     public function findRecentPopularPosts(int $limit = 4, ?\App\Entity\User $user = null): array
     {
         $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.auteur', 'a')   // ✅ EAGER : évite N+1 auteur
+            ->addSelect('a')
+            ->leftJoin('p.rubrique', 'r') // ✅ EAGER : évite N+1 rubrique
+            ->addSelect('r')
             ->where('p.statut = :status')
             ->setParameter('status', 'published');
 
@@ -156,7 +162,7 @@ class PostRepository extends ServiceEntityRepository
 
             if (!empty($likedIdsArr)) {
                 $qb->andWhere('p.id NOT IN (:likedIds)')
-                   ->setParameter('likedIds', $likedIdsArr);
+                    ->setParameter('likedIds', $likedIdsArr);
             }
         }
 

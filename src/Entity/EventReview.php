@@ -16,11 +16,12 @@ class EventReview
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 3, scale: 1)]
     #[Assert\NotBlank(message: 'La note est obligatoire.')]
-    #[Assert\Range(min: 0.0, max: 5.0, notInRangeMessage: 'La note doit être entre {{ min }} et {{ max }}.')]
+    #[Assert\Range(min: 0.0, max: 5.0, notInRangeMessage: 'La note doit ??tre entre {{ min }} et {{ max }}.')]
     private ?string $rating = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

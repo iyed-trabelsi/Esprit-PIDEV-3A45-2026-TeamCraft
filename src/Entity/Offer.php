@@ -16,11 +16,14 @@ class Offer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
+    /** @var Collection<int, Postulation> */
     #[ORM\OneToMany(mappedBy: 'offer', targetEntity: Postulation::class, orphanRemoval: true)]
     private Collection $postulations;
 
+    /** @var Collection<int, Application> */
     #[ORM\OneToMany(mappedBy: 'offer', targetEntity: Application::class, orphanRemoval: true)]
     private Collection $applications;
 
@@ -33,7 +36,7 @@ class Offer
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le titre est obligatoire.")]
     #[Assert\Length(max: 255)]
-    #[Assert\Regex('/^[\w\s\-\!\?\#\.]+$/', message: "Le titre contient des caractères non autorisés.")]
+    #[Assert\Regex('/^[\w\s\-\!\?\#\.]+$/', message: "Le titre contient des caract??res non autoris??s.")]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
@@ -53,7 +56,7 @@ class Offer
     private ?string $game = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: "Le rôle est obligatoire.")]
+    #[Assert\NotBlank(message: "Le r??le est obligatoire.")]
     private ?string $role = null;
 
     #[ORM\Column(length: 255)]
@@ -61,8 +64,8 @@ class Offer
     private ?string $rank = null;
 
     #[ORM\Column]
-    #[Assert\NotBlank(message: "Le nombre de joueurs à recruter est obligatoire.")]
-    #[Assert\Positive(message: "Le nombre de joueurs doit être positif.")]
+    #[Assert\NotBlank(message: "Le nombre de joueurs ?? recruter est obligatoire.")]
+    #[Assert\Positive(message: "Le nombre de joueurs doit ??tre positif.")]
     private ?int $nbPlayerRecruited = null;
 
     #[ORM\ManyToOne(inversedBy: 'offers')]
@@ -256,6 +259,14 @@ class Offer
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Application>
+     */
+    public function getApplications(): Collection
+    {
+        return $this->applications;
     }
 
     public function getViews(): int

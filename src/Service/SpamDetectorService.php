@@ -26,6 +26,15 @@ class SpamDetectorService
      * Checks if a comment or post is considered spam.
      * Returns an array with 'isSpam' (bool) and 'reason' (string|null).
      */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function checkSpam(User $user, string $text, string $countType = 'comment'): array
     {
         $text = trim($text);

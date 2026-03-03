@@ -1,0 +1,31 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src --level=6 --no-progress 2>&1 | Out-Fil ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\ForumController.php                                                                                 
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  433    Offset 'warning_message' does not exist on array{status: 'accept'|'pending_review', message: string, scores?:  
+         array<string, float>, error?: string}.                                                                         
+         ­ƒ¬¬  offsetAccess.notFound                                                                                      
+  516    Offset 'warning_message' does not exist on array{status: 'accept'|'pending_review', message: string, scores?:  
+         array<string, float>, error?: string}.                                                                         
+         ­ƒ¬¬  offsetAccess.notFound                                                                                      
+  698    Offset 'warning_message' does not exist on array{status: 'accept'|'pending_review', message: string, scores?:  
+         array<string, float>, error?: string}.                                                                         
+         ­ƒ¬¬  offsetAccess.notFound                                                                                      
+  699    Offset 'warning_message' does not exist on array{status: 'accept'|'pending_review', message: string, scores?:  
+         array<string, float>, error?: string}.                                                                         
+         ­ƒ¬¬  offsetAccess.notFound                                                                                      
+  842    Offset 'warning_message' does not exist on array{status: 'accept'|'pending_review', message: string, scores?:  
+         array<string, float>, error?: string}.                                                                         
+         ­ƒ¬¬  offsetAccess.notFound                                                                                      
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+
+ [ERROR] Found 5 errors                                                                                                
+

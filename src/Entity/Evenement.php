@@ -17,30 +17,31 @@ class Evenement
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_evenement')]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'Le nom de l\'événement est obligatoire.')]
+    #[Assert\NotBlank(message: 'Le nom de l\'??v??nement est obligatoire.')]
     #[Assert\Length(
         min: 8,
         max: 255,
-        minMessage: 'Le nom de l\'événement doit contenir au moins {{ limit }} caractères.',
-        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
+        minMessage: 'Le nom de l\'??v??nement doit contenir au moins {{ limit }} caract??res.',
+        maxMessage: 'Le nom ne peut pas d??passer {{ limit }} caract??res.'
     )]
     private ?string $nomEvenement = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'Le type d\'événement est obligatoire.')]
+    #[Assert\NotBlank(message: 'Le type d\'??v??nement est obligatoire.')]
     #[Assert\Length(
         min: 8,
         max: 255,
-        minMessage: 'Le type d\'événement doit contenir au moins {{ limit }} caractères.',
-        maxMessage: 'Le type ne peut pas dépasser {{ limit }} caractères.'
+        minMessage: 'Le type d\'??v??nement doit contenir au moins {{ limit }} caract??res.',
+        maxMessage: 'Le type ne peut pas d??passer {{ limit }} caract??res.'
     )]
     private ?string $typeEvenement = null;
 
     #[ORM\Column]
-    #[Assert\NotNull(message: 'La date de début est obligatoire.')]
+    #[Assert\NotNull(message: 'La date de d??but est obligatoire.')]
     private ?\DateTime $dateDebut = null;
 
     #[ORM\Column]
@@ -51,7 +52,7 @@ class Evenement
     #[Assert\NotBlank(message: 'Le statut est obligatoire.')]
     #[Assert\Choice(
         choices: ['open', 'closed', 'over'],
-        message: 'Le statut doit être "open", "closed" ou "over".'
+        message: 'Le statut doit ??tre "open", "closed" ou "over".'
     )]
     private ?string $status = null;
 
@@ -60,17 +61,19 @@ class Evenement
     #[Assert\NotNull(message: 'Le lieu est obligatoire.')]
     private ?Place $place = null;
 
+    /** @var Collection<int, Participation> */
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: Participation::class, orphanRemoval: true)]
     private Collection $participations;
 
+    /** @var Collection<int, EventReview> */
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: EventReview::class, orphanRemoval: true)]
     private Collection $reviews;
 
     #[ORM\Column(type: 'float', options: ['default' => 0])]
-    private ?float $averageRating = 0.0;
+    private float $averageRating = 0.0;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
-    private ?int $reviewCount = 0;
+    private int $reviewCount = 0;
 
     public function __construct()
     {
@@ -150,7 +153,7 @@ class Evenement
     }
 
     /**
-     * @return Collection|Participation[]
+     * @return Collection<int, Participation>
      */
     public function getParticipations(): Collection
     {
@@ -208,7 +211,7 @@ class Evenement
         return $this;
     }
 
-    public function getAverageRating(): ?float
+    public function getAverageRating(): float
     {
         return $this->averageRating;
     }
@@ -219,7 +222,7 @@ class Evenement
         return $this;
     }
 
-    public function getReviewCount(): ?int
+    public function getReviewCount(): int
     {
         return $this->reviewCount;
     }
@@ -244,7 +247,7 @@ class Evenement
 
         // check dates are not null
         if ($this->dateDebut === null) {
-            $context->buildViolation('La date de début est obligatoire.')
+            $context->buildViolation('La date de d??but est obligatoire.')
                 ->atPath('dateDebut')
                 ->addViolation();
         }
@@ -256,16 +259,16 @@ class Evenement
         }
 
         if ($this->dateDebut !== null && $this->dateFin !== null) {
-            // end date ≥ start date
+            // end date ??? start date
             if ($this->dateFin < $this->dateDebut) {
-                $context->buildViolation('La date de fin doit être postérieure ou égale à la date de début.')
+                $context->buildViolation('La date de fin doit ??tre post??rieure ou ??gale ?? la date de d??but.')
                     ->atPath('dateFin')
                     ->addViolation();
             }
 
-            // start date ≥ today
+            // start date ??? today
             if ($this->dateDebut < $today) {
-                $context->buildViolation('La date de début ne peut pas être dans le passé.')
+                $context->buildViolation('La date de d??but ne peut pas ??tre dans le pass??.')
                     ->atPath('dateDebut')
                     ->addViolation();
             }

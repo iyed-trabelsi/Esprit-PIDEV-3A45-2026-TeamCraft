@@ -18,17 +18,11 @@ use App\Service\NotificationService;
 class TeamController extends AbstractController
 {
     private NotificationService $notificationService;
-    private \App\Service\PremiumService $premiumService;
-    private \App\Service\OfferLifecycleService $offerLifecycleService;
 
     public function __construct(
         NotificationService $notificationService,
-        \App\Service\PremiumService $premiumService,
-        \App\Service\OfferLifecycleService $offerLifecycleService
     ) {
         $this->notificationService = $notificationService;
-        $this->premiumService = $premiumService;
-        $this->offerLifecycleService = $offerLifecycleService;
     }
 
     #[Route('/teams', name: 'app_teams')]
@@ -48,7 +42,7 @@ class TeamController extends AbstractController
         }
 
         $myTeams = [];
-        if ($user) {
+        if ($user instanceof \App\Entity\User) {
             $ownedTeams = $user->getTeams();
             $joinedTeams = $teamRepository->findTeamsByMember($user);
 
@@ -141,7 +135,7 @@ class TeamController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $teams = $user->getTeams();
+        $teams = ($user instanceof \App\Entity\User) ? $user->getTeams() : [];
 
         return $this->render('frontoffice/teams/my_teams.html.twig', [
             'teams' => $teams,

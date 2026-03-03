@@ -6,6 +6,18 @@ use App\Dto\GamerPerformanceDto;
 
 class Cs2PerformanceCalculator implements GamePerformanceCalculatorInterface
 {
+    /**
+     * @param array<int, array<string, mixed>> $matches
+     * @param array<string, mixed> $rankData
+     */
+    /**
+     * @param array<int, array<string, mixed>> $matches
+     * @param array<string, mixed> $rankData
+     */
+    /**
+     * @param array<int, array<string, mixed>> $matches
+     * @param array<string, mixed> $rankData
+     */
     public function calculate(array $matches, array $rankData = []): GamerPerformanceDto
     {
         // For CS2, we expect stats in rankData if matches is empty (since it's aggregate data)

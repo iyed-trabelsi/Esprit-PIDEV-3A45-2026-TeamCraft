@@ -27,18 +27,18 @@ use Symfony\Component\Mime\Email;
 
 class AdminController extends AbstractController
 {
-#[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
+    #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(
-        Request $request, 
+        Request $request,
         RubriqueRepository $rubriqueRepository,
-        UserRepository $userRepo, 
-        PostRepository $postRepository, 
+        UserRepository $userRepo,
+        PostRepository $postRepository,
         CommentRepository $commentRepository,
         PlayerRepository $playerRepo,
         TeamRepository $teamRepo,
         OfferRepository $offerRepo
     ): Response {
-        
+
         // 1. STATS RÉELLES
         $stats = [
             'totalUsers' => $userRepo->countAllUsers(),
@@ -48,7 +48,7 @@ class AdminController extends AbstractController
             'bannedUsers' => $userRepo->countBannedUsers(),
             'genderDistribution' => $userRepo->countByGender(),
         ];
-        
+
         $limit = 5;
 
         // 2. PAGINATION RUBRIQUES
@@ -71,12 +71,12 @@ class AdminController extends AbstractController
         $totalComments = count($allComments);
         $maxPagesComments = (int) ceil($totalComments / $limit) ?: 1;
         $comments = array_slice($allComments, ($pageComments - 1) * $limit, $limit);
-        
+
         return $this->render('backoffice/dashboard.html.twig', [
             'userStats' => $stats,
-            'players' => $playerRepo->findAll(),
-            'teams' => $teamRepo->findAll(),
-            'offers' => $offerRepo->findAll(),
+            'players' => $playerRepo->findForAdmin(null, null, 10, 0), // ✅ limité + JOIN user
+            'teams' => $teamRepo->searchByNameOrGame(null, null, null, 10, 0), // ✅ limité + JOIN owner
+            'offers' => $offerRepo->findBy([], ['dateCreation' => 'DESC'], 10), // ✅ limité
             'events' => $this->getEvents(), // Méthode privée en bas
             'rubriques' => $rubriques,
             'rubriquesCurrentPage' => $pageRubriques,
@@ -95,7 +95,7 @@ class AdminController extends AbstractController
     #[Route('/admin/user/{id}/block', name: 'admin_user_block', methods: ['POST'])]
     public function blockUser(User $user, EntityManagerInterface $em, MailerInterface $mailer): Response
     {
-        $user->setIsActive(false); 
+        $user->setIsActive(false);
         $em->flush();
 
         $email = (new Email())
@@ -133,59 +133,59 @@ class AdminController extends AbstractController
         ]);
     }
 
-#[Route('/admin/players/save', name: 'admin_player_save', methods: ['POST'])]
-public function savePlayer(Request $request, EntityManagerInterface $em, PlayerRepository $playerRepository, UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher): Response
-{
-    $id = $request->request->get('id');
-    $pseudo = $request->request->get('pseudo');
-    $status = $request->request->get('status') ?? 'Active'; // Récupère Active, Inactive ou Banned
+    #[Route('/admin/players/save', name: 'admin_player_save', methods: ['POST'])]
+    public function savePlayer(Request $request, EntityManagerInterface $em, PlayerRepository $playerRepository, UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher): Response
+    {
+        $id = $request->request->get('id');
+        $pseudo = $request->request->get('pseudo');
+        $status = $request->request->get('status') ?? 'Active'; // Récupère Active, Inactive ou Banned
 
-    if ($id) {
-        $player = $playerRepository->find($id);
-        if (!$player) {
-            throw $this->createNotFoundException('Joueur introuvable');
+        if ($id) {
+            $player = $playerRepository->find($id);
+            if (!$player) {
+                throw $this->createNotFoundException('Joueur introuvable');
+            }
+            $user = $player->getUser();
+        } else {
+            $user = $userRepository->findOneBy(['pseudo' => $pseudo]);
+            if (!$user) {
+                $user = new \App\Entity\User();
+                $user->setPseudo($pseudo);
+                $user->setUsername($pseudo);
+                $user->setName($pseudo);
+                $user->setEmail(uniqid('player_') . '@example.com');
+                $user->setPassword($passwordHasher->hashPassword($user, 'password123'));
+                $user->setRoles(['ROLE_USER']);
+                $user->setUserType('player');
+                $em->persist($user);
+            }
+            $player = new Player();
+            $player->setUser($user);
         }
-        $user = $player->getUser();
-    } else {
-        $user = $userRepository->findOneBy(['pseudo' => $pseudo]);
-        if (!$user) {
-            $user = new \App\Entity\User();
-            $user->setPseudo($pseudo);
-            $user->setUsername($pseudo);
-            $user->setName($pseudo);
-            $user->setEmail(uniqid('player_') . '@example.com');
-            $user->setPassword($passwordHasher->hashPassword($user, 'password123'));
-            $user->setRoles(['ROLE_USER']);
-            $user->setUserType('player');
+
+        // --- LA CORRECTION EST ICI ---
+        // On met à jour le statut du Joueur
+        $player->setStatus($status);
+
+        // On synchronise avec l'entité User pour que les stats du dashboard soient correctes
+        // Si le statut est 'Active', isActive = true. Sinon (Inactive ou Banned), isActive = false.
+        if ($user) {
+            $user->setIsActive($status === 'Active');
             $em->persist($user);
         }
-        $player = new Player();
-        $player->setUser($user);
+        // -----------------------------
+
+        $player->setGame($request->request->get('game'));
+        $player->setGameRank($request->request->get('rank'));
+        $player->setRole($request->request->get('role'));
+        $player->setRegion($request->request->get('region'));
+
+        $em->persist($player);
+        $em->flush();
+
+        $this->addFlash('success', 'Joueur et compte utilisateur mis à jour avec succès.');
+        return $this->redirectToRoute('admin_players');
     }
-
-    // --- LA CORRECTION EST ICI ---
-    // On met à jour le statut du Joueur
-    $player->setStatus($status);
-
-    // On synchronise avec l'entité User pour que les stats du dashboard soient correctes
-    // Si le statut est 'Active', isActive = true. Sinon (Inactive ou Banned), isActive = false.
-    if ($user) {
-        $user->setIsActive($status === 'Active');
-        $em->persist($user);
-    }
-    // -----------------------------
-
-    $player->setGame($request->request->get('game'));
-    $player->setGameRank($request->request->get('rank'));
-    $player->setRole($request->request->get('role'));
-    $player->setRegion($request->request->get('region'));
-
-    $em->persist($player);
-    $em->flush();
-
-    $this->addFlash('success', 'Joueur et compte utilisateur mis à jour avec succès.');
-    return $this->redirectToRoute('admin_players');
-}
 
     #[Route('/admin/players/{id}/delete', name: 'admin_player_delete', methods: ['POST'])]
     public function deletePlayer(Player $player, EntityManagerInterface $em, Request $request): Response
@@ -240,10 +240,10 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
     #[Route('/admin/offers', name: 'admin_offers', methods: ['GET'])]
     public function offers(\Symfony\Component\HttpFoundation\Request $request, \App\Repository\OfferRepository $offerRepository, \App\Repository\PostulationRepository $postulationRepository): Response
     {
-        $allOffers = $offerRepository->findAll();
+        // ✅ Pagination directe en BDD : évite de charger TOUS les Offer en mémoire
+        $totalOffers = $offerRepository->count([]);
         $limit = 5;
         $page = max(1, $request->query->getInt('page', 1));
-        $totalOffers = count($allOffers);
         $maxPages = (int) ceil($totalOffers / $limit);
 
         if ($page > $maxPages && $maxPages > 0) {
@@ -251,9 +251,9 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
         }
 
         $offset = ($page - 1) * $limit;
-        $paginatedOffers = array_slice($allOffers, $offset, $limit);
+        $paginatedOffers = $offerRepository->findBy([], ['dateCreation' => 'DESC'], $limit, $offset);
 
-        // Calculate statistics for all applications
+        // Statistiques via DQL COUNT (une seule requête au lieu de N+1)
         $allApplications = $postulationRepository->findAll();
         $stats = [
             'accepted' => 0,
@@ -459,7 +459,7 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
     public function userBan(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $em): Response
     {
         $user = $userRepository->find($id);
-        
+
         /** @var \App\Entity\User $currentUser */
         $currentUser = $this->getUser();
         if ($user && $user->getId() === $currentUser->getId()) {
@@ -650,10 +650,13 @@ public function savePlayer(Request $request, EntityManagerInterface $em, PlayerR
             return $this->redirectToRoute('admin_rubriques');
         }
 
-        $rubriques = $rubriqueRepository->findAll();
-        foreach ($rubriques as $rubrique) {
-            $count = count($rubrique->getPosts());
-            $rubrique->setNbPosts($count);
+        // ✅ UNE seule requête DQL (SELECT r, COUNT(p.id)) au lieu de N+1
+        // AVANT : findAll() + count($rubrique->getPosts()) était un N+1 classique
+        $rows = $rubriqueRepository->findAllWithPostsCount();
+        foreach ($rows as $row) {
+            // findAllWithPostsCount retourne [{0: Rubrique, postCount: int}, ...]
+            $rubrique = $row[0];
+            $rubrique->setNbPosts((int) $row['postCount']);
         }
         $em->flush();
 

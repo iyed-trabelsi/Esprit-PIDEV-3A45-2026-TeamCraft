@@ -10,19 +10,17 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use App\Entity\Team;
-use App\Entity\FriendRequest;
-use App\Entity\Message;
-use App\Entity\Notification;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    /** @var int|null */
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
@@ -31,15 +29,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Length(max: 180)]
     private ?string $email = null;
 
-    /**
-     * @var list<string> The user roles
-     */
+    /** @var list<string> The user roles */
     #[ORM\Column]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     */
+    /** @var string The hashed password */
     #[ORM\Column]
     private ?string $password = null;
 
@@ -50,7 +44,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $username = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $userType = 'player';
+    private string $userType = 'player';
 
     #[ORM\Column(length: 100)]
     private ?string $name = null;
@@ -76,6 +70,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Manager $managerProfile = null;
 
+    /** @var Admin|null */
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Admin $adminProfile = null;
 
@@ -97,47 +92,54 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 20, nullable: true, unique: true)]
     private ?string $steamId = null;
 
-    /**
-     * @var Collection<int, Team>
-     */
+    /** @var Collection<int, Team> */
     #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Team::class)]
     private Collection $teams;
 
-    /**
-     * @var Collection<int, LoginHistory>
-     */
+    /** @var Collection<int, LoginHistory> */
     #[ORM\OneToMany(targetEntity: LoginHistory::class, mappedBy: 'user')]
     private Collection $loginHistories;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $securityCode = null;
+
     #[ORM\Column(options: ["default" => false])]
     private bool $isBanned = false;
+
+    /** @var Collection<int, FriendRequest> */
     #[ORM\OneToMany(mappedBy: 'sender', targetEntity: FriendRequest::class, orphanRemoval: true)]
     private Collection $sentFriendRequests;
 
+    /** @var Collection<int, FriendRequest> */
     #[ORM\OneToMany(mappedBy: 'receiver', targetEntity: FriendRequest::class, orphanRemoval: true)]
     private Collection $receivedFriendRequests;
 
+    /** @var Collection<int, Message> */
     #[ORM\OneToMany(mappedBy: 'sender', targetEntity: Message::class, orphanRemoval: true)]
     private Collection $sentMessages;
 
+    /** @var Collection<int, Message> */
     #[ORM\OneToMany(mappedBy: 'receiver', targetEntity: Message::class, orphanRemoval: true)]
     private Collection $receivedMessages;
 
-    /**
-     * @var Collection<int, TeamMessage>
-     */
+    /** @var Collection<int, TeamMessage> */
     #[ORM\OneToMany(targetEntity: TeamMessage::class, mappedBy: 'sender')]
-    private Collection $team;
+    private Collection $teamMessages;
 
     #[ORM\Column(options: ['default' => false])]
-    private ?bool $isMusicEnabled = false;
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'App\Entity\Notification', orphanRemoval: true)]
+    private bool $isMusicEnabled = false;
+
+    /** @var Collection<int, Notification> */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, orphanRemoval: true)]
     private Collection $notifications;
 
+    /** @var Collection<int, Application> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Application::class, orphanRemoval: true)]
     private Collection $applications;
+
+    /** @var Collection<int, Signalement> */
+    #[ORM\OneToMany(mappedBy: 'reporter', targetEntity: Signalement::class, orphanRemoval: true)]
+    private Collection $signalements;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lastActivityAt = null;
@@ -151,15 +153,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->receivedFriendRequests = new ArrayCollection();
         $this->sentMessages = new ArrayCollection();
         $this->receivedMessages = new ArrayCollection();
-        $this->team = new ArrayCollection();
+        $this->teamMessages = new ArrayCollection();
         $this->notifications = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->lastActivityAt = new \DateTimeImmutable();
     }
 
-    /**
-     * @return Collection<int, Notification>
-     */
+    /** @return Collection<int, Notification> */
     public function getNotifications(): Collection
     {
         return $this->notifications;
@@ -171,19 +171,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->notifications->add($notification);
             $notification->setUser($this);
         }
-
         return $this;
     }
 
     public function removeNotification(Notification $notification): static
     {
         if ($this->notifications->removeElement($notification)) {
-            // set the owning side to null (unless already changed)
             if ($notification->getUser() === $this) {
                 $notification->setUser(null);
             }
         }
-
         return $this;
     }
 
@@ -211,46 +208,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see UserInterface
-     * ROLE_ADMIN est ajouté automatiquement si l'utilisateur a une entrée dans la table admin.
-     */
+    /** @return list<string> */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
-
         return array_unique($roles);
     }
 
-    /**
-     * @param list<string> $roles
-     */
+    /** @param list<string> $roles */
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
-
         return $this;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
     public function getPassword(): ?string
     {
         return $this->password;
@@ -259,14 +239,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
     }
 
-    #[\Deprecated]
     public function eraseCredentials(): void
     {
-        // @deprecated, to be removed when upgrading to Symfony 8
     }
 
     public function getPseudo(): ?string
@@ -277,7 +254,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPseudo(string $pseudo): static
     {
         $this->pseudo = $pseudo;
-
         return $this;
     }
 
@@ -289,11 +265,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUsername(string $username): static
     {
         $this->username = $username;
-
         return $this;
     }
 
-    public function getUserType(): ?string
+    public function getUserType(): string
     {
         return $this->userType;
     }
@@ -301,7 +276,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUserType(string $userType): static
     {
         $this->userType = $userType;
-
         return $this;
     }
 
@@ -313,7 +287,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -325,7 +298,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setSexe(?string $sexe): static
     {
         $this->sexe = $sexe;
-
         return $this;
     }
 
@@ -337,7 +309,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsActive(bool $isActive): static
     {
         $this->isActive = $isActive;
-
         return $this;
     }
 
@@ -348,13 +319,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setPlayerProfile(Player $playerProfile): static
     {
-        // set the owning side of the relation if necessary
         if ($playerProfile->getUser() !== $this) {
             $playerProfile->setUser($this);
         }
-
         $this->playerProfile = $playerProfile;
-
         return $this;
     }
 
@@ -365,13 +333,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setManagerProfile(Manager $managerProfile): static
     {
-        // set the owning side of the relation if necessary
         if ($managerProfile->getUser() !== $this) {
             $managerProfile->setUser($this);
         }
-
         $this->managerProfile = $managerProfile;
-
         return $this;
     }
 
@@ -382,17 +347,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setAdminProfile(Admin $adminProfile): static
     {
-        // set the owning side of the relation if necessary
         if ($adminProfile->getUser() !== $this) {
             $adminProfile->setUser($this);
         }
-
+        $this->adminProfile = $adminProfile;
         return $this;
     }
 
-    /**
-     * @return Collection<int, Team>
-     */
+    /** @return Collection<int, Team> */
     public function getTeams(): Collection
     {
         return $this->teams;
@@ -404,19 +366,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->teams->add($team);
             $team->setOwner($this);
         }
-
         return $this;
     }
 
     public function removeTeam(Team $team): static
     {
         if ($this->teams->removeElement($team)) {
-            // set the owning side to null (unless already changed)
             if ($team->getOwner() === $this) {
                 $team->setOwner(null);
             }
         }
-
         return $this;
     }
 
@@ -453,9 +412,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, LoginHistory>
-     */
+    /** @return Collection<int, LoginHistory> */
     public function getLoginHistories(): Collection
     {
         return $this->loginHistories;
@@ -466,15 +423,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if (!$this->loginHistories->contains($loginHistory)) {
             $this->loginHistories->add($loginHistory);
             $loginHistory->setUser($this);
-            }
-            return $this;
-            }
-        /**
-             * @var Collection<int, Signalement>
-             */
-    #[ORM\OneToMany(mappedBy: 'reporter', targetEntity: Signalement::class, orphanRemoval: true)]
-    private Collection $signalements;
+        }
+        return $this;
+    }
 
+    public function removeLoginHistory(LoginHistory $loginHistory): static
+    {
+        if ($this->loginHistories->removeElement($loginHistory)) {
+            if ($loginHistory->getUser() === $this) {
+                $loginHistory->setUser(null);
+            }
+        }
+        return $this;
+    }
+
+    /** @return Collection<int, Signalement> */
     public function getSignalements(): Collection
     {
         return $this->signalements;
@@ -486,7 +449,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->signalements->add($signalement);
             $signalement->setReporter($this);
         }
+        return $this;
     }
+
+    public function removeSignalement(Signalement $signalement): static
+    {
+        if ($this->signalements->removeElement($signalement)) {
+            if ($signalement->getReporter() === $this) {
+                $signalement->setReporter(null);
+            }
+        }
+        return $this;
+    }
+
     public function getYoutube(): ?string
     {
         return $this->youtube;
@@ -542,9 +517,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, FriendRequest>
-     */
+    /** @return Collection<int, FriendRequest> */
     public function getSentFriendRequests(): Collection
     {
         return $this->sentFriendRequests;
@@ -556,42 +529,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->sentFriendRequests->add($sentFriendRequest);
             $sentFriendRequest->setSender($this);
         }
-
         return $this;
     }
 
-   public function removeLoginHistory(LoginHistory $loginHistory): static
-    {
-        if ($this->loginHistories->removeElement($loginHistory)) {
-            // set the owning side to null (unless already changed)
-            if ($loginHistory->getUser() === $this) {
-                $loginHistory->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-    public function removeSignalement(Signalement $signalement): static
-    {
-        if ($this->signalements->removeElement($signalement)) {
-            // set the owning side to null (unless already changed)
-            if ($signalement->getReporter() === $this) {
-                $signalement->setReporter(null);
-            }
-        }
-    }
     public function removeSentFriendRequest(FriendRequest $sentFriendRequest): static
     {
-        if ($this->sentFriendRequests->removeElement($sentFriendRequest)) {
-            // set the owning side to null (unless already changed)
-            if ($sentFriendRequest->getSender() === $this) {
-                // strict check, but sender is non-nullable so we can't really set to null without removing entity
-                // Since orphanRemoval is true, removing from collection is enough
-            }
-        }
-
+        $this->sentFriendRequests->removeElement($sentFriendRequest);
         return $this;
     }
+
     public function isBanned(): bool
     {
         return $this->isBanned;
@@ -600,12 +546,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsBanned(bool $isBanned): static
     {
         $this->isBanned = $isBanned;
+        return $this;
     }
-    
 
-    /**
-     * @return Collection<int, FriendRequest>
-     */
+    /** @return Collection<int, FriendRequest> */
     public function getReceivedFriendRequests(): Collection
     {
         return $this->receivedFriendRequests;
@@ -617,19 +561,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->receivedFriendRequests->add($receivedFriendRequest);
             $receivedFriendRequest->setReceiver($this);
         }
-
         return $this;
     }
 
     public function removeReceivedFriendRequest(FriendRequest $receivedFriendRequest): static
     {
-        if ($this->receivedFriendRequests->removeElement($receivedFriendRequest)) {
-            // set the owning side to null (unless already changed)
-            if ($receivedFriendRequest->getReceiver() === $this) {
-                // strict check
-            }
-        }
-
+        $this->receivedFriendRequests->removeElement($receivedFriendRequest);
         return $this;
     }
 
@@ -641,12 +578,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setSecurityCode(?string $securityCode): static
     {
         $this->securityCode = $securityCode;
-
         return $this;
     }
-    /**
-     * @return Collection<int, Message>
-     */
+
+    /** @return Collection<int, Message> */
     public function getSentMessages(): Collection
     {
         return $this->sentMessages;
@@ -658,25 +593,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->sentMessages->add($sentMessage);
             $sentMessage->setSender($this);
         }
-
         return $this;
     }
 
     public function removeSentMessage(Message $sentMessage): static
     {
-        if ($this->sentMessages->removeElement($sentMessage)) {
-            // set the owning side to null (unless already changed)
-            if ($sentMessage->getSender() === $this) {
-                // set the owning side to null (unless already changed)
-            }
-        }
-
+        $this->sentMessages->removeElement($sentMessage);
         return $this;
     }
 
-    /**
-     * @return Collection<int, Message>
-     */
+    /** @return Collection<int, Message> */
     public function getReceivedMessages(): Collection
     {
         return $this->receivedMessages;
@@ -688,19 +614,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->receivedMessages->add($receivedMessage);
             $receivedMessage->setReceiver($this);
         }
-
         return $this;
     }
 
     public function removeReceivedMessage(Message $receivedMessage): static
     {
-        if ($this->receivedMessages->removeElement($receivedMessage)) {
-            // set the owning side to null (unless already changed)
-            if ($receivedMessage->getReceiver() === $this) {
-                // set the owning side to null (unless already changed)
-            }
-        }
-
+        $this->receivedMessages->removeElement($receivedMessage);
         return $this;
     }
 
@@ -715,15 +634,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, TeamMessage>
-     */
-    public function getTeam(): Collection
+    /** @return Collection<int, TeamMessage> */
+    public function getTeamMessages(): Collection
     {
-        return $this->team;
+        return $this->teamMessages;
     }
 
-    public function isMusicEnabled(): ?bool
+    public function addTeamMessage(TeamMessage $teamMessage): static
+    {
+        if (!$this->teamMessages->contains($teamMessage)) {
+            $this->teamMessages->add($teamMessage);
+            $teamMessage->setSender($this);
+        }
+        return $this;
+    }
+
+    public function removeTeamMessage(TeamMessage $teamMessage): static
+    {
+        if ($this->teamMessages->removeElement($teamMessage)) {
+            // set the owning side to null (unless already changed)
+            if ($teamMessage->getSender() === $this) {
+                $teamMessage->setSender(null);
+            }
+        }
+        return $this;
+    }
+
+    public function isMusicEnabled(): bool
     {
         return $this->isMusicEnabled;
     }
@@ -732,5 +669,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->isMusicEnabled = $isMusicEnabled;
         return $this;
+    }
+
+    /** @return Collection<int, Application> */
+    public function getApplications(): Collection
+    {
+        return $this->applications;
     }
 }

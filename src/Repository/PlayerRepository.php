@@ -59,8 +59,15 @@ class PlayerRepository extends ServiceEntityRepository
                    ->setParameter('status', $sort);
                 $qb->orderBy('p.id', 'DESC'); 
             } else {
-                // Sinon, on trie dynamiquement par la colonne reçue
-                $qb->orderBy($sort, 'ASC');
+                // ✅ SÉCURITÉ : Whitelist par match pour éviter ORDER BY injection
+                match ($sort) {
+                    'p.id' => $qb->orderBy('p.id', 'ASC'),
+                    'u.pseudo' => $qb->orderBy('u.pseudo', 'ASC'),
+                    'p.game' => $qb->orderBy('p.game', 'ASC'),
+                    'p.gameRank' => $qb->orderBy('p.gameRank', 'ASC'),
+                    'p.role' => $qb->orderBy('p.role', 'ASC'),
+                    default => $qb->orderBy('p.id', 'DESC'),
+                };
             }
         } else {
             // Tri par défaut

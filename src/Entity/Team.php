@@ -10,24 +10,26 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: TeamRepository::class)]
-#[UniqueEntity(fields: ['name'], message: 'Ce nom d\'équipe est déjà utilisé.')]
+#[UniqueEntity(fields: ['name'], message: 'Ce nom d\'??quipe est d??j?? utilis??.')]
 class Team
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: "Le nom de l'équipe est obligatoire.")]
+    #[Assert\NotBlank(message: "Le nom de l'??quipe est obligatoire.")]
     #[Assert\Length(max: 255)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $logo = null;
 
+    /** @var array<string> */
     #[ORM\Column(type: 'json')]
-    #[Assert\Count(min: 1, minMessage: "Vous devez sélectionner au moins un jeu.")]
+    #[Assert\Count(min: 1, minMessage: "Vous devez s??lectionner au moins un jeu.")]
     private array $games = [];
 
     /**
@@ -80,11 +82,17 @@ class Team
         return $this;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getGames(): array
     {
         return $this->games;
     }
 
+    /**
+     * @param array<string> $games
+     */
     public function setGames(array $games): static
     {
         $this->games = $games;
@@ -115,9 +123,11 @@ class Team
 
         return $this;
     }
+    /** @var Collection<int, Offer> */
     #[ORM\OneToMany(mappedBy: 'team', targetEntity: Offer::class, orphanRemoval: true)]
-    private \Doctrine\Common\Collections\Collection $offers;
+    private Collection $offers;
 
+    /** @var Collection<int, TeamMessage> */
     #[ORM\OneToMany(mappedBy: 'team', targetEntity: TeamMessage::class, orphanRemoval: true)]
     private Collection $messages;
 

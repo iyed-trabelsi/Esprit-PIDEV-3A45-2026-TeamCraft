@@ -11,9 +11,10 @@ class Manager
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
-    #[ORM\OneToOne(inversedBy: 'managerProfile', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(inversedBy: 'managerProfile', cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 

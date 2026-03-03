@@ -16,11 +16,12 @@ class Post
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
-    #[Assert\Length(max: 50, maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.')]
+    #[Assert\Length(max: 50, maxMessage: 'Le titre ne peut pas d??passer {{ limit }} caract??res.')]
     private ?string $titre = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -28,7 +29,7 @@ class Post
 
     #[ORM\Column(length: 30)]
     #[Assert\Choice(choices: ['discussion', 'question', 'annonce'], message: 'Type de post invalide.')]
-    private ?string $typePost = 'discussion';
+    private string $typePost = 'discussion';
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateCreation = null;
@@ -38,7 +39,7 @@ class Post
 
     #[ORM\Column(length: 20)]
     #[Assert\Choice(choices: ['published', 'archived', 'pending_review'], message: 'Statut invalide.')]
-    private ?string $statut = 'published';
+    private string $statut = 'published';
 
     #[ORM\Column]
     private int $nbLikes = 0;
@@ -107,7 +108,7 @@ class Post
         return $this;
     }
 
-    public function getTypePost(): ?string
+    public function getTypePost(): string
     {
         return $this->typePost;
     }
@@ -146,7 +147,7 @@ class Post
         return $this;
     }
 
-    public function getStatut(): ?string
+    public function getStatut(): string
     {
         return $this->statut;
     }
@@ -275,6 +276,9 @@ class Post
     #[ORM\OneToMany(mappedBy: 'post', targetEntity: Signalement::class, orphanRemoval: true)]
     private Collection $signalements;
 
+    /**
+     * @return Collection<int, Signalement>
+     */
     public function getSignalements(): Collection
     {
         return $this->signalements;

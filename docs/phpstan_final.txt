@@ -1,0 +1,49 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src --level=6 --no-progress 2>&1 | Out-Fil ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\ForumController.php                                                                               
+ ------ ------------------------------------------------------------------------------------------------------------- 
+         Ignored error pattern empty.offset in path                                                                   
+         C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Controller\ForumController.php was not       
+         matched in reported errors.                                                                                  
+         Ignored error pattern nullCoalesce.offset in path                                                            
+         C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Controller\ForumController.php was not       
+         matched in reported errors.                                                                                  
+  1014   Call to function method_exists() with App\Service\ContentModeratorService and 'debugModeration' will always  
+         evaluate to true.                                                                                            
+         ­ƒ¬¬  function.alreadyNarrowedType                                                                             
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------- 
+  Line   Controller\GoogleController.php                                                                      
+ ------ ----------------------------------------------------------------------------------------------------- 
+  12     Method App\Controller\GoogleController::connectAction() has no return type specified.                
+         ­ƒ¬¬  missingType.return                                                                               
+  20     Method App\Controller\GoogleController::connectCheckAction() has no return type specified.           
+         ­ƒ¬¬  missingType.return                                                                               
+  21     Parameter $request of method App\Controller\GoogleController::connectCheckAction() has invalid type  
+         Symfony\Component\HttpFoundation\HttpFoundation\Request.                                             
+         ­ƒ¬¬  class.notFound                                                                                   
+ ------ ----------------------------------------------------------------------------------------------------- 
+
+ -- ------------------------------------------------------------------------------------------------------------------ 
+     Error                                                                                                             
+ -- ------------------------------------------------------------------------------------------------------------------ 
+     Ignored error pattern argument.type in path                                                                       
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Twig\* was not matched in reported errors.        
+     Ignored error pattern if.alwaysTrue in path                                                                       
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Controller\* was not matched in reported errors.  
+     Ignored error pattern notIdentical.alwaysFalse in path                                                            
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Controller\* was not matched in reported errors.  
+     Ignored error pattern argument.type in path                                                                       
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Service\* was not matched in reported errors.     
+ -- ------------------------------------------------------------------------------------------------------------------ 
+
+ [ERROR] Found 10 errors                                                                                               
+

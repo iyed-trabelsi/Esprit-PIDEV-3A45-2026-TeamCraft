@@ -15,6 +15,7 @@ class MediaSubmission
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -66,9 +67,11 @@ class MediaSubmission
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    /** @var Collection<int, MediaLike> */
     #[ORM\OneToMany(mappedBy: 'mediaSubmission', targetEntity: MediaLike::class, orphanRemoval: true)]
     private Collection $likes;
 
+    /** @var Collection<int, MediaComment> */
     #[ORM\OneToMany(mappedBy: 'mediaSubmission', targetEntity: MediaComment::class, orphanRemoval: true)]
     private Collection $comments;
 

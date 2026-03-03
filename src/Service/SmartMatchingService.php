@@ -56,10 +56,19 @@ class SmartMatchingService
     /**
      * Predict match score using the AI microservice.
      */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function predictMatch(Player $player, Offer $offer): array
     {
         $apiUrl = $this->parameterBag->get('ai_service_url') ?: 'http://127.0.0.1:8000';
-        
+
         try {
             $response = $this->httpClient->request('POST', $apiUrl . '/predict', [
                 'json' => [
@@ -104,7 +113,7 @@ class SmartMatchingService
         }
 
         $apiUrl = $this->parameterBag->get('ai_service_url') ?: 'http://127.0.0.1:8000';
-        
+
         $offerData = array_map(fn(Offer $o) => [
             'id' => $o->getId(),
             'rank' => $this->scorer->resolveRankLevel($o->getRank()) ?? 1,
@@ -136,7 +145,7 @@ class SmartMatchingService
         $results = [];
         foreach ($offers as $o) {
             $score = $this->scorer->computeScore($player, $o);
-            $results[(string)$o->getId()] = [
+            $results[(string) $o->getId()] = [
                 'match_score' => $score,
                 'compatibility_level' => $this->getCompatibilityLevelFromScore($score),
                 'fallback' => true,
@@ -148,8 +157,10 @@ class SmartMatchingService
 
     private function getCompatibilityLevelFromScore(float $score): string
     {
-        if ($score >= 80) return 'High';
-        if ($score >= 50) return 'Medium';
+        if ($score >= 80)
+            return 'High';
+        if ($score >= 50)
+            return 'Medium';
         return 'Low';
     }
 
@@ -162,7 +173,7 @@ class SmartMatchingService
     {
         $game = $offer->getGame() ?? '';
         $aliases = $this->getGameAliases($game);
-        
+
         $candidates = $this->playerRepository->findCandidatesForOffer($aliases, self::CANDIDATE_LIMIT);
         if (empty($candidates)) {
             return [];
@@ -171,35 +182,39 @@ class SmartMatchingService
         // We need specialized batch logic for players vs one offer
         // Let's adapt predictMatchesBatch logic or just use it by creating a fake batch
         // Actually, it's easier to just add a batch predict for players
-        
+
         // Since I've already updated the FastAPI to allow multiple offers for ONE player,
         // it doesn't quite fit the candidates (multiple players) for ONE offer case.
         // But the FastAPI logic is just a loop, so let's update it to be more flexible or add a new endpoint.
-        
+
         // OR: Update Symfony to just loop if the number of candidates is small, 
         // but 50 might be too much.
-        
+
         // Let's update FastAPI once more to handle batch players for one offer.
         return $this->computeTopPlayersLegacy($offer, $candidates);
     }
 
+    /**
+     * @param array<int, Player> $candidates
+     * @return array<int, array{player: Player, score: float, compatibility_level: string}>
+     */
     private function computeTopPlayersLegacy(Offer $offer, array $candidates): array
     {
         $scored = [];
         foreach ($candidates as $player) {
             $prediction = $this->predictMatch($player, $offer);
             $score = (float) $prediction['match_score'];
-            
+
             if ($score > 0) {
                 $scored[] = [
-                    'player' => $player, 
+                    'player' => $player,
                     'score' => round($score, 1),
                     'compatibility_level' => $prediction['compatibility_level']
                 ];
             }
         }
 
-        usort($scored, static fn (array $a, array $b) => $b['score'] <=> $a['score']);
+        usort($scored, static fn(array $a, array $b) => $b['score'] <=> $a['score']);
 
         return array_slice($scored, 0, self::TOP_LIMIT);
     }
@@ -212,7 +227,7 @@ class SmartMatchingService
     private function getGameAliases(string $game): array
     {
         $game = CompatibilityScorer::normalizeGameName($game);
-        
+
         return match ($game) {
             'league of legends' => ['league of legends', 'lol', 'league'],
             'cs2' => ['cs2', 'csgo', 'counter-strike', 'cs:go'],

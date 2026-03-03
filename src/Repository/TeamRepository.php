@@ -43,7 +43,10 @@ class TeamRepository extends ServiceEntityRepository
     public function searchByNameOrGame(?string $query, ?string $game, ?string $sort, int $limit, int $offset): array
     {
         $qb = $this->createQueryBuilder('t')
-            ->leftJoin('t.owner', 'o'); // Join owner
+            ->leftJoin('t.owner', 'o')
+            ->addSelect('o')              // ✅ EAGER owner — évite N+1 en Twig
+            ->leftJoin('t.members', 'm')
+            ->addSelect('m');             // ✅ EAGER members — évite count() lazy
 
         if ($query) {
             $orX = $qb->expr()->orX();
@@ -66,7 +69,7 @@ class TeamRepository extends ServiceEntityRepository
                     if (stripos($query, $keyword) !== false) {
                         $orX->add($qb->expr()->like('t.games', ':game_' . $code));
                         $qb->setParameter('game_' . $code, '%' . $code . '%');
-                        break; 
+                        break;
                     }
                 }
             }
@@ -122,7 +125,7 @@ class TeamRepository extends ServiceEntityRepository
                     if (stripos($query, $keyword) !== false) {
                         $orX->add($qb->expr()->like('t.games', ':game_' . $code));
                         $qb->setParameter('game_' . $code, '%' . $code . '%');
-                        break; 
+                        break;
                     }
                 }
             }

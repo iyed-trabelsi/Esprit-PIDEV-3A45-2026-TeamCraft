@@ -13,6 +13,7 @@ class FavoriteOffer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]

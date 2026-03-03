@@ -1,0 +1,105 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src/Service --level=6 --no-progress 2>&1 | ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   AiSchedulingService.php                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  112    Method App\Service\AiSchedulingService::analyzeHistory() has parameter $events with no value type specified  
+         in iterable type array.                                                                                      
+         ­ƒ¬¬  missingType.iterableValue                                                                                
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                   
+  168    Method App\Service\AiSchedulingService::getFallbackEvent() return type has no value type specified in        
+         iterable type array.                                                                                         
+         ­ƒ¬¬  missingType.iterableValue                                                                                
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                   
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   GamerCvService.php                                                                                            
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  117    Method App\Service\GamerCvService::fetchLatestMatches() return type has no value type specified in iterable   
+         type array.                                                                                                   
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  121    Expression on left side of ?? is not nullable.                                                                
+         ­ƒ¬¬  nullCoalesce.expr                                                                                         
+  143    Method App\Service\GamerCvService::enrichLoLStats() has parameter $matchData with no value type specified in  
+         iterable type array.                                                                                          
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  143    Method App\Service\GamerCvService::enrichLoLStats() has parameter $stats with no value type specified in      
+         iterable type array.                                                                                          
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  143    Method App\Service\GamerCvService::enrichLoLStats() return type has no value type specified in iterable type  
+         array.                                                                                                        
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   GeminiService.php                                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  37     Method App\Service\GeminiService::generateResponse() has parameter $history with no value type specified in  
+         iterable type array.                                                                                         
+         ­ƒ¬¬  missingType.iterableValue                                                                                
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                   
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   RiotApiService.php                                                                                            
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  23     Method App\Service\RiotApiService::getRequestOptions() has parameter $extra with no value type specified in   
+         iterable type array.                                                                                          
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  23     Method App\Service\RiotApiService::getRequestOptions() return type has no value type specified in iterable    
+         type array.                                                                                                   
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  270    Method App\Service\RiotApiService::getParticipantStats() has parameter $matchData with no value type          
+         specified in iterable type array.                                                                             
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  270    Method App\Service\RiotApiService::getParticipantStats() return type has no value type specified in iterable  
+         type array.                                                                                                   
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   SmartMatchingService.php                                                                                       
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  189    Method App\Service\SmartMatchingService::computeTopPlayersLegacy() has parameter $candidates with no value     
+         type specified in iterable type array.                                                                         
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+  189    Method App\Service\SmartMatchingService::computeTopPlayersLegacy() return type has no value type specified in  
+         iterable type array.                                                                                           
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   SmartWritingService.php                                                                                        
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  184    Method App\Service\SmartWritingService::findBestComment() return type has no value type specified in iterable  
+         type array.                                                                                                    
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ -- -------------------------------------------------------------------------------------------------------------- 
+     Error                                                                                                         
+ -- -------------------------------------------------------------------------------------------------------------- 
+     Ignored error pattern property.unusedType in path                                                             
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Entity\* was not matched in reported errors.  
+ -- -------------------------------------------------------------------------------------------------------------- 
+
+ [ERROR] Found 16 errors                                                                                               
+

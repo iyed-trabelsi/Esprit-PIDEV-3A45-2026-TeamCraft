@@ -136,6 +136,15 @@ class ContentModeratorService
      * @param string $text Le texte à analyser
      * @return array Informations de debug incluant les scores et erreurs éventuelles
      */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function debugModeration(string $text): array
     {
         $result = [

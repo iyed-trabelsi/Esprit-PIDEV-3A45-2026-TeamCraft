@@ -6,6 +6,10 @@ use App\Dto\GamerPerformanceDto;
 
 class ValorantStatsService
 {
+    /**
+     * @param array<int, array<string, mixed>> $matches  Liste des matchs Valorant
+     * @param array<string, mixed>             $rankData Données de rang optionnelles
+     */
     public function calculate(array $matches, array $rankData = []): GamerPerformanceDto
     {
         $count = count($matches);

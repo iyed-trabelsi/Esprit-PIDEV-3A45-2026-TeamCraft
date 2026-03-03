@@ -27,15 +27,22 @@ class OfferRepository extends ServiceEntityRepository
      *    Note: Using CASE for custom order on strings
      * 2) visibilityScore DESC
      * 3) dateCreation DESC
+     *
+     * ✅ OPTIMISÉ : addSelect('t') charge la Team en EAGER pour éviter N+1 lazy en Twig.
      */
     public function findAllSorted(array $criteria = [], ?string $search = null, ?string $rank = null): array
     {
         $qb = $this->createQueryBuilder('o')
-            ->leftJoin('o.team', 't');
+            ->leftJoin('o.team', 't')
+            ->addSelect('t'); // ✅ EAGER : évite N requêtes lazy o.team en Twig
 
         foreach ($criteria as $field => $value) {
-            $qb->andWhere(sprintf('o.%s = :%s', $field, $field))
-               ->setParameter($field, $value);
+            match ($field) {
+                'offerType' => $qb->andWhere('o.offerType = :offerType')->setParameter('offerType', $value),
+                'game' => $qb->andWhere('o.game = :game')->setParameter('game', $value),
+                'status' => $qb->andWhere('o.status = :status')->setParameter('status', $value),
+                default => null,
+            };
         }
 
         if ($search) {
@@ -50,9 +57,11 @@ class OfferRepository extends ServiceEntityRepository
 
         return $qb
             ->addSelect("(CASE 
-                WHEN o.offerType = 'SPONSORED' THEN 3 
-                WHEN o.offerType = 'FEATURED' THEN 2 
+                WHEN o.offerType = :spon THEN 3 
+                WHEN o.offerType = :feat THEN 2 
                 ELSE 1 END) AS HIDDEN typePriority")
+            ->setParameter('spon', Offer::TYPE_SPONSORED)
+            ->setParameter('feat', Offer::TYPE_FEATURED)
             ->orderBy('typePriority', 'DESC')
             ->addOrderBy('o.visibilityScore', 'DESC')
             ->addOrderBy('o.dateCreation', 'DESC')

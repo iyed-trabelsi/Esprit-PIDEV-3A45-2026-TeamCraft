@@ -13,6 +13,7 @@ class Postulation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\ManyToOne]
@@ -27,7 +28,7 @@ class Postulation
     private ?string $status = 'pending';
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Assert\Length(max: 1000, maxMessage: "Le message ne peut pas dépasser {{ limit }} caractères.")]
+    #[Assert\Length(max: 1000, maxMessage: "Le message ne peut pas d??passer {{ limit }} caract??res.")]
     private ?string $message = null;
 
     #[ORM\Column]

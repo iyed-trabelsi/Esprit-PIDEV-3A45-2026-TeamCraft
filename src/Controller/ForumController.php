@@ -121,18 +121,20 @@ class ForumController extends AbstractController
         }
 
         if ($form->isSubmitted()) {
-             // Debug form validity
-             // dd("Form Valid: " . ($form->isValid() ? 'YES' : 'NO'));
+            // Debug form validity
+            // dd("Form Valid: " . ($form->isValid() ? 'YES' : 'NO'));
         }
 
         if ($form->isSubmitted() && $form->isValid() && !$existingRubrique) {
             $nomRubrique = $rubrique->getNomRubrique();
             $description = $rubrique->getDescription();
             $topic = $rubrique->getTopic();
-            if (($nomRubrique && $this->moderator->isToxic($nomRubrique)) ||
+            if (
+                ($nomRubrique && $this->moderator->isToxic($nomRubrique)) ||
                 ($description && $this->moderator->isToxic($description)) ||
-                ($topic && $this->moderator->isToxic($topic))) {
-                
+                ($topic && $this->moderator->isToxic($topic))
+            ) {
+
                 $toxicError = '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Veuillez modifier le contenu de votre rubrique.';
                 $this->addFlash('warning', $toxicError);
                 return $this->render('frontoffice/forum/rubrique_form.html.twig', [
@@ -147,7 +149,7 @@ class ForumController extends AbstractController
             // Handle image upload
             $file = $form->get('image')->getData();
             $generatedFilename = $request->request->get('generated_image_filename');
-            
+
             if ($generatedFilename) {
                 // Use AI-generated image
                 $rubrique->setImage($generatedFilename);
@@ -174,7 +176,7 @@ class ForumController extends AbstractController
             $this->addFlash('success', 'Rubrique créée.');
             return $this->redirectToRoute('app_forum');
         }
-        
+
         return $this->render('frontoffice/forum/rubrique_form.html.twig', [
             'rubrique' => $rubrique,
             'form' => $form,
@@ -194,7 +196,7 @@ class ForumController extends AbstractController
             $this->addFlash('error', 'Seul l\'auteur peut modifier cette rubrique.');
             return $this->redirectToRoute('app_forum_rubrique_show', ['id' => $id]);
         }
-        
+
         $topics = $this->rubriqueRepository->findDistinctTopics();
         if (empty($topics)) {
             $topics = ['Général', 'Recrutement', 'Support', 'Discussion', 'Événements'];
@@ -225,10 +227,12 @@ class ForumController extends AbstractController
             $description = $rubrique->getDescription();
             $topic = $rubrique->getTopic();
 
-            if (($nomRubrique && $this->moderator->isToxic($nomRubrique)) ||
+            if (
+                ($nomRubrique && $this->moderator->isToxic($nomRubrique)) ||
                 ($description && $this->moderator->isToxic($description)) ||
-                ($topic && $this->moderator->isToxic($topic))) {
-                
+                ($topic && $this->moderator->isToxic($topic))
+            ) {
+
                 $toxicError = '⚠️ CONTENU INAPPROPRIÉ DÉTECTÉ ! Veuillez modifier le contenu de votre rubrique.';
                 $this->addFlash('warning', $toxicError);
                 return $this->render('frontoffice/forum/rubrique_form.html.twig', [
@@ -244,7 +248,7 @@ class ForumController extends AbstractController
             $file = $form->get('image')->getData();
             $generatedFilename = $request->request->get('generated_image_filename');
             $deleteCurrentImage = $request->request->get('delete_current_image') === '1';
-            
+
             if ($generatedFilename) {
                 // Use AI-generated image (delete old if exists)
                 if ($rubrique->getImage() && $rubrique->getImage() !== $generatedFilename) {
@@ -293,7 +297,7 @@ class ForumController extends AbstractController
             $this->addFlash('success', 'Rubrique mise à jour.');
             return $this->redirectToRoute('app_forum_rubrique_show', ['id' => $id]);
         }
-        
+
         return $this->render('frontoffice/forum/rubrique_form.html.twig', [
             'rubrique' => $rubrique,
             'form' => $form,
@@ -665,7 +669,7 @@ class ForumController extends AbstractController
                     $uploadDir = $this->getParameter('uploads_comment_dir');
                     $file->move($uploadDir, $newFilename);
                     $absolutePath = realpath($uploadDir . \DIRECTORY_SEPARATOR . $newFilename) ?: $uploadDir . \DIRECTORY_SEPARATOR . $newFilename;
-                    
+
                     // Check if it's an image before moderation
                     $mimeType = mime_content_type($absolutePath);
                     $isImage = str_starts_with($mimeType, 'image/');
@@ -697,7 +701,7 @@ class ForumController extends AbstractController
                         }
                     } else {
                         // It's likely audio or other allowed type -> just save it
-                        $comment->setImage($newFilename); 
+                        $comment->setImage($newFilename);
                     }
                 } catch (FileException $e) {
                     $this->addFlash('error', 'Erreur lors de l\'upload du fichier.');
@@ -712,7 +716,7 @@ class ForumController extends AbstractController
             if ($isAjax) {
                 $auteur = $comment->getAuteur();
                 $csrfTokenManager = $this->container->get('security.csrf.token_manager');
-                
+
                 // Calculate relative time manually for the immediate response
                 // Since it's just created, it's "à l'instant"
                 $timeAgo = "à l'instant";
@@ -739,8 +743,7 @@ class ForumController extends AbstractController
                 }
                 return new JsonResponse($json);
             }
-        }
- else {
+        } else {
             $errors = [];
             foreach ($form->getErrors(true) as $error) {
                 $errors[] = $error->getMessage();
@@ -769,11 +772,11 @@ class ForumController extends AbstractController
         }
         $form = $this->createForm(CommentType::class, $comment);
         $form->handleRequest($request);
-        
+
         if ($form->isSubmitted() && $form->isValid()) {
             $contenu = $comment->getContenu() ?? '';
             $contenu = trim($contenu);
-            
+
             $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
 
             if ($contenu && $this->moderator->isToxic($contenu)) {
@@ -810,7 +813,7 @@ class ForumController extends AbstractController
                     $uploadDir = $this->getParameter('uploads_comment_dir');
                     $file->move($uploadDir, $newFilename);
                     $absolutePath = realpath($uploadDir . \DIRECTORY_SEPARATOR . $newFilename) ?: $uploadDir . \DIRECTORY_SEPARATOR . $newFilename;
-                    
+
                     // Check if it's an image before moderation
                     $mimeType = mime_content_type($absolutePath);
                     $isImage = str_starts_with($mimeType, 'image/');
@@ -840,7 +843,7 @@ class ForumController extends AbstractController
                             }
                         }
                     } else {
-                         // It's likely audio or other allowed type -> just save it
+                        // It's likely audio or other allowed type -> just save it
                         $comment->setImage($newFilename);
                     }
                 } catch (FileException $e) {
@@ -850,14 +853,14 @@ class ForumController extends AbstractController
 
             // Si erreurs ajoutées manuellement
             if ($form->getErrors(true)->count() > 0) {
-                 if ($isAjax) {
+                if ($isAjax) {
                     $errors = [];
                     foreach ($form->getErrors(true) as $error) {
                         $errors[] = $error->getMessage();
                     }
                     return new JsonResponse(['success' => false, 'errors' => $errors], 400);
-                 }
-                 return $this->render('frontoffice/forum/comment_edit.html.twig', [
+                }
+                return $this->render('frontoffice/forum/comment_edit.html.twig', [
                     'comment' => $comment,
                     'form' => $form,
                 ]);
@@ -947,7 +950,7 @@ class ForumController extends AbstractController
     public function reportPost(int $id, Request $request): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
-        
+
         $post = $this->postRepository->find($id);
         if (!$post) {
             throw $this->createNotFoundException('Post introuvable');
@@ -964,7 +967,7 @@ class ForumController extends AbstractController
             return $this->redirectToRoute('app_forum_post_show', ['id' => $id]);
         }
 
-        $motif = trim((string)$request->request->get('motif'));
+        $motif = trim((string) $request->request->get('motif'));
         $description = $request->request->get('description');
 
         if (empty($motif)) {
@@ -1011,9 +1014,7 @@ class ForumController extends AbstractController
     public function testModeration(Request $request): Response
     {
         $text = (string) $request->query->get('text', 'Hello world');
-        $debug = method_exists($this->moderator, 'debugModeration')
-            ? $this->moderator->debugModeration($text)
-            : ['key_set' => false, 'error' => 'Service sans debug', 'api_content' => null, 'toxic' => false];
+        $debug = $this->moderator->debugModeration($text);
 
         $html = '<h2>Test modération (API IA)</h2>';
         $html .= '<p><strong>Texte testé :</strong> ' . htmlspecialchars($text) . '</p>';
@@ -1039,7 +1040,7 @@ class ForumController extends AbstractController
     public function translate(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
-        
+
         $data = json_decode($request->getContent(), true);
         $text = $data['text'] ?? '';
         $targetLanguage = $data['targetLanguage'] ?? 'English';
@@ -1060,7 +1061,7 @@ class ForumController extends AbstractController
     public function generateRubriqueImage(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
-        
+
         $data = json_decode($request->getContent(), true);
         $name = $data['name'] ?? '';
         $description = $data['description'] ?? null;

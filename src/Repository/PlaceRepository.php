@@ -25,9 +25,15 @@ class PlaceRepository extends ServiceEntityRepository
                ->setParameter('query', $query);
         }
 
-        return $qb->orderBy('p.' . $sort, $direction)
-            ->getQuery()
-            ->getResult();
+        // ✅ SÉCURITÉ : Whitelist pour éviter l'injection SQL via ORDER BY
+        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
+        match ($sort) {
+            'capaciteMax' => $qb->orderBy('p.capaciteMax', $direction),
+            'nom'         => $qb->orderBy('p.nom', $direction),
+            default       => $qb->orderBy('p.id', 'DESC'),
+        };
+
+        return $qb->getQuery()->getResult();
     }
 
     //    /**

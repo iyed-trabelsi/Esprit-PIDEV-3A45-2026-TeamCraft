@@ -19,7 +19,8 @@ class FavoriteOfferRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find all favorite offers for a specific user
+     * Find all favorite offers for a specific user.
+     * ✅ EAGER : JOIN sur offer + team pour éviter N+1 lazy en Twig.
      * @return FavoriteOffer[]
      */
     public function findByUser(User $user): array
@@ -27,9 +28,31 @@ class FavoriteOfferRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('f')
             ->andWhere('f.user = :user')
             ->setParameter('user', $user)
+            ->leftJoin('f.offer', 'o')   // ✅ EAGER offer
+            ->addSelect('o')
+            ->leftJoin('o.team', 't')    // ✅ EAGER team via offer
+            ->addSelect('t')
             ->orderBy('f.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Retourne uniquement les IDs des offres favorites d'un utilisateur.
+     * ✅ UNE seule requête scalaire — remplace findBy() + N×getOffer()->getId().
+     *
+     * @return int[]
+     */
+    public function findOfferIdsByUser(User $user): array
+    {
+        $rows = $this->createQueryBuilder('f')
+            ->select('IDENTITY(f.offer) AS offerId')
+            ->andWhere('f.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_column($rows, 'offerId');
     }
 
     /**

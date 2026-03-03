@@ -18,7 +18,7 @@ class ImageModerationService
         "ANUS_EXPOSED",
         "MALE_GENITALIA_EXPOSED",
     ];
-    
+
     private const CATEGORY_SUGGESTIVE = [
         "FEMALE_BREAST_COVERED",
         "BUTTOCKS_COVERED",
@@ -26,12 +26,8 @@ class ImageModerationService
         "BELLY_EXPOSED",
     ];
 
-    private const CATEGORY_SAFE = [
-        "FACE_FEMALE",
-        "FACE_MALE",
-        "ARMPITS_EXPOSED",
-        "FEET_EXPOSED",
-    ];
+
+
 
     /** Labels for warning messages */
     private const SENSITIVE_LABELS = [
@@ -79,7 +75,7 @@ class ImageModerationService
             $normalized,
         ]);
         $process->setTimeout(self::PROCESS_TIMEOUT);
-        
+
         // LOG COMMAND
         $commandStr = $this->pythonPath . ' ' . $this->scriptPath . ' ' . $normalized;
         @file_put_contents($this->projectDir . '/var/log/ai_moderation_debug.log', date('[Y-m-d H:i:s] ') . "Running: " . $commandStr . "\n", FILE_APPEND);
@@ -106,7 +102,7 @@ class ImageModerationService
                 'stderr' => $stderr,
                 'path' => $normalized,
             ]);
-            
+
             // EMERGENCY LOGGING
             @file_put_contents($this->projectDir . '/var/log/ai_moderation_error.log', date('[Y-m-d H:i:s] ') . "Script Failed (Exit $exitCode): $stderr\n", FILE_APPEND);
 
@@ -139,7 +135,7 @@ class ImageModerationService
             $this->logger?->error('ImageModeration: invalid JSON', ['output_preview' => mb_substr($output, 0, 200)]);
             // EMERGENCY LOGGING
             @file_put_contents($this->projectDir . '/var/log/ai_moderation_error.log', date('[Y-m-d H:i:s] ') . "Invalid JSON: $output\n", FILE_APPEND);
-            
+
             return $this->failResult('invalid_json', 'La modération n\'a pas pu analyser cette image.');
         }
 
@@ -154,6 +150,15 @@ class ImageModerationService
 
     /**
      * When moderation fails: reject (and don't save image) or accept (save image) according to moderationRequired.
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
      */
     private function failResult(string $errorCode, string $rejectMessage): array
     {
@@ -181,19 +186,33 @@ class ImageModerationService
      * Apply business rules based on Sensitivity Levels.
      * Uses Cumulative Scoring with Noise Filtering to prevent false positives.
      */
+    /**
+     * @param array<string, float> $scores
+     * @return array<string, mixed>
+     */
+    /**
+     * @param array<string, float> $scores
+     * @return array<string, mixed>
+     */
+    /**
+     * @param array<string, float> $scores
+     * @return array<string, mixed>
+     */
     private function applyModerationRules(array $scores): array
     {
         $explicitMax = 0.0;
         $suggestiveMax = 0.0;
-        
+
         foreach (self::CATEGORY_EXPLICIT as $label) {
             $val = $scores[$label] ?? 0.0;
-            if ($val > $explicitMax) $explicitMax = $val;
+            if ($val > $explicitMax)
+                $explicitMax = $val;
         }
-        
+
         foreach (self::CATEGORY_SUGGESTIVE as $label) {
             $val = $scores[$label] ?? 0.0;
-            if ($val > $suggestiveMax) $suggestiveMax = $val;
+            if ($val > $suggestiveMax)
+                $suggestiveMax = $val;
         }
 
         // Individual peak check (winner)
@@ -221,7 +240,7 @@ class ImageModerationService
          * DECISION LOGIC (NudeNet Specialized)
          * NudeNet is very specific. If it sees a breast or genitalia with > 60% confidence, it's almost certainly nudity.
          */
-        
+
         // 1. REJECT if Explicit is high
         if ($explicitMax > 0.60) {
             $flagged = [];
@@ -231,7 +250,7 @@ class ImageModerationService
                 }
             }
             $details = $flagged !== [] ? ' (' . implode(', ', $flagged) . ')' : '';
-            
+
             return [
                 'status' => 'reject',
                 'sensitivity' => 'high',
@@ -242,7 +261,7 @@ class ImageModerationService
 
         // 2. PENDING (Blur) if suggestive is notable or explicit is present but low
         if ($suggestiveMax > 0.50 || $explicitMax > 0.40) {
-             return $this->withWarning([
+            return $this->withWarning([
                 'status' => 'pending_review',
                 'sensitivity' => 'medium',
                 'message' => 'L\'image a été marquée comme sensible.',

@@ -1,0 +1,308 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src/Entity --level=6 --no-progress 2>&1 |  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   Application.php                                                                                              
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  16     No error to ignore is reported on line 16.                                                                   
+  29     Property App\Entity\Application::$status (string|null) is never assigned null so it can be removed from the  
+         property type.                                                                                               
+         ­ƒ¬¬  property.unusedType                                                                                      
+  41     Access to an undefined property App\Entity\Application::$id.                                                 
+         ­ƒ¬¬  property.notFound                                                                                        
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Comment.php                                                                                               
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  20     No error to ignore is reported on line 20.                                                                
+  21     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  75     Access to an undefined property App\Entity\Comment::$id.                                                  
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   CompetitiveRank.php                                                                    
+ ------ --------------------------------------------------------------------------------------- 
+  15     No error to ignore is reported on line 15.                                             
+  48     Access to an undefined property App\Entity\CompetitiveRank::$id.                       
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Evenement.php                                                                                             
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  21     No error to ignore is reported on line 21.                                                                
+  22     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  85     Access to an undefined property App\Entity\Evenement::$id.                                                
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   EventReview.php                                                                                           
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  20     No error to ignore is reported on line 20.                                                                
+  21     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  51     Access to an undefined property App\Entity\EventReview::$id.                                              
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   FavoriteOffer.php                                                                      
+ ------ --------------------------------------------------------------------------------------- 
+  17     No error to ignore is reported on line 17.                                             
+  36     Access to an undefined property App\Entity\FavoriteOffer::$id.                         
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   FriendRequest.php                                                                      
+ ------ --------------------------------------------------------------------------------------- 
+  21     No error to ignore is reported on line 21.                                             
+  47     Access to an undefined property App\Entity\FriendRequest::$id.                         
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   LoginHistory.php                                                                                          
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  16     No error to ignore is reported on line 16.                                                                
+  17     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  39     Access to an undefined property App\Entity\LoginHistory::$id.                                             
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   Manager.php                                                                            
+ ------ --------------------------------------------------------------------------------------- 
+  15     No error to ignore is reported on line 15.                                             
+  25     Access to an undefined property App\Entity\Manager::$id.                               
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   MediaComment.php                                                                       
+ ------ --------------------------------------------------------------------------------------- 
+  17     No error to ignore is reported on line 17.                                             
+  39     Access to an undefined property App\Entity\MediaComment::$id.                          
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   MediaLike.php                                                                          
+ ------ --------------------------------------------------------------------------------------- 
+  16     No error to ignore is reported on line 16.                                             
+  35     Access to an undefined property App\Entity\MediaLike::$id.                             
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   MediaSubmission.php                                                                    
+ ------ --------------------------------------------------------------------------------------- 
+  19     No error to ignore is reported on line 19.                                             
+  147    Access to an undefined property App\Entity\MediaSubmission::$id.                       
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Message.php                                                                                            
+ ------ ------------------------------------------------------------------------------------------------------- 
+  16     No error to ignore is reported on line 16.                                                             
+  32     Property App\Entity\Message::$isRead (bool|null) is never assigned null so it can be removed from the  
+         property type.                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                
+  47     Access to an undefined property App\Entity\Message::$id.                                               
+         ­ƒ¬¬  property.notFound                                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                  
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   MusicTrack.php                                                                         
+ ------ --------------------------------------------------------------------------------------- 
+  17     No error to ignore is reported on line 17.                                             
+  59     Access to an undefined property App\Entity\MusicTrack::$id.                            
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   Notification.php                                                                       
+ ------ --------------------------------------------------------------------------------------- 
+  16     No error to ignore is reported on line 16.                                             
+  40     Access to an undefined property App\Entity\Notification::$id.                          
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   Offer.php                                                                                                    
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  20     No error to ignore is reported on line 20.                                                                   
+  23     Property App\Entity\Offer::$postulations with generic interface Doctrine\Common\Collections\Collection does  
+         not specify its types: TKey, T                                                                               
+         ­ƒ¬¬  missingType.generics                                                                                     
+  105    Access to an undefined property App\Entity\Offer::$id.                                                       
+         ­ƒ¬¬  property.notFound                                                                                        
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Participation.php                                                                                         
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  19     No error to ignore is reported on line 19.                                                                
+  20     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  33     Access to an undefined property App\Entity\Participation::$id.                                            
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Place.php                                                                                                 
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  19     No error to ignore is reported on line 19.                                                                
+  20     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  69     Access to an undefined property App\Entity\Place::$id.                                                    
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   Player.php                                                                             
+ ------ --------------------------------------------------------------------------------------- 
+  17     No error to ignore is reported on line 17.                                             
+  59     No error to ignore is reported on line 59.                                             
+  64     Access to an undefined property App\Entity\Player::$id.                                
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Post.php                                                                                                  
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  20     No error to ignore is reported on line 20.                                                                
+  21     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  85     Access to an undefined property App\Entity\Post::$id.                                                     
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   Postulation.php                                                                                              
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  17     No error to ignore is reported on line 17.                                                                   
+  27     Property App\Entity\Postulation::$status (string|null) is never assigned null so it can be removed from the  
+         property type.                                                                                               
+         ­ƒ¬¬  property.unusedType                                                                                      
+  49     Access to an undefined property App\Entity\Postulation::$id.                                                 
+         ­ƒ¬¬  property.notFound                                                                                        
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   RiotStats.php                                                                          
+ ------ --------------------------------------------------------------------------------------- 
+  15     No error to ignore is reported on line 15.                                             
+  71     Access to an undefined property App\Entity\RiotStats::$id.                             
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Rubrique.php                                                                                              
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  21     No error to ignore is reported on line 21.                                                                
+  22     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  53     Property App\Entity\Rubrique::$etat (string|null) is never assigned null so it can be removed from the    
+         property type.                                                                                            
+         ­ƒ¬¬  property.unusedType                                                                                   
+  101    Access to an undefined property App\Entity\Rubrique::$id.                                                 
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   Signalement.php                                                                                              
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  17     No error to ignore is reported on line 17.                                                                   
+  18     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.     
+         ­ƒ¬¬  attribute.nonRepeatable                                                                                  
+  28     Property App\Entity\Signalement::$status (string|null) is never assigned null so it can be removed from the  
+         property type.                                                                                               
+         ­ƒ¬¬  property.unusedType                                                                                      
+  45     Access to an undefined property App\Entity\Signalement::$id.                                                 
+         ­ƒ¬¬  property.notFound                                                                                        
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                        
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------- 
+  Line   SteamStats.php                                                                         
+ ------ --------------------------------------------------------------------------------------- 
+  15     No error to ignore is reported on line 15.                                             
+  64     Access to an undefined property App\Entity\SteamStats::$id.                            
+         ­ƒ¬¬  property.notFound                                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property  
+ ------ --------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Team.php                                                                                                  
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  20     No error to ignore is reported on line 20.                                                                
+  21     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  57     Access to an undefined property App\Entity\Team::$id.                                                     
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   TeamMessage.php                                                                                           
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  16     No error to ignore is reported on line 16.                                                                
+  17     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  36     Access to an undefined property App\Entity\TeamMessage::$id.                                              
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   User.php                                                                                                  
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  24     No error to ignore is reported on line 24.                                                                
+  25     Attribute class Doctrine\ORM\Mapping\Column is not repeatable but is already present above the property.  
+         ­ƒ¬¬  attribute.nonRepeatable                                                                               
+  29     PHPDoc tag @var for property App\Entity\User::$email with type int|null is not subtype of native type     
+         string|null.                                                                                              
+         ­ƒ¬¬  property.phpDocType                                                                                   
+  199    Access to an undefined property App\Entity\User::$id.                                                     
+         ­ƒ¬¬  property.notFound                                                                                     
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                     
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ [ERROR] Found 76 errors                                                                                               
+

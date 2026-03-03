@@ -7,13 +7,22 @@ use App\Repository\LoginHistoryRepository;
 
 class SecurityScorer
 {
-    private $historyRepository;
+    private \App\Repository\LoginHistoryRepository $historyRepository;
 
     public function __construct(LoginHistoryRepository $historyRepository)
     {
         $this->historyRepository = $historyRepository;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function getRiskScore(User $user, string $currentIp, string $currentCity, string $currentUA): array
     {
         // hedheya test : return ['score' => 100, 'reasons' => ['TEST FORCE']];

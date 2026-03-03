@@ -2,48 +2,96 @@
 
 {% block title %}Événements - TEAMCRAFT{% endblock %}
 
-{% block flash_messages %}
-    {{ parent() }}
-{% endblock %}
-
 {% block stylesheets %}
 <style>
     /* Scoped styles for event images */
     .event-card-banner {
         width: 100%;
-        height: 200px;
-        object-fit: contain;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
         border-radius: 12px;
-        margin-bottom: 1.25rem;
         border: 1px solid rgba(255, 255, 255, 0.1);
         display: block;
-        background: rgba(0, 0, 0, 0.3);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    .event-card-banner:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
-    }
-    
-    .event-image-container {
+    .event-image-wrapper {
         position: relative;
         width: 100%;
-        height: 200px;
-        border-radius: 12px;
-        overflow: hidden;
         margin-bottom: 1.25rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+    .event-image-wrapper:hover .event-card-banner {
+        transform: scale(1.05);
+    }
+    .view-image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(2px);
+    }
+    .event-image-wrapper:hover .view-image-overlay {
+        opacity: 1;
+    }
+    .view-image-btn {
+        background: rgba(168, 85, 247, 0.8);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(4px);
+    }
+    .event-image-wrapper:hover .view-image-btn {
+        transform: translateY(0);
+    }
+    .view-image-btn:hover {
+        background: #a855f7;
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+    }
+    .image-viewer-modal .modal-content {
+        background: rgba(13, 13, 27, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+    }
+    .image-viewer-modal .modal-body {
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #full-size-image {
+        max-width: 100%;
+        max-height: 80vh;
+        border-radius: 12px;
+        object-fit: contain;
     }
     .discovery-avatar {
         overflow: hidden !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        margin-bottom: 1.25rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--tc-cyan);
     }
     .date-label {
         color: var(--tc-cyan);
@@ -312,11 +360,16 @@
                          data-id="{{ e.id }}">
                         <div class="discovery-card h-100 d-flex flex-column p-4 text-center" style="border: 2px solid #a855f7;">
                             {% if e.imageEvenement %}
-                                <div class="event-image-container">
+                                <div class="event-image-wrapper js-view-image" data-img-url="{{ asset('uploads/events/' ~ e.imageEvenement) }}" data-img-title="{{ e.nomEvenement }}">
                                     <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
+                                    <div class="view-image-overlay">
+                                        <div class="view-image-btn">
+                                            <i class="bi bi-eye-fill me-1"></i> Voir l'image
+                                        </div>
+                                    </div>
                                 </div>
                             {% else %}
-                                <div class="discovery-avatar mx-auto mb-3">
+                                <div class="discovery-avatar mx-auto">
                                     {{ e.nomEvenement|slice(0, 2)|upper }}
                                 </div>
                             {% endif %}
@@ -366,6 +419,7 @@
                 {% include 'frontoffice/partials/_icon_people.html.twig' %}
                 Tous les Événements
             </h1>
+            <a href="#" class="discovery-view-all">VOIR TOUS LES ÉVÉNEMENTS →</a>
         </div>
 
         {# Live Search and Filter Section for All Events #}
@@ -460,9 +514,16 @@
                      data-id="{{ e.id }}">
                     <div class="discovery-card h-100 d-flex flex-column p-4 text-center">
                         {% if e.imageEvenement %}
-                            <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
+                            <div class="event-image-wrapper js-view-image" data-img-url="{{ asset('uploads/events/' ~ e.imageEvenement) }}" data-img-title="{{ e.nomEvenement }}">
+                                <img src="{{ asset('uploads/events/' ~ e.imageEvenement) }}" alt="{{ e.nomEvenement }}" class="event-card-banner">
+                                <div class="view-image-overlay">
+                                    <div class="view-image-btn">
+                                        <i class="bi bi-eye-fill me-1"></i> Voir l'image
+                                    </div>
+                                </div>
+                            </div>
                         {% else %}
-                            <div class="discovery-avatar mx-auto mb-3">
+                            <div class="discovery-avatar mx-auto">
                                 {{ e.nomEvenement|slice(0, 2)|upper }}
                             </div>
                         {% endif %}
@@ -684,18 +745,33 @@
                             <span class="text-info ms-1">PARTICIPATING</span>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary border-0 ms-auto px-4 fw-bold" data-bs-dismiss="modal">Ferme</button>
                 </div>
             </div>
         </div>
     </div>
 
+    {# Image Viewer Modal #}
+    <div class="modal fade image-viewer-modal" id="imageViewerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-white" id="imageViewerTitle">Aperçu de l'image</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <img id="full-size-image" src="" alt="Aperçu" class="img-fluid mx-auto d-block">
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {% include 'frontoffice/partials/_footer_full.html.twig' %}
+    {% include 'frontoffice/partials/_footer.html.twig' %}
 {% endblock %}
 
-{% block javascripts %}
+{% block scripts %}
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
@@ -755,6 +831,30 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalEl = document.getElementById('calendarModal');
     modalEl.addEventListener('shown.bs.modal', function () {
         calendar.render();
+    });
+    // --- IMAGE MODAL LOGIC (Event Delegation) ---
+    const imageViewerModalElement = document.getElementById('imageViewerModal');
+    let imageViewerModal = null;
+    const fullSizeImg = document.getElementById('full-size-image');
+    const imageViewerTitle = document.getElementById('imageViewerTitle');
+
+    document.addEventListener('click', function(e) {
+        const wrapper = e.target.closest('.js-view-image');
+        if (wrapper) {
+            e.preventDefault();
+            const url = wrapper.getAttribute('data-img-url');
+            const title = wrapper.getAttribute('data-img-title');
+            
+            if (fullSizeImg && imageViewerModalElement) {
+                fullSizeImg.src = url;
+                if (imageViewerTitle) imageViewerTitle.textContent = title;
+                
+                if (!imageViewerModal) {
+                    imageViewerModal = new bootstrap.Modal(imageViewerModalElement);
+                }
+                imageViewerModal.show();
+            }
+        }
     });
 
 });

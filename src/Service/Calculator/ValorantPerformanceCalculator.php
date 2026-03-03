@@ -6,6 +6,18 @@ use App\Dto\GamerPerformanceDto;
 
 class ValorantPerformanceCalculator implements GamePerformanceCalculatorInterface
 {
+    /**
+     * @param array<int, array<string, mixed>> $matches
+     * @param array<string, mixed> $rankData
+     */
+    /**
+     * @param array<int, array<string, mixed>> $matches
+     * @param array<string, mixed> $rankData
+     */
+    /**
+     * @param array<int, array<string, mixed>> $matches
+     * @param array<string, mixed> $rankData
+     */
     public function calculate(array $matches, array $rankData = []): GamerPerformanceDto
     {
         $count = count($matches);

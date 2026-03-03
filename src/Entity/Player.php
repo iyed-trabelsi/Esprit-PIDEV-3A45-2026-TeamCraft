@@ -13,6 +13,7 @@ class Player
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\OneToOne(inversedBy: 'playerProfile')]
@@ -34,8 +35,9 @@ class Player
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $status = null;
 
+    /** @var array<string> */
     #[ORM\Column(type: 'json', nullable: true)]
-    private ?array $selectedGames = [];
+    private array $selectedGames = [];
 
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $availability = null;
@@ -48,6 +50,7 @@ class Player
     #[ORM\Column(nullable: true)]
     private ?float $kd = null;
 
+    /** @var Collection<int, CompetitiveRank> */
     #[ORM\OneToMany(targetEntity: CompetitiveRank::class, mappedBy: 'player', orphanRemoval: true)]
     private Collection $competitiveRanks;
 
@@ -134,14 +137,20 @@ class Player
         return $this;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getSelectedGames(): array
     {
-        return $this->selectedGames ?? [];
+        return $this->selectedGames;
     }
 
-    public function setSelectedGames(?array $selectedGames): static
+    /**
+     * @param array<string> $selectedGames
+     */
+    public function setSelectedGames(array $selectedGames): static
     {
-        $this->selectedGames = $selectedGames ?? [];
+        $this->selectedGames = $selectedGames;
 
         return $this;
     }

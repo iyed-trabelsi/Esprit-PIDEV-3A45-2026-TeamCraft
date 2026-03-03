@@ -1,0 +1,46 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src/Controller/TeamController.php --level= ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   TeamController.php                                                                                        
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  21     Property App\Controller\TeamController::$premiumService is never read, only written.                      
+         ­ƒ¬¬  property.onlyWritten                                                                                  
+         ­ƒÆí  See: https://phpstan.org/developing-extensions/always-read-written-properties                         
+  22     Property App\Controller\TeamController::$offerLifecycleService is never read, only written.               
+         ­ƒ¬¬  property.onlyWritten                                                                                  
+         ­ƒÆí  See: https://phpstan.org/developing-extensions/always-read-written-properties                         
+  52     Call to an undefined method Symfony\Component\Security\Core\User\UserInterface::getTeams().               
+         ­ƒ¬¬  method.notFound                                                                                       
+  53     Parameter #1 $user of method App\Repository\TeamRepository::findTeamsByMember() expects App\Entity\User,  
+         Symfony\Component\Security\Core\User\UserInterface given.                                                 
+         ­ƒ¬¬  argument.type                                                                                         
+  80     Parameter #1 $owner of method App\Entity\Team::setOwner() expects App\Entity\User|null,                   
+         Symfony\Component\Security\Core\User\UserInterface given.                                                 
+         ­ƒ¬¬  argument.type                                                                                         
+  144    Call to an undefined method Symfony\Component\Security\Core\User\UserInterface::getTeams().               
+         ­ƒ¬¬  method.notFound                                                                                       
+  166    Parameter #1 $user of method App\Entity\Team::isCoOwner() expects App\Entity\User,                        
+         Symfony\Component\Security\Core\User\UserInterface given.                                                 
+         ­ƒ¬¬  argument.type                                                                                         
+  241    Expression on left side of ?? is not nullable.                                                            
+         ­ƒ¬¬  nullCoalesce.expr                                                                                     
+  299    Parameter #1 $user of method App\Entity\Team::isCoOwner() expects App\Entity\User,                        
+         Symfony\Component\Security\Core\User\UserInterface given.                                                 
+         ­ƒ¬¬  argument.type                                                                                         
+  355    Parameter #1 $user of method App\Entity\Team::isCoOwner() expects App\Entity\User,                        
+         Symfony\Component\Security\Core\User\UserInterface|null given.                                            
+         ­ƒ¬¬  argument.type                                                                                         
+  645    Parameter #1 $user of method App\Entity\Team::isCoOwner() expects App\Entity\User,                        
+         Symfony\Component\Security\Core\User\UserInterface given.                                                 
+         ­ƒ¬¬  argument.type                                                                                         
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+
+ [ERROR] Found 11 errors                                                                                               
+

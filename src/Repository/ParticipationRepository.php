@@ -32,9 +32,16 @@ class ParticipationRepository extends ServiceEntityRepository
                ->setParameter('query', $query . '%');
         }
 
-        return $qb->orderBy($sort, $direction)
-            ->getQuery()
-            ->getResult();
+        // ✅ SÉCURITÉ : Whitelist pour éviter l'injection SQL via ORDER BY
+        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
+        match ($sort) {
+            'p.dateInscription' => $qb->orderBy('p.dateInscription', $direction),
+            'u.username'        => $qb->orderBy('u.username', $direction),
+            'e.nomEvenement'    => $qb->orderBy('e.nomEvenement', $direction),
+            default             => $qb->orderBy('p.id', 'DESC'),
+        };
+
+        return $qb->getQuery()->getResult();
     }
 
     //    /**

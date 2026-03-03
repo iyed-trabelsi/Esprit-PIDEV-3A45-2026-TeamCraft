@@ -8,28 +8,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RiotApiService
 {
-    private const RIOT_API_REGIONS = [
-        'EUW' => 'euw1.api.riotgames.com',
-        'EUNE' => 'eun1.api.riotgames.com',
-        'NA' => 'na1.api.riotgames.com',
-        'KR' => 'kr.api.riotgames.com',
-        // Regional routing for ACCOUNT-V1 (PUUID)
-        'EUROPE' => 'europe.api.riotgames.com',
-        'AMERICAS' => 'americas.api.riotgames.com',
-        'ASIA' => 'asia.api.riotgames.com',
-    ];
 
     public function __construct(
         private HttpClientInterface $httpClient,
         private LoggerInterface $logger,
-        private string $riotApiKey,
-        private int $riotApiRateLimit
+        private string $riotApiKey
     ) {
     }
 
     /**
-     * Common HTTP options for all Riot API requests.
-     * Ensures SSL is bypassed in dev and a generous timeout is set.
+     * @param array<string, mixed> $extra
+     * @return array<string, mixed>
      */
     private function getRequestOptions(array $extra = []): array
     {
@@ -83,15 +72,15 @@ class RiotApiService
     {
         $routing = $this->getRegionalRouting($region);
         $host = strtolower($routing) . '.api.riotgames.com';
-        
+
         // Debug logging
         $this->logger->info("Searching for PUUID: gameName={$gameName}, tagLine={$tagLine}, region={$region}, host={$host}");
-        
+
         try {
             $response = $this->httpClient->request('GET', "https://{$host}/riot/account/v1/accounts/by-riot-id/{$gameName}/{$tagLine}", $this->getRequestOptions());
 
             $this->logger->info("Riot API response status: " . $response->getStatusCode());
-            
+
             if ($response->getStatusCode() !== 200) {
                 $this->logger->error('Riot API error (getPuuid): ' . $response->getStatusCode());
                 return null;
@@ -108,6 +97,15 @@ class RiotApiService
 
     /**
      * Get League of Legends Ranked Stats
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
      */
     public function getLeagueStats(string $puuid, string $region): ?array
     {
@@ -172,6 +170,15 @@ class RiotApiService
      * IMPORTANT: Standard production keys often don't have access to VAL-RANKED-V1 directly without approval. 
      * We will implement the standard endpoint structure.
      */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function getValorantStats(string $puuid, string $region): ?array
     {
         // VAL-RANKED-V1 is often restricted for dev keys.
@@ -218,6 +225,15 @@ class RiotApiService
     /**
      * STEP B: Get Match IDs by PUUID
      */
+    /**
+     * @return array<int, string>
+     */
+    /**
+     * @return array<int, string>
+     */
+    /**
+     * @return array<int, string>
+     */
     public function getMatchIds(string $puuid, string $region, int $start = 0, int $count = 20): array
     {
         $routing = $this->getRegionalRouting($region);
@@ -243,6 +259,15 @@ class RiotApiService
     /**
      * STEP C: Get Match Details
      */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function getMatchDetails(string $matchId, string $region): ?array
     {
         $routing = $this->getRegionalRouting($region);
@@ -265,6 +290,10 @@ class RiotApiService
 
     /**
      * Helper to extract specific participant stats from match details
+     */
+    /**
+     * @param array<string, mixed> $matchData
+     * @return array<string, mixed>|null
      */
     public function getParticipantStats(array $matchData, string $puuid): ?array
     {

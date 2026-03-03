@@ -1,0 +1,345 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src/Entity --level=6 --no-progress 2>&1 |  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Admin.php                                                                                                     
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  14     Property App\Entity\Admin::$id (int|null) is never assigned int so it can be removed from the property type.  
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Application.php                                                                                               
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  15     Property App\Entity\Application::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+  29     Property App\Entity\Application::$status (string|null) is never assigned null so it can be removed from the   
+         property type.                                                                                                
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Comment.php                                                                                               
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  19     Property App\Entity\Comment::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                     
+         ­ƒ¬¬  property.unusedType                                                                                   
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------- 
+  Line   CompetitiveRank.php                                                                                      
+ ------ --------------------------------------------------------------------------------------------------------- 
+  14     Property App\Entity\CompetitiveRank::$id (int|null) is never assigned int so it can be removed from the  
+         property type.                                                                                           
+         ­ƒ¬¬  property.unusedType                                                                                  
+ ------ --------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Evenement.php                                                                                                 
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  20     Property App\Entity\Evenement::$id (int|null) is never assigned int so it can be removed from the property    
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+  64     Property App\Entity\Evenement::$participations with generic interface Doctrine\Common\Collections\Collection  
+         does not specify its types: TKey, T                                                                           
+         ­ƒ¬¬  missingType.generics                                                                                      
+  67     Property App\Entity\Evenement::$reviews with generic interface Doctrine\Common\Collections\Collection does    
+         not specify its types: TKey, T                                                                                
+         ­ƒ¬¬  missingType.generics                                                                                      
+  70     Property App\Entity\Evenement::$averageRating (float|null) is never assigned null so it can be removed from   
+         the property type.                                                                                            
+         ­ƒ¬¬  property.unusedType                                                                                       
+  73     Property App\Entity\Evenement::$reviewCount (int|null) is never assigned null so it can be removed from the   
+         property type.                                                                                                
+         ­ƒ¬¬  property.unusedType                                                                                       
+  155    Method App\Entity\Evenement::getParticipations() return type with generic interface                           
+         Doctrine\Common\Collections\Collection does not specify its types: TKey, T                                    
+         ­ƒ¬¬  missingType.generics                                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   EventReview.php                                                                                               
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  19     Property App\Entity\EventReview::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   FavoriteOffer.php                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+  16     Property App\Entity\FavoriteOffer::$id (int|null) is never assigned int so it can be removed from the  
+         property type.                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   FriendRequest.php                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+  20     Property App\Entity\FriendRequest::$id (int|null) is never assigned int so it can be removed from the  
+         property type.                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   LoginHistory.php                                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  15     Property App\Entity\LoginHistory::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                          
+         ­ƒ¬¬  property.unusedType                                                                                        
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Manager.php                                                                                               
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  14     Property App\Entity\Manager::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                     
+         ­ƒ¬¬  property.unusedType                                                                                   
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   MediaComment.php                                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  16     Property App\Entity\MediaComment::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                          
+         ­ƒ¬¬  property.unusedType                                                                                        
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  Line   MediaLike.php                                                                                               
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  15     Property App\Entity\MediaLike::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                       
+         ­ƒ¬¬  property.unusedType                                                                                     
+ ------ ------------------------------------------------------------------------------------------------------------ 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   MediaSubmission.php                                                                                           
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  18     Property App\Entity\MediaSubmission::$id (int|null) is never assigned int so it can be removed from the       
+         property type.                                                                                                
+         ­ƒ¬¬  property.unusedType                                                                                       
+  70     Property App\Entity\MediaSubmission::$likes with generic interface Doctrine\Common\Collections\Collection     
+         does not specify its types: TKey, T                                                                           
+         ­ƒ¬¬  missingType.generics                                                                                      
+  73     Property App\Entity\MediaSubmission::$comments with generic interface Doctrine\Common\Collections\Collection  
+         does not specify its types: TKey, T                                                                           
+         ­ƒ¬¬  missingType.generics                                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  Line   Message.php                                                                                               
+ ------ ---------------------------------------------------------------------------------------------------------- 
+  15     Property App\Entity\Message::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                     
+         ­ƒ¬¬  property.unusedType                                                                                   
+  32     Property App\Entity\Message::$isRead (bool|null) is never assigned null so it can be removed from the     
+         property type.                                                                                            
+         ­ƒ¬¬  property.unusedType                                                                                   
+ ------ ---------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   MusicTrack.php                                                                                               
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  16     Property App\Entity\MusicTrack::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                        
+         ­ƒ¬¬  property.unusedType                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Notification.php                                                                                               
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  15     Property App\Entity\Notification::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                          
+         ­ƒ¬¬  property.unusedType                                                                                        
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Offer.php                                                                                                     
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  19     Property App\Entity\Offer::$id (int|null) is never assigned int so it can be removed from the property type.  
+         ­ƒ¬¬  property.unusedType                                                                                       
+  22     Property App\Entity\Offer::$postulations with generic interface Doctrine\Common\Collections\Collection does   
+         not specify its types: TKey, T                                                                                
+         ­ƒ¬¬  missingType.generics                                                                                      
+  25     Property App\Entity\Offer::$applications is never read, only written.                                         
+         ­ƒ¬¬  property.onlyWritten                                                                                      
+         ­ƒÆí  See: https://phpstan.org/developing-extensions/always-read-written-properties                             
+  25     Property App\Entity\Offer::$applications with generic interface Doctrine\Common\Collections\Collection does   
+         not specify its types: TKey, T                                                                                
+         ­ƒ¬¬  missingType.generics                                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Participation.php                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+  18     Property App\Entity\Participation::$id (int|null) is never assigned int so it can be removed from the  
+         property type.                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Place.php                                                                                                      
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  18     Property App\Entity\Place::$id (int|null) is never assigned int so it can be removed from the property type.   
+         ­ƒ¬¬  property.unusedType                                                                                        
+  59     Property App\Entity\Place::$evenements with generic interface Doctrine\Common\Collections\Collection does not  
+         specify its types: TKey, T                                                                                     
+         ­ƒ¬¬  missingType.generics                                                                                       
+  118    Method App\Entity\Place::getEvenements() return type with generic interface                                    
+         Doctrine\Common\Collections\Collection does not specify its types: TKey, T                                     
+         ­ƒ¬¬  missingType.generics                                                                                       
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Player.php                                                                                                     
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  16     Property App\Entity\Player::$id (int|null) is never assigned int so it can be removed from the property type.  
+         ­ƒ¬¬  property.unusedType                                                                                        
+  38     Property App\Entity\Player::$selectedGames (array|null) is never assigned null so it can be removed from the   
+         property type.                                                                                                 
+         ­ƒ¬¬  property.unusedType                                                                                        
+  38     Property App\Entity\Player::$selectedGames type has no value type specified in iterable type array.            
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+  52     Property App\Entity\Player::$competitiveRanks with generic interface Doctrine\Common\Collections\Collection    
+         does not specify its types: TKey, T                                                                            
+         ­ƒ¬¬  missingType.generics                                                                                       
+  137    Method App\Entity\Player::getSelectedGames() return type has no value type specified in iterable type array.   
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+  142    Method App\Entity\Player::setSelectedGames() has parameter $selectedGames with no value type specified in      
+         iterable type array.                                                                                           
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Post.php                                                                                                       
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  19     Property App\Entity\Post::$id (int|null) is never assigned int so it can be removed from the property type.    
+         ­ƒ¬¬  property.unusedType                                                                                        
+  31     Property App\Entity\Post::$typePost (string|null) is never assigned null so it can be removed from the         
+         property type.                                                                                                 
+         ­ƒ¬¬  property.unusedType                                                                                        
+  41     Property App\Entity\Post::$statut (string|null) is never assigned null so it can be removed from the property  
+         type.                                                                                                          
+         ­ƒ¬¬  property.unusedType                                                                                        
+  278    Method App\Entity\Post::getSignalements() return type with generic interface                                   
+         Doctrine\Common\Collections\Collection does not specify its types: TKey, T                                     
+         ­ƒ¬¬  missingType.generics                                                                                       
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Postulation.php                                                                                               
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  16     Property App\Entity\Postulation::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+  27     Property App\Entity\Postulation::$status (string|null) is never assigned null so it can be removed from the   
+         property type.                                                                                                
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   ResetPasswordRequest.php                                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  17     Property App\Entity\ResetPasswordRequest::$id (int|null) is never assigned int so it can be removed from the  
+         property type.                                                                                                
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   RiotStats.php                                                                                                 
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  14     Property App\Entity\RiotStats::$id (int|null) is never assigned int so it can be removed from the property    
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+  57     Property App\Entity\RiotStats::$recentMatches type has no value type specified in iterable type array.        
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  216    Method App\Entity\RiotStats::getRecentMatches() return type has no value type specified in iterable type      
+         array.                                                                                                        
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  221    Method App\Entity\RiotStats::setRecentMatches() has parameter $recentMatches with no value type specified in  
+         iterable type array.                                                                                          
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  Line   Rubrique.php                                                                                               
+ ------ ----------------------------------------------------------------------------------------------------------- 
+  20     Property App\Entity\Rubrique::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                      
+         ­ƒ¬¬  property.unusedType                                                                                    
+  53     Property App\Entity\Rubrique::$etat (string|null) is never assigned null so it can be removed from the     
+         property type.                                                                                             
+         ­ƒ¬¬  property.unusedType                                                                                    
+ ------ ----------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Signalement.php                                                                                               
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  16     Property App\Entity\Signalement::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+  28     Property App\Entity\Signalement::$status (string|null) is never assigned null so it can be removed from the   
+         property type.                                                                                                
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   SteamStats.php                                                                                               
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  14     Property App\Entity\SteamStats::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                        
+         ­ƒ¬¬  property.unusedType                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   Team.php                                                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  19     Property App\Entity\Team::$id (int|null) is never assigned int so it can be removed from the property type.   
+         ­ƒ¬¬  property.unusedType                                                                                       
+  31     Property App\Entity\Team::$games type has no value type specified in iterable type array.                     
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  83     Method App\Entity\Team::getGames() return type has no value type specified in iterable type array.            
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  88     Method App\Entity\Team::setGames() has parameter $games with no value type specified in iterable type array.  
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+  119    Property App\Entity\Team::$offers with generic interface Doctrine\Common\Collections\Collection does not      
+         specify its types: TKey, T                                                                                    
+         ­ƒ¬¬  missingType.generics                                                                                      
+  122    Property App\Entity\Team::$messages with generic interface Doctrine\Common\Collections\Collection does not    
+         specify its types: TKey, T                                                                                    
+         ­ƒ¬¬  missingType.generics                                                                                      
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   TeamMessage.php                                                                                               
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  15     Property App\Entity\TeamMessage::$id (int|null) is never assigned int so it can be removed from the property  
+         type.                                                                                                         
+         ­ƒ¬¬  property.unusedType                                                                                       
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  Line   User.php                                                                                                     
+ ------ ------------------------------------------------------------------------------------------------------------- 
+  23     Property App\Entity\User::$id (int|null) is never assigned int so it can be removed from the property type.  
+         ­ƒ¬¬  property.unusedType                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------------- 
+
+ [ERROR] Found 63 errors                                                                                               
+

@@ -32,7 +32,7 @@ Exemples :
     }
 
     /**
-     * @param array $history Optional conversation history for context maintenance
+     * @param array<int, array<string, string>> $history Optional conversation history for context maintenance
      */
     public function generateResponse(string $userMessage, array $history = []): string
     {

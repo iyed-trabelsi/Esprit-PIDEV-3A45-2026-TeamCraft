@@ -1,0 +1,25 @@
+﻿vendor/bin/phpstan : Note: Using configuration file 
+C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\phpstan.dist.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse src/Entity --level=6 --no-progress 2>&1 |  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...stan.dist.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ -------------------------------------------- 
+  Line   Player.php                                  
+ ------ -------------------------------------------- 
+  60     No error to ignore is reported on line 60.  
+ ------ -------------------------------------------- 
+
+ -- -------------------------------------------------------------------------------------------------------------- 
+     Error                                                                                                         
+ -- -------------------------------------------------------------------------------------------------------------- 
+     Ignored error pattern property.onlyWritten in path                                                            
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Entity\* was not matched in reported errors.  
+     Ignored error pattern property.notFound in path                                                               
+     C:\Users\PC\Desktop\TeamCraft-azizfinal\TeamCraft-azizfinal\src\Entity\* was not matched in reported errors.  
+ -- -------------------------------------------------------------------------------------------------------------- 
+
+ [ERROR] Found 3 errors                                                                                                
+

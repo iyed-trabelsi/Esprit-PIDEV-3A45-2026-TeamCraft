@@ -8,10 +8,10 @@ use Psr\Log\LoggerInterface;
 
 class AiSchedulingService
 {
-    private $evenementRepo;
-    private $httpClient;
-    private $logger;
-    private $apiKey;
+    private \App\Repository\EvenementRepository $evenementRepo;
+    private \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient;
+    private \Psr\Log\LoggerInterface $logger;
+    private string $apiKey;
 
     public function __construct(
         EvenementRepository $evenementRepo,
@@ -26,6 +26,15 @@ class AiSchedulingService
         $this->apiKey = !empty($apiKey) ? $apiKey : 'AIzaSyCW8BJaGZQMvtSYh0n56VIJuRTXLpjn_QY';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function generateOptimalEvent(): array
     {
         $events = $this->evenementRepo->findAll();
@@ -34,19 +43,19 @@ class AiSchedulingService
         $currentDateTimeStr = (new \DateTime())->format('Y-m-d H:i');
 
         $prompt = "You are a senior event analytics consultant advising a competitive gaming community. "
-                . "IMPORTANT CONTEXT: Today's exact current date and time is: $currentDateTimeStr\n\n"
-                . "Below is detailed performance data from past events. Each entry includes the event name, type, day of week, start time, duration, venue capacity, participants (fill rate %), and average community rating out of 5.\n\n"
-                . $stats . "\n\n"
-                . "Your task: Analyse this data and recommend the SINGLE most optimal next event. Your tone should be professional, confident, and persuasive — as if presenting a strategic report to stakeholders.\n\n"
-                . "STRICT CONSTRAINTS (MANDATORY):\n"
-                . "1. nomEvenement MUST be AT LEAST 8 characters long.\n"
-                . "2. typeEvenement MUST be AT LEAST 8 characters long.\n"
-                . "3. dateDebut MUST be EQUAL TO OR STRICTLY LATER THAN $currentDateTimeStr.\n"
-                . "4. dateFin MUST be AFTER dateDebut.\n\n"
-                . "Return ONLY a JSON object (no markdown, no extra text). Use this EXACT schema:\n"
-                . '{"nomEvenement":"A compelling event name (min 8 chars)","typeEvenement":"The event type (min 8 chars)","dateDebut":"YYYY-MM-DDTHH:MM","dateFin":"YYYY-MM-DDTHH:MM","reasoning":"ONE sentence executive summary of the recommendation.","data_insights":"2-3 sentences citing specific numbers from the data: which time slots had the highest fill rates, which event types scored the best ratings, notable patterns observed.","time_rationale":"2-3 sentences explaining WHY this specific day, time, and duration were chosen based on the data patterns. Be specific with percentages and ratings.","type_rationale":"2-3 sentences explaining why this event type is recommended over alternatives, referencing its historical performance metrics.","confidence_score":85}';
+            . "IMPORTANT CONTEXT: Today's exact current date and time is: $currentDateTimeStr\n\n"
+            . "Below is detailed performance data from past events. Each entry includes the event name, type, day of week, start time, duration, venue capacity, participants (fill rate %), and average community rating out of 5.\n\n"
+            . $stats . "\n\n"
+            . "Your task: Analyse this data and recommend the SINGLE most optimal next event. Your tone should be professional, confident, and persuasive — as if presenting a strategic report to stakeholders.\n\n"
+            . "STRICT CONSTRAINTS (MANDATORY):\n"
+            . "1. nomEvenement MUST be AT LEAST 8 characters long.\n"
+            . "2. typeEvenement MUST be AT LEAST 8 characters long.\n"
+            . "3. dateDebut MUST be EQUAL TO OR STRICTLY LATER THAN $currentDateTimeStr.\n"
+            . "4. dateFin MUST be AFTER dateDebut.\n\n"
+            . "Return ONLY a JSON object (no markdown, no extra text). Use this EXACT schema:\n"
+            . '{"nomEvenement":"A compelling event name (min 8 chars)","typeEvenement":"The event type (min 8 chars)","dateDebut":"YYYY-MM-DDTHH:MM","dateFin":"YYYY-MM-DDTHH:MM","reasoning":"ONE sentence executive summary of the recommendation.","data_insights":"2-3 sentences citing specific numbers from the data: which time slots had the highest fill rates, which event types scored the best ratings, notable patterns observed.","time_rationale":"2-3 sentences explaining WHY this specific day, time, and duration were chosen based on the data patterns. Be specific with percentages and ratings.","type_rationale":"2-3 sentences explaining why this event type is recommended over alternatives, referencing its historical performance metrics.","confidence_score":85}';
 
-        
+
         try {
             $this->logger->info('AI Scheduling: Calling Gemini API. Key starts with: ' . substr($this->apiKey, 0, 8));
             $response = $this->httpClient->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $this->apiKey, [
@@ -72,19 +81,19 @@ class AiSchedulingService
             $content = $response->toArray(false);
             if (isset($content['candidates'][0]['content']['parts'][0]['text'])) {
                 $generated = trim($content['candidates'][0]['content']['parts'][0]['text']);
-                
+
                 // Advanced heuristic JSON cleanup
                 $generated = preg_replace('/```json/i', '', $generated);
                 $generated = preg_replace('/```/i', '', $generated);
-                
+
                 // Try to find the first { and last }
                 $start = strpos($generated, '{');
                 $end = strrpos($generated, '}');
-                
+
                 if ($start !== false && $end !== false) {
                     $jsonStr = substr($generated, $start, $end - $start + 1);
                     $data = json_decode($jsonStr, true);
-                    
+
                     if (json_last_error() === JSON_ERROR_NONE && isset($data['nomEvenement'])) {
                         return $data;
                     } else {
@@ -106,6 +115,12 @@ class AiSchedulingService
         return $this->getFallbackEvent();
     }
 
+    /**
+     * @param array<int, mixed> $events
+     */
+    /**
+     * @param array<int, mixed> $events
+     */
     private function analyzeHistory(array $events): string
     {
         if (count($events) === 0) {
@@ -125,19 +140,19 @@ class AiSchedulingService
 
             $hasData = true;
 
-            $cap  = $e->getPlace() ? $e->getPlace()->getCapaciteMax() : 0;
-            $cap  = max(1, (int)$cap);
+            $cap = $e->getPlace() ? $e->getPlace()->getCapaciteMax() : 0;
+            $cap = max(1, (int) $cap);
             $part = count($e->getParticipations());
             $fill = round(($part / $cap) * 100);
 
             $durationHours = round(($e->getDateFin()->getTimestamp() - $e->getDateDebut()->getTimestamp()) / 3600, 1);
 
-            $day   = $e->getDateDebut()->format('l');    // e.g. Friday
-            $time  = $e->getDateDebut()->format('H:i');  // e.g. 20:00
+            $day = $e->getDateDebut()->format('l');    // e.g. Friday
+            $time = $e->getDateDebut()->format('H:i');  // e.g. 20:00
 
-            $rating      = $e->getAverageRating() ?? 0;
+            $rating = $e->getAverageRating() ?? 0;
             $reviewCount = $e->getReviewCount() ?? 0;
-            $ratingStr   = $reviewCount > 0
+            $ratingStr = $reviewCount > 0
                 ? round($rating, 1) . '/5 (' . $reviewCount . ' review' . ($reviewCount > 1 ? 's' : '') . ')'
                 : 'no reviews yet';
 
@@ -162,6 +177,12 @@ class AiSchedulingService
         return "HISTORICAL EVENT DATA (" . count($lines) . " completed events):\n" . implode("\n", $lines);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     private function getFallbackEvent(): array
     {
         $nextFriday = new \DateTime('next friday 20:00');

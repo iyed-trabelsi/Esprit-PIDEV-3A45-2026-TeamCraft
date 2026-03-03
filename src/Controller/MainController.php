@@ -12,7 +12,7 @@ class MainController extends AbstractController
 {
     #[Route('/', name: 'app_home', methods: ['GET'])]
 
-public function index(Request $request, \App\Repository\OfferRepository $offerRepository): Response
+    public function index(Request $request, \App\Repository\OfferRepository $offerRepository): Response
     {
         // 1. Ta Sécurité : Bloque l'accès si le code de sécurité est requis
         if ($request->getSession()->get('2fa_required')) {
@@ -21,7 +21,7 @@ public function index(Request $request, \App\Repository\OfferRepository $offerRe
 
         // 2. Leur Travail : Récupération des offres sponsorisées
         $sponsoredOffers = $offerRepository->findAllSorted(['offerType' => \App\Entity\Offer::TYPE_SPONSORED]);
-        
+
         // On garde les 3 meilleures pour la page d'accueil
         $sponsoredOffers = array_slice($sponsoredOffers, 0, 3);
 
@@ -227,8 +227,13 @@ public function index(Request $request, \App\Repository\OfferRepository $offerRe
     }
 
     #[Route('/offres', name: 'app_offres', methods: ['GET'])]
-    public function offres(Request $request, \App\Repository\OfferRepository $offerRepository, \Doctrine\ORM\EntityManagerInterface $em, \App\Service\SmartMatchingService $smartMatchingService): Response
-    {
+    public function offres(
+        Request $request,
+        \App\Repository\OfferRepository $offerRepository,
+        \Doctrine\ORM\EntityManagerInterface $em,
+        \App\Service\SmartMatchingService $smartMatchingService,
+        \App\Repository\FavoriteOfferRepository $favoriteOfferRepository
+    ): Response {
         $search = $request->query->get('search');
         $game = $request->query->get('game');
         $rank = $request->query->get('rank');
@@ -246,8 +251,8 @@ public function index(Request $request, \App\Repository\OfferRepository $offerRe
         $user = $this->getUser();
 
         if ($user) {
-            $favorites = $em->getRepository(\App\Entity\FavoriteOffer::class)->findBy(['user' => $user]);
-            $favoriteIds = array_map(fn($f) => $f->getOffer()->getId(), $favorites);
+            // ✅ UNE seule requête scalaire au lieu de findBy() + N×getOffer()->getId()
+            $favoriteIds = $favoriteOfferRepository->findOfferIdsByUser($user);
 
             if ($user->getPlayerProfile()) {
                 $matchScores = $smartMatchingService->predictMatchesBatch($user->getPlayerProfile(), $offres);
@@ -281,12 +286,12 @@ public function index(Request $request, \App\Repository\OfferRepository $offerRe
         // Track view (prevent duplicate counting with session)
         $session = $request->getSession();
         $viewedOffers = $session->get('viewed_offers', []);
-        
+
         // If this offer wasn't viewed in this session in the last 24h, increment view count
         $offerKey = 'offer_' . $id;
         $lastViewed = $viewedOffers[$offerKey] ?? null;
         $now = new \DateTimeImmutable();
-        
+
         if (!$lastViewed || $lastViewed < $now->modify('-24 hours')) {
             $offre->incrementViews();
             $entityManager->flush();
@@ -521,7 +526,7 @@ public function index(Request $request, \App\Repository\OfferRepository $offerRe
         }
 
         $favorites = $favoriteOfferRepository->findByUser($this->getUser());
-        
+
         // Extract offers from favorites
         $offers = array_map(fn($fav) => $fav->getOffer(), $favorites);
 

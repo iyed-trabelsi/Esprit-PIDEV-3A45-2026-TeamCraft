@@ -25,7 +25,7 @@ class RubriqueRepository extends ServiceEntityRepository
     public function findAllActive(string $sortDirection = 'DESC'): array
     {
         $sortDirection = strtoupper($sortDirection) === 'ASC' ? 'ASC' : 'DESC';
-        
+
         return $this->createQueryBuilder('r')
             ->andWhere('r.etat = :etat')
             ->setParameter('etat', 'active')
@@ -126,6 +126,24 @@ class RubriqueRepository extends ServiceEntityRepository
             ->select('r.etat as state, COUNT(r.id) as count')
             ->groupBy('r.etat')
             ->orderBy('count', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retourne toutes les rubriques avec le COUNT de leurs posts en UNE seule requête.
+     * Élimine le N+1 de AdminController::syncCounts() qui faisait findAll()
+     * puis count($rubrique->getPosts()) pour chaque rubrique (N requêtes lazy).
+     *
+     * @return array<int, array{rubrique: \App\Entity\Rubrique, postCount: int}>
+     */
+    public function findAllWithPostsCount(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->select('r, COUNT(p.id) AS postCount')
+            ->leftJoin('r.posts', 'p')
+            ->groupBy('r.id')
+            ->orderBy('r.dateCreation', 'DESC')
             ->getQuery()
             ->getResult();
     }

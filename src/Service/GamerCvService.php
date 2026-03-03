@@ -19,6 +19,15 @@ class GamerCvService
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @return array<string, mixed>
+     */
     public function buildCvData(User $user, ?RiotStats $riotStats, string $game = 'lol', ?\App\Entity\SteamStats $steamStats = null): array
     {
         $player = $user->getPlayerProfile();
@@ -111,11 +120,17 @@ class GamerCvService
         return $data;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
+    /**
+     * @return array<int, mixed>
+     */
     private function fetchLatestMatches(RiotStats $riotStats, string $game): array
     {
         if ($game === 'valorant') {
             // Use cached matches in DB for Valorant (since we usually mock/proxy them)
-            return $riotStats->getRecentMatches() ?? [];
+            return $riotStats->getRecentMatches();
         }
 
         // Live fetch for LoL
@@ -137,6 +152,16 @@ class GamerCvService
         return $matches;
     }
 
+    /**
+     * @param array<string, mixed> $stats
+     * @param array<string, mixed> $matchData
+     * @return array<string, mixed>
+     */
+    /**
+     * @param array<string, mixed> $stats
+     * @param array<string, mixed> $matchData
+     * @return array<string, mixed>
+     */
     private function enrichLoLStats(array $stats, array $matchData, string $puuid): array
     {
         $gameDuration = max(1, ($matchData['info']['gameDuration'] ?? 0) / 60);

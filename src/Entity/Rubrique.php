@@ -17,13 +17,14 @@ class Rubrique
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @var int|null */
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: 'Le nom de la rubrique est obligatoire.')]
     #[Assert\Length(
         max: 50,
-        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
+        maxMessage: 'Le nom ne peut pas d??passer {{ limit }} caract??res.'
     )]
     private ?string $nomRubrique = null;
 
@@ -31,15 +32,15 @@ class Rubrique
     #[Assert\NotBlank(message: 'La description est obligatoire.')]
     private ?string $description = null;
 
-    // 🔹 Nouveau sujet (NON obligatoire si un sujet existant est choisi)
+    // ???? Nouveau sujet (NON obligatoire si un sujet existant est choisi)
     #[ORM\Column(length: 50, nullable: true)]
     #[Assert\Length(
         max: 50,
-        maxMessage: 'Le sujet ne peut pas dépasser {{ limit }} caractères.'
+        maxMessage: 'Le sujet ne peut pas d??passer {{ limit }} caract??res.'
     )]
     private ?string $topic = null;
 
-    // 🔹 Sujet existant (champ formulaire seulement, PAS en base)
+    // ???? Sujet existant (champ formulaire seulement, PAS en base)
     private ?string $existingTopic = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
@@ -48,7 +49,7 @@ class Rubrique
     #[ORM\Column(length: 20)]
     #[Assert\Choice(
         choices: ['active', 'archived'],
-        message: 'L\'état doit être actif ou archivé.'
+        message: 'L\'??tat doit ??tre actif ou archiv??.'
     )]
     private ?string $etat = 'active';
 

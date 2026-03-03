@@ -86,7 +86,6 @@ services:
         arguments:
             $httpClient: '@riot.client'
             $riotApiKey: '%env(RIOT_API_KEY)%'
-            $riotApiRateLimit: '%env(int:RIOT_API_RATE_LIMIT)%'
 
     App\Service\PdfCvService:
         arguments:

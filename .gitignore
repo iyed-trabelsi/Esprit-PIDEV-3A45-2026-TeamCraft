@@ -34,3 +34,7 @@ Thumbs.db
 *.log
 
 .vercel
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###
