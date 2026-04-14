@@ -1,16 +1,23 @@
-Academic Use License
+Academic and Restricted Use License
 
 Copyright (c) 2026 Iyed Trabelsi, Aziz Ben Amor, Ghassen Barbouch, Yasser Chebbi, Achref Reguai
 
 This project was developed as part of the academic program at Esprit School of Engineering – Tunisia (Academic Year 2025–2026).
 
-Permission is hereby granted to use, copy, and modify this software for academic and educational purposes only.
+1. Purpose of Use
+   This software and all associated materials (including but not limited to source code, assets, videos, designs, and documentation) are provided strictly for academic evaluation and grading purposes.
 
-Any commercial use, distribution, sublicensing, or publication of this software without explicit permission from the authors is strictly prohibited.
+2. Restrictions
+   Any use outside the academic context is strictly prohibited. This includes, but is not limited to:
 
-This project must always be credited to:
-Esprit School of Engineering – Tunisia
+* Commercial use of any part of the project
+* Generating revenue directly or indirectly from the project
+* Redistribution, publication, or sublicensing of the project
+* Use of project assets (videos, images, designs, or content) without permission
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+3. Ownership
+   All rights are exclusively reserved to the project contributors:
+   Iyed Trabelsi, Aziz Ben Amor, Ghassen Barbouch, Yasser Chebbi, Achref Reguai.
 
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+4. Permission
+   No part of this project may be reused, modified, or distributed without explicit written permission from all contributors.
